@@ -1,15 +1,15 @@
 import { useEffect, useState, useCallback } from "react";
 import { Card, Col, Table } from "react-bootstrap";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
 
 const ViewGeneratePanel = () => {
-
   const [panelList, setPanelList] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  //  PAGINATION STATE (same as first file)
+  // PAGINATION STATE
   const itemsPerPage = 10;
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -40,7 +40,7 @@ const ViewGeneratePanel = () => {
     fetchLots();
   }, [fetchLots]);
 
-  //  DELETE
+  // DELETE
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this panel?")) return;
 
@@ -59,12 +59,8 @@ const ViewGeneratePanel = () => {
     }
   };
 
-  // ============================
-  //  PAGINATION LOGIC (SAME AS FIRST CODE)
-  // ============================
-
+  // PAGINATION LOGIC
   const totalPages = Math.ceil(panelList.length / itemsPerPage);
-
   const startIndex = (currentPage - 1) * itemsPerPage;
 
   const currentData = panelList.slice(
@@ -72,10 +68,7 @@ const ViewGeneratePanel = () => {
     startIndex + itemsPerPage
   );
 
-  // ============================
   // EXPORT DATA
-  // ============================
-
   const exportData = panelList.map((item, index) => ({
     sno: index + 1,
     date: item.date || "-",
@@ -95,7 +88,6 @@ const ViewGeneratePanel = () => {
   return (
     <Col lg={12}>
       <Card>
-
         <Card.Header className="d-flex justify-content-between align-items-center">
           <Card.Title className="mb-0">
             View Generate Panel Serial Number
@@ -109,7 +101,6 @@ const ViewGeneratePanel = () => {
         </Card.Header>
 
         <Card.Body>
-
           {loading ? (
             <p>Loading...</p>
           ) : (
@@ -141,37 +132,51 @@ const ViewGeneratePanel = () => {
                         <td>{item.panel_capacity}</td>
                         <td>{item.panel_type}</td>
 
-                                            <td className="text-center">
-                                                <Link
-                                                    to={`/edit-panel/${item._id}`}
-                                                    className="btn btn-primary btn-xs sharp me-2"
-                                                >
-                                                    <i className="fa fa-pencil" />
-                                                </Link>
+                        <td className="text-center">
+                          <Link
+                            to={`/edit-panel/${item._id}`}
+                            className="btn btn-primary btn-xs sharp me-2"
+                          >
+                            <i className="fa fa-pencil" />
+                          </Link>
 
-                                                <button
-                                                    className="btn btn-danger btn-xs sharp"
-                                                    onClick={() => console.log(item._id)}
-                                                >
-                                                    <i className="fa fa-trash" />
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="6" className="text-center">
-                                            No records found
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </Table>
-                    )}
-                </Card.Body>
-            </Card>
-        </Col>
-    );
+                          <Link
+                            to={`/view-panel-details/${item._id}`}
+                            className="btn btn-info btn-xs sharp me-2"
+                          >
+                            <i className="fa fa-eye" />
+                          </Link>
+
+                          <button
+                            className="btn btn-danger btn-xs sharp"
+                            onClick={() => handleDelete(item._id)}
+                          >
+                            <i className="fa fa-trash" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="6" className="text-center">
+                        No records found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </Table>
+
+              <CommonPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </>
+          )}
+        </Card.Body>
+      </Card>
+    </Col>
+  );
 };
 
 export default ViewGeneratePanel;
