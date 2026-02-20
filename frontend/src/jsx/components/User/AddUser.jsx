@@ -1,15 +1,15 @@
 import { Fragment, useState } from "react";
 import PageTitle from "../../layouts/PageTitle";
 import { Row, Col, Card, Form, Button } from "react-bootstrap";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+
+import { createUser } from "./userApi"; 
 
 const AddUser = () => {
   const navigate = useNavigate();
 
   // 🔐 Get session user
   const sessionUser = JSON.parse(localStorage.getItem("user"));
-  const token = localStorage.getItem("token");
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -27,7 +27,9 @@ const AddUser = () => {
     emp_image: null,
   });
 
-  // 🔁 Input handler
+  /* ===============================
+     Input handler
+  =============================== */
   const handleChange = (e) => {
     const { name, value, files } = e.target;
 
@@ -38,7 +40,9 @@ const AddUser = () => {
     }
   };
 
-  // 🚀 Submit
+  /* ===============================
+     Submit form
+  =============================== */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -58,7 +62,7 @@ const AddUser = () => {
       data.append("project", formData.project);
       data.append("password", formData.password);
 
-      // Required backend fields
+      // Backend required fields
       data.append("manager", sessionUser.first_name);
       data.append("state_access", "ALL");
       data.append("created_by", sessionUser.id);
@@ -67,23 +71,14 @@ const AddUser = () => {
         data.append("emp_image", formData.emp_image);
       }
 
-      await axios.post(
-        `${import.meta.env.VITE_BACKEND_API_URL}users/create-user`,
-        data,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      await createUser(data); // ✅ clean API call
 
       alert("User added successfully");
       navigate("/user/list");
 
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Failed to add user");
+      alert("Failed to add user");
     } finally {
       setLoading(false);
     }
@@ -109,7 +104,6 @@ const AddUser = () => {
               <Col lg={6} className="mb-3">
                 <Form.Label>First Name *</Form.Label>
                 <Form.Control
-                  type="text"
                   name="first_name"
                   value={formData.first_name}
                   onChange={handleChange}
@@ -120,7 +114,6 @@ const AddUser = () => {
               <Col lg={6} className="mb-3">
                 <Form.Label>Last Name *</Form.Label>
                 <Form.Control
-                  type="text"
                   name="last_name"
                   value={formData.last_name}
                   onChange={handleChange}
@@ -142,11 +135,9 @@ const AddUser = () => {
               <Col lg={6} className="mb-3">
                 <Form.Label>WhatsApp No *</Form.Label>
                 <Form.Control
-                  type="number"
                   name="whatsapp_no"
                   value={formData.whatsapp_no}
                   onChange={handleChange}
-                  minLength={10}
                   required
                 />
               </Col>
@@ -185,7 +176,6 @@ const AddUser = () => {
               <Col lg={6} className="mb-3">
                 <Form.Label>City *</Form.Label>
                 <Form.Control
-                  type="text"
                   name="city"
                   value={formData.city}
                   onChange={handleChange}
@@ -196,7 +186,6 @@ const AddUser = () => {
               <Col lg={6} className="mb-3">
                 <Form.Label>Project *</Form.Label>
                 <Form.Control
-                  type="text"
                   name="project"
                   value={formData.project}
                   onChange={handleChange}
@@ -222,7 +211,6 @@ const AddUser = () => {
                       right: "12px",
                       transform: "translateY(-50%)",
                       cursor: "pointer",
-                      color: "#6c757d",
                     }}
                   >
                     <i className={`fa ${showPassword ? "fa-eye-slash" : "fa-eye"}`} />
@@ -244,7 +232,7 @@ const AddUser = () => {
             </Row>
 
             <div className="text-center mt-3">
-              <Button type="submit" variant="primary" className="px-5" disabled={loading}>
+              <Button type="submit" disabled={loading}>
                 {loading ? "Saving..." : "Add User"}
               </Button>
             </div>

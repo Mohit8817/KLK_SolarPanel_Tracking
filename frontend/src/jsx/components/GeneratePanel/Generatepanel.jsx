@@ -1,6 +1,6 @@
 import { Fragment, useState } from "react";
 import PageTitle from "../../layouts/PageTitle";
-import axios from "axios";
+import { createPanelSerial } from "./GeneratepanelApis";
 
 const Generatepanel = () => {
   const [formData, setFormData] = useState({
@@ -20,43 +20,17 @@ const Generatepanel = () => {
     });
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const token = localStorage.getItem("token");
-
-  if (!user?.company_id || !user?.id) {
-    alert("Session expired. Please login again.");
-    return;
-  }
-
-  const payload = {
-    ...formData,
-    company_id: user.company_id,
-    created_by: user.id,
-    updated_by: user.id,
+    try {
+      await createPanelSerial(formData);
+      alert("Serial numbers generated successfully");
+    } catch (error) {
+      console.log("ERROR:", error?.response?.data);
+      alert(error?.response?.data?.message || "Failed to generate");
+    }
   };
-
-  try {
-    const res = await axios.post(
-      `${import.meta.env.VITE_BACKEND_API_URL}panels/create-panel-serial`,
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-  alert("Serial numbers generated successfully");
-  } catch (error) {
-  console.log("ERROR:", error?.response?.data);
-  alert(error?.response?.data?.message || "Failed to generate");
-}
-
-};
 
   return (
     <Fragment>
@@ -149,7 +123,7 @@ const handleSubmit = async (e) => {
                     </div>
                   </div>
 
-                        {/* Panel Type */}
+                  {/* Panel Category */}
                   <div className="col-xl-6 col-md-6">
                     <div className="form-group mb-3">
                       <label className="form-label">
@@ -190,7 +164,9 @@ const handleSubmit = async (e) => {
                   {/* Starting No */}
                   <div className="col-xl-12 col-md-12">
                     <div className="form-group mb-3">
-                      <label className="form-label">Starting No</label>
+                      <label className="form-label">
+                        Starting No
+                      </label>
                       <input
                         type="number"
                         className="form-control"
@@ -206,7 +182,10 @@ const handleSubmit = async (e) => {
 
                 <div className="row mt-3">
                   <div className="col-lg-12 text-center">
-                    <button type="submit" className="btn btn-primary px-4">
+                    <button
+                      type="submit"
+                      className="btn btn-primary px-4"
+                    >
                       Generate Serial No
                     </button>
                   </div>

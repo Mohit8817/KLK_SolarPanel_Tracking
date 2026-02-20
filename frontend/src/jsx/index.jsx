@@ -26,6 +26,9 @@ import DamagePanel from "./components/DamagePanel/Damagepanel";
 import ViewDamagePanel from "./components/DamagePanel/ViewDamagePanel";
 import AddUser from "./components/User/AddUser";
 import ViewUser from "./components/User/ViewUser";
+import EditUser from "./components/User/EditUser";
+import ViewSingleUser from "./components/User/ViewSingleUser";
+
 import ReceiveDamagedPanel from "./components/DamagePanel/ReceiveDamagedPanel";
 import LockScreen from "./pages/LockScreen";
 
@@ -56,6 +59,8 @@ const Markup = () => {
 
     { url: "user/add", component: <AddUser /> },
     { url: "user/list", component: <ViewUser /> },
+    { url: "user/edit/:id", component: <EditUser /> },
+    { url: "user/view/:id", component: <ViewSingleUser /> }
   ];
 
   return (
@@ -85,9 +90,8 @@ function MainLayout() {
     <>
       <div
         id="main-wrapper"
-        className={`show ${sidebariconHover ? "iconhover-toggle" : ""} ${
-          sideMenu ? "menu-toggle" : ""
-        }`}
+        className={`show ${sidebariconHover ? "iconhover-toggle" : ""} ${sideMenu ? "menu-toggle" : ""
+          }`}
       >
         <Nav />
 

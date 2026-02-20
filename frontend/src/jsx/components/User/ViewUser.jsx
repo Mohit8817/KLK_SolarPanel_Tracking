@@ -1,7 +1,8 @@
 import { Card, Col, Table, Badge, Spinner } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axios from "axios";
+
+import { getUsers, deleteUser } from "./userApi"; 
 
 const ViewUser = () => {
   const [users, setUsers] = useState([]);
@@ -12,22 +13,27 @@ const ViewUser = () => {
   =============================== */
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await axios.get(
-        `${import.meta.env.VITE_BACKEND_API_URL}users/user-list`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
+      const res = await getUsers();
       setUsers(res.data);
     } catch (err) {
       console.error("Fetch users error:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  /* ===============================
+     Delete user
+  =============================== */
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+
+    try {
+      await deleteUser(id);
+      fetchUsers(); // refresh table
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("Failed to delete user");
     }
   };
 
@@ -79,17 +85,17 @@ const ViewUser = () => {
 
                       {/* Profile Image */}
                       <td>
-                    <img
-                      src={
-                        user.emp_image
-                          ? `${import.meta.env.VITE_BACKEND_URL}/uploads/${user.emp_image}`
-                          : "https://via.placeholder.com/45"
-                      }
-                      alt="User"
-                      width="45"
-                      height="45"
-                      className="rounded-circle border"
-                    />
+                        <img
+                          src={
+                            user.emp_image
+                              ? `${import.meta.env.VITE_BACKEND_URL}/uploads/${user.emp_image}`
+                              : "https://via.placeholder.com/45"
+                          }
+                          alt="User"
+                          width="45"
+                          height="45"
+                          className="rounded-circle border"
+                        />
                       </td>
 
                       {/* Name */}
@@ -111,27 +117,32 @@ const ViewUser = () => {
                       </td>
 
                       <td className="text-center">
-                        <Link
-                          to={`/user/view/${user._id}`}
-                          className="btn btn-primary btn-xs sharp me-2"
-                        >
-                          <i className="fa fa-eye"></i>
-                        </Link>
+                        <div className="d-flex align-items-center justify-content-center gap-2">
 
-                        <Link
-                          to={`/user/edit/${user._id}`}
-                          className="btn btn-warning btn-xs sharp me-2"
-                        >
-                          <i className="fa fa-edit"></i>
-                        </Link>
+                          <Link
+                            to={`/user/view/${user._id}`}
+                            className="btn btn-primary btn-xs sharp"
+                          >
+                            <i className="fa fa-eye"></i>
+                          </Link>
 
-                        <button
-                          className="btn btn-danger btn-xs sharp"
-                          onClick={() => console.log("Delete", user._id)}
-                        >
-                          <i className="fa fa-trash"></i>
-                        </button>
+                          <Link
+                            to={`/user/edit/${user._id}`}
+                            className="btn btn-warning btn-xs sharp"
+                          >
+                            <i className="fa fa-edit"></i>
+                          </Link>
+
+                          <button
+                            className="btn btn-danger btn-xs sharp"
+                            onClick={() => handleDelete(user._id)}
+                          >
+                            <i className="fa fa-trash"></i>
+                          </button>
+
+                        </div>
                       </td>
+
                     </tr>
                   ))
                 )}
