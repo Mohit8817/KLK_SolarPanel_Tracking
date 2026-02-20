@@ -14,14 +14,16 @@ function Login() {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
 
   // Redirect if already logged in
- useEffect(() => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    navigate("/dashboard"); // only redirect if token exists
-  }
-}, [navigate]);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/dashboard"); // only redirect if token exists
+    }
+  }, [navigate]);
 
   const onLogin = async (e) => {
     e.preventDefault();
@@ -43,10 +45,10 @@ function Login() {
       );
 
       if (response.data?.token) {
-        // ✅ Save token in localStorage
+        // Save token in localStorage
         localStorage.setItem("token", response.data.token);
 
-        // ✅ Save user info for later use
+        // Save user info for later use
         localStorage.setItem("user", JSON.stringify(response.data.user));
 
         alert("Login Successful!");
@@ -116,7 +118,7 @@ function Login() {
                           {errors.email && <div className="text-danger fs-12">{errors.email}</div>}
                         </div>
 
-                        <div className="form-group">
+                        {/* <div className="form-group">
                           <label className="mb-2"><strong>Password</strong> <span className="required">*</span></label>
                           <input
                             type="password"
@@ -126,7 +128,41 @@ function Login() {
                             placeholder="Type Your Password"
                           />
                           {errors.password && <div className="text-danger fs-12">{errors.password}</div>}
+                        </div> */}
+
+                        <div className="form-group">
+                          <label className="mb-2">
+                            <strong>Password</strong> <span className="required">*</span>
+                          </label>
+
+                          <div className="position-relative">
+                            <input
+                              type={showPassword ? "text" : "password"}
+                              className="form-control pe-5"
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
+                              placeholder="Type Your Password"
+                            />
+
+                            <i
+                              className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"} position-absolute`}
+                              style={{
+                                right: "12px",
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                cursor: "pointer",
+                                fontSize: "18px",
+                                color: "#6c757d"
+                              }}
+                              onClick={() => setShowPassword(!showPassword)}
+                            ></i>
+                          </div>
+
+                          {errors.password && (
+                            <div className="text-danger fs-12">{errors.password}</div>
+                          )}
                         </div>
+
 
                         <div className="form-row d-flex justify-content-between mt-4 mb-2">
                           <div className="form-check custom-checkbox ml-1">
@@ -145,7 +181,7 @@ function Login() {
                       </form>
 
                       <div className="new-account mt-2">
-                        <p>Don't have an account? <Link className="text-primary" to="/page-register">Sign up</Link></p>
+                        <p>Don&apos;t have an account? <Link className="text-primary" to="/page-register">Sign up</Link></p>
                       </div>
 
                     </div>
