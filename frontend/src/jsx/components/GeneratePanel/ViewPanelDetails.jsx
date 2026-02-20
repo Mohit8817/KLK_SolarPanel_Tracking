@@ -8,7 +8,7 @@ import CommonPagination from "../Common/Pagination";
 const ViewPanelDetails = () => {
   const { id } = useParams();
   const [panelList, setPanelList] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [ setLoading] = useState(true);
 
   // PAGINATION
   const itemsPerPage = 10;

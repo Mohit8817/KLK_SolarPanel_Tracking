@@ -14,46 +14,48 @@ const TableExportActions = ({
   actions
 }) => {
   return (
-    <div className="d-flex gap-2">
+    <div className="d-flex gap-1 flex-wrap">
+
       {actions.includes("csv") && (
         <button
-          className="btn btn-outline-primary btn-sm"
+          className="btn btn-outline-primary btn-sm export-btn"
           title="CSV"
           onClick={() => exportCSV(data, fileName)}
         >
-          <FaFileCsv />
+          <FaFileCsv className="export-icon" />
         </button>
       )}
 
       {actions.includes("excel") && (
         <button
-          className="btn btn-outline-success btn-sm"
+          className="btn btn-outline-success btn-sm export-btn"
           title="Excel"
           onClick={() => exportExcel(data, fileName)}
         >
-          <FaFileExcel />
+          <FaFileExcel className="export-icon" />
         </button>
       )}
 
       {actions.includes("pdf") && (
         <button
-          className="btn btn-outline-danger btn-sm"
+          className="btn btn-outline-danger btn-sm export-btn"
           title="PDF"
           onClick={() => exportPDF(data, columns, fileName)}
         >
-          <FaFilePdf />
+          <FaFilePdf className="export-icon" />
         </button>
       )}
 
       {actions.includes("print") && (
         <button
-          className="btn btn-outline-dark btn-sm"
+          className="btn btn-outline-dark btn-sm export-btn"
           title="Print"
           onClick={printTable}
         >
-          <FaPrint />
+          <FaPrint className="export-icon" />
         </button>
       )}
+
     </div>
   );
 };
