@@ -15,8 +15,16 @@ import LogoutPage from './Logout';
 import { ThemeContext } from "../../../context/ThemeContext";
 
 const Header = ({ onNote }) => {
-  var path = window.location.pathname.split("/");
-  var name = path[path.length - 1].split("-");
+var path = window.location.pathname.split("/").filter(Boolean);
+
+var lastSegment = path[path.length - 1];
+
+var isMongoId = /^[0-9a-fA-F]{24}$/.test(lastSegment);
+
+var segment = isMongoId ? path[path.length - 2] : lastSegment;
+
+var name = segment ? segment.split("-") : [];
+
   var filterName = name.length >= 3 ? name.filter((n, i) => i > 0) : name;
   var finalName = filterName.includes("app")
     ? filterName.filter((f) => f !== "app")

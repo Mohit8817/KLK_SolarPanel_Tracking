@@ -1,6 +1,7 @@
 import DispatchPanel from "../models/dispatchpanel.model.js"
 import PanelNumber from "../models/PanelNumber.model.js";
 import session from "express-session";
+import mongoose from "mongoose";
 
 // ✅ CREATE DISPATCH
 export const createDispatch = async (req, res) => {
@@ -168,52 +169,34 @@ export const scanPanel = async (req, res) => {
 };
 
 
-
-
-export const getPanelsByDispatchUniqueId = async (req, res) => {
+export const getPanelsByDispatchId = async (req, res) => {
   try {
-    const { unique_id } = req.params;
+    const { id } = req.params;
 
-    /* ===============================
-       1️⃣ Validate input
-    =============================== */
-    if (!unique_id) {
+    // ✅ Validate ObjectId first
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        message: "Dispatch unique_id is required",
+        message: "Invalid dispatch ID",
       });
     }
 
-    /* ===============================
-       2️⃣ Fetch panels from PanelNumber
-    =============================== */
     const panels = await PanelNumber.find({
-      dispatch_id: Number(unique_id),
-      dispatch_status: 1,
-    }).sort({ panel_no: 1 });
+      dispatch_id: id,   // no need to force new ObjectId()
+    }).sort({ createdAt: -1 });
 
-    /* ===============================
-       3️⃣ Check if panels exist
-    =============================== */
-    if (!panels.length) {
-      return res.status(404).json({
-        success: false,
-        message: "No panels found for this dispatch",
-      });
-    }
-
-    /* ===============================
-       4️⃣ Response
-    =============================== */
     res.status(200).json({
       success: true,
-      total_panels: panels.length,
+      total: panels.length,
       data: panels,
     });
+
   } catch (error) {
+    console.error("Dispatch Fetch Error:", error);
+
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Failed to fetch dispatch panels",
     });
   }
 };

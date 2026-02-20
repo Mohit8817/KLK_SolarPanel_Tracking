@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import PanelSerialLot from "../models/PanelSerialLot.model.js";
 import PanelNumber from "../models/PanelNumber.model.js";
+import PanelCounter from "../models/PanelCounter.model.js";
 
 export const createPanelSerialLot = async (req, res) => {
   try {
@@ -17,99 +18,107 @@ export const createPanelSerialLot = async (req, res) => {
       updated_by,
     } = req.body;
 
-    /* ===============================
-       1️⃣ Generate LOT unique_id
-    =============================== */
-    const lastLot = await PanelSerialLot.findOne()
-      .sort({ unique_id: -1 })
-      .select("unique_id");
-
-    const nextLotUniqueId = lastLot ? lastLot.unique_id + 1 : 1;
-
-    /* ===============================
-       2️⃣ Generate GLOBAL panel unique_id
-    =============================== */
-    const lastPanel = await PanelNumber.findOne()
-      .sort({ unique_id: -1 })
-      .select("unique_id");
-
-    const panelUniqueStart = lastPanel ? lastPanel.unique_id + 1 : 1;
-
-    /* ===============================
-       3️⃣ Capacity-wise serial continuation
-    =============================== */
-    const lastCapacityPanel = await PanelNumber.findOne({ panel_capacity })
-      .sort({ panel_unique_no: -1 })
-      .select("panel_unique_no");
-
-    let actualStartingNo = starting_no;
-
-    if (lastCapacityPanel?.panel_unique_no) {
-      const lastSerial = Number(
-        lastCapacityPanel.panel_unique_no.split("-").pop()
-      );
-      actualStartingNo = lastSerial + 1;
+    if (!total_panels || !prefix || !panel_type || !panel_capacity || !date) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields",
+      });
     }
 
-    /* ===============================
-       4️⃣ Create LOT
-    =============================== */
+    /* ==========================
+       1️⃣ Year & Month
+    ========================== */
+    const year = new Date(date).getFullYear().toString().slice(-2); // e.g., "26"
+    const month = (new Date(date).getMonth() + 1).toString().padStart(2, "0"); // e.g., "02"
+    const monthYear = month + year; // MMYY
+
+    const formattedPanelType = String(panel_type).padStart(2, "0");
+
+    /* ==========================
+       2️⃣ Get or create counter
+       Uniqueness: prefix + capacity + type + monthYear
+    ========================== */
+    let counter = await PanelCounter.findOne({
+      prefix,
+      panel_capacity,
+      panel_type,
+      monthYear,
+    });
+
+    let actualStartingNo;
+    if (counter) {
+      // Continue from last sequence
+      actualStartingNo = counter.seq + 1;
+      counter.seq += Number(total_panels);
+      await counter.save();
+    } else {
+      // New combination → use provided starting_no or default 1
+      actualStartingNo = starting_no ? Number(starting_no) : 1;
+      counter = await PanelCounter.create({
+        prefix,
+        panel_capacity,
+        panel_type,
+        monthYear,
+        seq: actualStartingNo + Number(total_panels) - 1,
+      });
+    }
+
+    /* ==========================
+       3️⃣ Create LOT
+    ========================== */
     const lot = await PanelSerialLot.create({
-      unique_id: nextLotUniqueId,
       company_id,
       prefix,
       starting_no: actualStartingNo,
       date,
       panel_capacity,
       panel_type,
+      panel_category,
       total_panels,
       created_by,
       updated_by,
     });
 
-    /* ===============================
-       5️⃣ Create PANELS (FIXED)
-    =============================== */
+    /* ==========================
+       4️⃣ Generate PANELS
+    ========================== */
     const panels = [];
-
     for (let i = 0; i < total_panels; i++) {
       const serial = actualStartingNo + i;
-      const paddedSerial = String(serial).padStart(6, "0");
+      const paddedSerial = String(serial).padStart(6, "0"); // 000001
+
+      const panel_unique_no = `${prefix}${panel_capacity}${formattedPanelType}${monthYear}${paddedSerial}`;
 
       panels.push({
-        unique_id: panelUniqueStart + i,
         panel_lot_id: lot._id,
         panel_capacity,
+        panel_type,
         panel_category,
-        panel_lot_count: total_panels, // ✅ FIX
-        panel_unique_no: `${prefix}-${panel_type}-${date}-${paddedSerial}`,
+        panel_lot_count: total_panels,
         panel_no: paddedSerial,
+        panel_unique_no,
       });
     }
 
     await PanelNumber.insertMany(panels);
 
-    /* ===============================
-       6️⃣ Response
-    =============================== */
+    /* ==========================
+       5️⃣ Response
+    ========================== */
     res.status(201).json({
       success: true,
-      message: "Panel lot and panel numbers created successfully",
-      data: {
-        lot_unique_id: nextLotUniqueId,
-        total_panels,
-        panel_unique_start: panelUniqueStart,
-        panel_unique_end: panelUniqueStart + total_panels - 1,
-      },
+      message: "Panel lot created successfully",
+      total_created: panels.length,
+      starting_number: actualStartingNo,
     });
   } catch (error) {
+    console.error("Create Panel Lot Error:", error);
     res.status(400).json({
       success: false,
       message: error.message,
     });
   }
 };
-
 
 
 
@@ -173,5 +182,36 @@ export const deletePanelSerialLot = async (req, res) => {
     });
   }
 };
+
+
+export const getPanelsByLotId = async (req, res) => {
+  try {
+    const { id } = req.params; // this is panel_lot_id
+
+     const panels = await PanelNumber.find({
+     panel_lot_id: new mongoose.Types.ObjectId(id),
+     });
+
+    if (!panels || panels.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No panels found for this lot id",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      total: panels.length,
+      data: panels,
+    });
+  } catch (error) {
+    console.error("Error fetching panels:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
 
 

@@ -9,6 +9,7 @@ const DispatchPanel = () => {
   const [scanning, setScanning] = useState(false);
   const [dispatchStarted, setDispatchStarted] = useState(false);
   const [manualPanel, setManualPanel] = useState("");
+  const [scannerInput, setScannerInput] = useState("");
 
   const STORAGE_KEY = "dispatchPanelData";
 
@@ -73,6 +74,14 @@ const DispatchPanel = () => {
       setScanning(false);
     }
   };
+
+  const handleScannerInput = async (panelCode) => {
+  if (!panelCode) return;
+
+  // Same logic as savePanel
+  await savePanel(panelCode);
+};
+
 
   /* STOP SCANNER */
   const stopScan = async () => {
@@ -264,6 +273,7 @@ const DispatchPanel = () => {
                   </button>
                 </div>
               </form>
+              <hr/>
 
               {/* SECOND FORM */}
               <form onSubmit={handleEndDispatch}>
@@ -297,7 +307,26 @@ const DispatchPanel = () => {
                   </div>
                 </div>
 
-                <div className="text-center mb-3">
+                <div className="text-center row mb-3">
+                <div className="col-md-4 justify-content-center">
+                    <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Scan panel with scanner"
+                  style={{ maxWidth: "250px" }}
+                  value={scannerInput}
+                  onChange={(e) => setScannerInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleScannerInput(scannerInput.trim());
+                      setScannerInput("");
+                    }
+                  }}
+                  disabled={!dispatchStarted}
+                />
+                </div>
+
+                <div className="col-md-4">
                   <button
                     type="button"
                     className="btn btn-primary px-5 mb-2"
@@ -306,8 +335,9 @@ const DispatchPanel = () => {
                   >
                     Scan Panel QR
                   </button>
+                  </div>
 
-                  <div className="d-flex justify-content-center gap-2">
+                  <div className="col-md-4 d-flex justify-content-center gap-2">
                     <input
                       type="text"
                       className="form-control"
@@ -326,6 +356,8 @@ const DispatchPanel = () => {
                       Add
                     </button>
                   </div>
+
+
                 </div>
 
                 {scanning && (

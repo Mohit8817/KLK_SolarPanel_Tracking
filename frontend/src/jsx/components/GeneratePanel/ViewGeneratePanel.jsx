@@ -141,39 +141,37 @@ const ViewGeneratePanel = () => {
                         <td>{item.panel_capacity}</td>
                         <td>{item.panel_type}</td>
 
-                        <td className="text-center">
-                          <button
-                            className="btn btn-danger btn-xs sharp"
-                            onClick={() => handleDelete(item._id)}
-                          >
-                            <i className="fa fa-trash" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="6" className="text-center text-muted">
-                        No records found
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </Table>
+                                            <td className="text-center">
+                                                <Link
+                                                    to={`/edit-panel/${item._id}`}
+                                                    className="btn btn-primary btn-xs sharp me-2"
+                                                >
+                                                    <i className="fa fa-pencil" />
+                                                </Link>
 
-              {/*  PAGINATION COMPONENT */}
-              <CommonPagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </>
-          )}
-
-        </Card.Body>
-      </Card>
-    </Col>
-  );
+                                                <button
+                                                    className="btn btn-danger btn-xs sharp"
+                                                    onClick={() => console.log(item._id)}
+                                                >
+                                                    <i className="fa fa-trash" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="6" className="text-center">
+                                            No records found
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </Table>
+                    )}
+                </Card.Body>
+            </Card>
+        </Col>
+    );
 };
 
 export default ViewGeneratePanel;

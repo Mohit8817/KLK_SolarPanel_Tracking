@@ -50,6 +50,36 @@ const fetchProduction = async () => {
     { label: "State", key: "state" },
   ];
 
+
+  const downloadExcel = async (id) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await axios.get(
+      `${import.meta.env.VITE_BACKEND_API_URL}production/export-production-panel-numbers/${id}`,
+      {
+        responseType: "blob",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "production_panel_numbers.xlsx");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+  } catch (error) {
+    console.error("Download Error:", error);
+    alert("Failed to download file");
+  }
+};
+
+
   return (
     <Col lg={12}>
       <Card>
@@ -99,6 +129,19 @@ const fetchProduction = async () => {
                       >
                         <i className="fa fa-pencil" />
                       </Link>
+                      <Link
+                      to={`/view-production-panels/${item._id}`}
+                      className="btn btn-info btn-xs sharp"
+                    >
+                      <i className="fa fa-eye" />
+                    </Link>
+                   
+                    <button
+                      className="btn btn-success btn-xs sharp me-2"
+                      onClick={() => downloadExcel(item._id)}
+                    >
+                      <i className="fa fa-file-excel" />
+                    </button>
 
                       <button
                         className="btn btn-danger btn-xs sharp"

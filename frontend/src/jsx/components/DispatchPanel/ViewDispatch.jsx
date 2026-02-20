@@ -3,6 +3,8 @@ import { Card, Col, Table, Badge } from "react-bootstrap";
 import TableExportActions from "../Common/TableExportActions";
 import ScannedPanelsModal from "./ScannedPanelsModal";
 import axios from "axios";
+import { Link } from "react-router-dom";
+
 
 const ViewDispatchPanel = () => {
 
@@ -108,9 +110,9 @@ const ViewDispatchPanel = () => {
                             </tr>
                             </thead>
                        <tbody>
-  {dispatchList.length > 0 ? (
-    dispatchList.map((item, index) => (
-      <tr key={item._id}>
+                    {dispatchList.length > 0 ? (
+                   dispatchList.map((item, index) => (
+                       <tr key={item._id}>
         <td><strong>{index + 1}</strong></td>
 
         <td>{item.dispatch_id}</td>
@@ -130,12 +132,12 @@ const ViewDispatchPanel = () => {
         </td>
 
         <td className="text-center">
-          <button
-            className="btn btn-primary btn-xs sharp me-2"
-            onClick={() => openModal(item)}
-          >
-            <i className="fa fa-eye" />
-          </button>
+         <Link
+  to={`/view-dispatch-panels/${item._id}`}
+  className="btn btn-info btn-xs sharp"
+>
+  <i className="fa fa-eye" />
+</Link>          
 
           <button className="btn btn-danger btn-xs sharp">
             <i className="fa fa-trash" />

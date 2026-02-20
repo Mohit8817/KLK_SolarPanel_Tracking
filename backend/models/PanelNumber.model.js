@@ -2,12 +2,6 @@ import mongoose from "mongoose";
 
 const PanelNumberSchema = new mongoose.Schema(
   {
-  unique_id: {
-    type: Number,
-    required: true,
-    unique: true,
-    index: true
-  },
     panel_lot_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "PanelSerialLot",
@@ -17,12 +11,11 @@ const PanelNumberSchema = new mongoose.Schema(
     panel_unique_no: {
       type: String,
       required: true,
-      unique: true,
+      unique: true, // only unique field now
     },
     panel_no: {
       type: String,
       required: true,
-      unique: true,
     },
     panel_lot_count: {
       type: Number,
@@ -30,9 +23,9 @@ const PanelNumberSchema = new mongoose.Schema(
     },
 
     panel_capacity: {
-    type: String,
-    required: true,
-    trim: true,
+      type: String,
+      required: true,
+      trim: true,
     },
 
     state: {
@@ -50,8 +43,8 @@ const PanelNumberSchema = new mongoose.Schema(
 
     // 🧩 Assignment
     production_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "ProductionPanel",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ProductionPanel",
     },
     production_lot_size: {
       type: Number,
@@ -63,29 +56,26 @@ const PanelNumberSchema = new mongoose.Schema(
     },
 
     // 🚚 Dispatch
-   dispatch_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "DispatchPanel"
-     },
- 
+    dispatch_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "DispatchPanel",
+    },
     dispatch_status: {
       type: Number,
       enum: [0, 1],
       default: 0,
     },
-   dispatch_panel_type: {
+    dispatch_panel_type: {
       type: Number,
       enum: [1, 2], // 1 = DCR, 2 = NON DCR
       default: null,
     },
 
-    // 🚚 Dispatch
+    // 🚚 Damage
     damage_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "DamagePanel"
-     },
-
-    // ❌ Damage
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "DamagePanel",
+    },
     damage_status: {
       type: Number,
       enum: [0, 1],
@@ -94,15 +84,14 @@ const PanelNumberSchema = new mongoose.Schema(
 
     // 🔄 Collection
     collect_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "DamagePanel"
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "DamagePanel",
     },
     collect_status: {
       type: Number,
       enum: [0, 1],
       default: 0,
     },
-
     collect_damage_status: {
       type: Number,
       enum: [0, 1],
@@ -114,8 +103,7 @@ const PanelNumberSchema = new mongoose.Schema(
 
 // Indexes for performance
 PanelNumberSchema.index({ panel_lot_id: 1 });
-PanelNumberSchema.index({ assign_status: 1 });
 PanelNumberSchema.index({ dispatch_status: 1 });
-
+PanelNumberSchema.index({ production_status: 1 });
 
 export default mongoose.model("PanelNumber", PanelNumberSchema);

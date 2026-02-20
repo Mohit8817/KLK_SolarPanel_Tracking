@@ -1,3 +1,5 @@
+import mongoose from 'mongoose'
+import ExcelJS from "exceljs";
 import ProductionPanel from "../models/ProductionPanel.model.js"
 import PanelNumber from "../models/PanelNumber.model.js";
 
@@ -8,7 +10,7 @@ export const createProductionPanel = async (req, res) => {
       company_id,
       panel_capacity,
       panel_count,
-      panel_type,
+      panel_type, // production panel type
       project,
       state,
       date,
@@ -24,25 +26,29 @@ export const createProductionPanel = async (req, res) => {
       });
     }
 
-    /* FETCH PANELS FIRST */
+    /* ===============================
+       1️⃣ Fetch available panels for production
+       - Must match capacity & type
+       - Must be unassigned (production_status = 0)
+    =============================== */
     const panels = await PanelNumber.find({
       production_status: 0,
       panel_capacity: panel_capacity,
-      panel_category : panel_type
+      panel_type: panel_type,
     })
       .sort({ createdAt: 1 })
       .limit(count);
 
-    console.log("Panels Found:", panels.length);
-
     if (panels.length < count) {
       return res.status(400).json({
         success: false,
-        message: "Not enough panels available",
+        message: `Not enough available panels. Requested: ${count}, Found: ${panels.length}`,
       });
     }
 
-    /* CREATE PRODUCTION */
+    /* ===============================
+       2️⃣ Create production record
+    =============================== */
     const productionPanel = await ProductionPanel.create({
       company_id,
       panel_capacity,
@@ -54,9 +60,11 @@ export const createProductionPanel = async (req, res) => {
       created_by,
     });
 
+    /* ===============================
+       3️⃣ Assign panels to production
+    =============================== */
     const panelIds = panels.map((p) => p._id);
 
-    /* UPDATE PANELS */
     const result = await PanelNumber.updateMany(
       { _id: { $in: panelIds } },
       {
@@ -68,8 +76,9 @@ export const createProductionPanel = async (req, res) => {
       }
     );
 
-    console.log("Updated Panels:", result.modifiedCount);
-
+    /* ===============================
+       4️⃣ Response
+    =============================== */
     res.status(201).json({
       success: true,
       message: "Production panel created successfully",
@@ -78,14 +87,15 @@ export const createProductionPanel = async (req, res) => {
         assigned_panels: result.modifiedCount,
       },
     });
-
   } catch (error) {
+    console.error("Production Panel Error:", error);
     res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
+
 
 
 
@@ -174,80 +184,83 @@ export const deleteProductionPanel = async (req, res) => {
   }
 };
 
-
-export const scanAndDispatchPanel = async (req, res) => {
+export const getPanelsByProductionId = async (req, res) => {
   try {
-    const { panel_no, dispatch_panel_type } = req.body;
+    const { id } = req.params;
 
-    /* ===============================
-       1️⃣ Get dispatch from session
-    =============================== */
-    const dispatchUniqueId = req.session.dispatch_unique_id;
+    const panels = await PanelNumber.find({
+      production_id: new mongoose.Types.ObjectId(id),
+    }).sort({ createdAt: -1 });
 
-    if (!dispatchUniqueId) {
-      return res.status(400).json({
-        success: false,
-        message: "Dispatch session not found. Create dispatch first.",
-      });
-    }
-
-    /* ===============================
-       2️⃣ Find panel by QR / panel_no
-    =============================== */
-    const panel = await PanelNumber.findOne({ panel_no });
-
-    if (!panel) {
-      return res.status(404).json({
-        success: false,
-        message: "Panel not found",
-      });
-    }
-
-    /* ===============================
-       3️⃣ Validate conditions
-    =============================== */
-    if (panel.production_status !== 1) {
-      return res.status(400).json({
-        success: false,
-        message: "Panel not ready for dispatch",
-      });
-    }
-
-    if (panel.dispatch_status === 1) {
-      return res.status(400).json({
-        success: false,
-        message: "Panel already dispatched",
-      });
-    }
-
-    /* ===============================
-       4️⃣ Update panel
-    =============================== */
-    panel.dispatch_id = dispatchUniqueId;
-    panel.dispatch_status = 1;
-    panel.dispatch_panel_type = dispatch_panel_type;
-
-    await panel.save();
-
-    /* ===============================
-       5️⃣ Response
-    =============================== */
     res.status(200).json({
       success: true,
-      message: "Panel dispatched successfully",
-      data: {
-        panel_no: panel.panel_no,
-        dispatch_id: dispatchUniqueId,
-        dispatch_panel_type,
-      },
+      total: panels.length,
+      data: panels,
     });
   } catch (error) {
+    console.error("Production Fetch Error:", error);
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Failed to fetch production panels",
     });
   }
 };
+
+export const exportProductionPanelNumbers = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const panels = await PanelNumber.find({
+      production_id: new mongoose.Types.ObjectId(id),
+    }).sort({ createdAt: 1 });
+
+    if (!panels.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No panels found",
+      });
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Panel Numbers");
+
+    // Only 2 columns
+    worksheet.columns = [
+      { header: "Sr No", key: "sno", width: 10 },
+      { header: "Panel No", key: "panel_no", width: 25 },
+    ];
+
+    panels.forEach((panel, index) => {
+      worksheet.addRow({
+        sno: index + 1,
+        panel_no: panel.panel_unique_no,
+      });
+    });
+
+    // Make header bold
+    worksheet.getRow(1).font = { bold: true };
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=production_panel_numbers.xlsx`
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+
+  } catch (error) {
+    console.error("Export Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to export panel numbers",
+    });
+  }
+};
+
 
 
 
