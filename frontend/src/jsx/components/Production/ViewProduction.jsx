@@ -1,5 +1,6 @@
 import { Card, Col, Table } from "react-bootstrap";
 import TableExportActions from "../Common/TableExportActions";
+import CommonPagination from "../Common/Pagination";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -7,29 +8,46 @@ import axios from "axios";
 const ViewProduction = () => {
   const [productionList, setProductionList] = useState([]);
 
-const fetchProduction = async () => {
-  try {
-    const token = localStorage.getItem("token");
+  // PAGINATION
+  const itemsPerPage = 10;
+  const [currentPage, setCurrentPage] = useState(1);
 
-    const res = await axios.get(
-      `${import.meta.env.VITE_BACKEND_API_URL}production/production-panel`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+  const totalPages = Math.ceil(productionList.length / itemsPerPage);
 
-    setProductionList(res.data.data);
-  } catch (err) {
-    console.log("API ERROR:", err);
-  }
-};
+  const startIndex = (currentPage - 1) * itemsPerPage;
+
+  const currentData = productionList.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
+
+  // Fetch Production List
+  const fetchProduction = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await axios.get(
+        `${import.meta.env.VITE_BACKEND_API_URL}production/production-panel`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setProductionList(res.data.data);
+    } catch (err) {
+      console.log("API ERROR:", err);
+    }
+  };
 
   useEffect(() => {
     fetchProduction();
   }, []);
 
+
+  // Export Data
   const exportData = productionList.map((item, index) => ({
     sno: index + 1,
     date: item.date,
@@ -50,35 +68,66 @@ const fetchProduction = async () => {
     { label: "State", key: "state" },
   ];
 
-
   const downloadExcel = async (id) => {
-  try {
-    const token = localStorage.getItem("token");
+    try {
+      const token = localStorage.getItem("token");
 
-    const response = await axios.get(
-      `${import.meta.env.VITE_BACKEND_API_URL}production/export-production-panel-numbers/${id}`,
-      {
-        responseType: "blob",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+      const response = await axios.get(
+        `${import.meta.env.VITE_BACKEND_API_URL}production/export-production-panel-numbers/${id}`,
+        {
+          responseType: "blob",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "production_panel_numbers.xlsx");
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+      // Create blob with correct type
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
 
-  } catch (error) {
-    console.error("Download Error:", error);
-    alert("Failed to download file");
-  }
-};
+      const url = window.URL.createObjectURL(blob);
 
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `production_${id}.xlsx`; // dynamic name
+      document.body.appendChild(link);
+      link.click();
+
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error("Download Error:", error.response || error);
+      alert("File download failed");
+    }
+  };
+
+  // Delete Production
+  const deleteProduction = async (id) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete?");
+    if (!confirmDelete) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.delete(
+        `${import.meta.env.VITE_BACKEND_API_URL}production/delete-production-panel/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      alert("Deleted Successfully");
+      fetchProduction(); // Refresh list
+    } catch (error) {
+      console.error("Delete Error:", error);
+      alert("Failed to delete");
+    }
+  };
 
   return (
     <Col lg={12}>
@@ -109,12 +158,11 @@ const fetchProduction = async () => {
                 <th className="text-center">Action</th>
               </tr>
             </thead>
-
             <tbody>
-              {productionList.length > 0 ? (
-                productionList.map((item, index) => (
+              {currentData.length > 0 ? (
+                currentData.map((item, index) => (
                   <tr key={item._id}>
-                    <td><strong>{index + 1}</strong></td>
+                    <td><strong>{startIndex + index + 1}</strong></td>
                     <td>{item.date}</td>
                     <td>{item.panel_count}</td>
                     <td>{item.panel_capacity}</td>
@@ -124,28 +172,22 @@ const fetchProduction = async () => {
 
                     <td className="text-center">
                       <Link
-                        to={`/edit-production/${item._id}`}
-                        className="btn btn-primary btn-xs sharp me-2"
+                        to={`/view-production-panels/${item._id}`}
+                        className="btn btn-info btn-xs sharp me-2"
                       >
-                        <i className="fa fa-pencil" />
+                        <i className="fa fa-eye" />
                       </Link>
-                      <Link
-                      to={`/view-production-panels/${item._id}`}
-                      className="btn btn-info btn-xs sharp"
-                    >
-                      <i className="fa fa-eye" />
-                    </Link>
-                   
-                    <button
-                      className="btn btn-success btn-xs sharp me-2"
-                      onClick={() => downloadExcel(item._id)}
-                    >
-                      <i className="fa fa-file-excel" />
-                    </button>
+
+                      <button
+                        className="btn btn-success btn-xs sharp me-2"
+                        onClick={() => downloadExcel(item._id)}
+                      >
+                        <i className="fa fa-file-excel" />
+                      </button>
 
                       <button
                         className="btn btn-danger btn-xs sharp"
-                        onClick={() => console.log("Delete", item._id)}
+                        onClick={() => deleteProduction(item._id)}
                       >
                         <i className="fa fa-trash" />
                       </button>
@@ -161,6 +203,13 @@ const fetchProduction = async () => {
               )}
             </tbody>
           </Table>
+
+          {/* PAGINATION */}
+          <CommonPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </Card.Body>
       </Card>
     </Col>
