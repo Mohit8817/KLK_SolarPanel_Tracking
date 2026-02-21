@@ -1,4 +1,4 @@
-import  { useReducer, useContext, useEffect, useState } from "react";
+import { useReducer, useContext, useEffect, useState } from "react";
 /// Scroll
 import PerfectScrollbar from "react-perfect-scrollbar";
 /// Link
@@ -22,7 +22,6 @@ const initialState = {
 }
 
 const SideBar = () => {
-  let year = new Date().getFullYear();
   const {
     iconHover,
     sidebarposition,
@@ -42,10 +41,7 @@ const SideBar = () => {
     btn.addEventListener("click", toggleFunc);
   }, []);
 
-  let handleheartBlast = document.querySelector('.heart');
-  function heartBlast() {
-    return handleheartBlast.classList.toggle("heart-blast");
-  }
+
   const [hideOnScroll, setHideOnScroll] = useState(true)
   useScrollPosition(
     ({ prevPos, currPos }) => {
@@ -99,7 +95,14 @@ const SideBar = () => {
               role="button"
               data-toggle="dropdown"
             >
-              <img src={profile} width={20} alt="" />
+              {/* <img src={profile} width={20} alt="" /> */}
+              <img
+                    src={profile}
+                    width="50"
+                    height="50"
+                    alt="profile"
+                    className="rounded-circle object-fit-cover"
+                  />
               <div className="header-info ms-3">
                 <span className="font-w600 ">Hi,<b> Admin</b></span>
                 <small className="text-end font-w400">superadmin@gmail.com</small>
@@ -126,7 +129,7 @@ const SideBar = () => {
                 </svg>
                 <span className="ms-2">Profile </span>
               </Link>
-        
+
 
               <LogoutPage />
             </Dropdown.Menu>
@@ -203,7 +206,7 @@ const SideBar = () => {
             }
           })}
         </ul>
-       
+
       </PerfectScrollbar>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, Col, Table } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
@@ -89,7 +89,6 @@ const ViewGeneratePanel = () => {
         </Card.Header>
 
         <Card.Body>
-
           {loading ? (
             <p>Loading...</p>
           ) : (
@@ -140,7 +139,6 @@ const ViewGeneratePanel = () => {
                           >
                             <i className="fa fa-trash" />
                           </button>
-
                         </td>
                       </tr>
                     ))

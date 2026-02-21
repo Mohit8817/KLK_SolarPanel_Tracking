@@ -104,4 +104,8 @@ const ViewSingleUser = () => {
   );
 };
 
+<<<<<<< HEAD
 export default ViewSingleUser;
+=======
+export default ViewSingleUser;
+>>>>>>> origin/mohitdev
