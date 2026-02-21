@@ -243,8 +243,4 @@ const EditUser = () => {
   );
 };
 
-<<<<<<< HEAD
 export default EditUser;
-=======
-export default EditUser;
->>>>>>> origin/mohitdev

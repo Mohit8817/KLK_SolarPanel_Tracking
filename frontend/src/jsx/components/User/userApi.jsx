@@ -36,8 +36,4 @@ export const updateUser = (id, data) =>
 export const deleteUser = (id) =>
   axios.get(`${API}users/delete-user/${id}`, {
     headers: authHeader()
-<<<<<<< HEAD
   });
-=======
-  });
->>>>>>> origin/mohitdev

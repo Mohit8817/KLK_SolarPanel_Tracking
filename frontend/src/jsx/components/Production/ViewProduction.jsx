@@ -132,7 +132,7 @@ const ViewProduction = () => {
   return (
     <Col lg={12}>
       <Card>
-        <Card.Header className="d-flex justify-content-between align-items-center">
+      <Card.Header className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
           <Card.Title className="mb-0">
             View Production Details
           </Card.Title>
@@ -170,7 +170,9 @@ const ViewProduction = () => {
                     <td>{item.project}</td>
                     <td>{item.state}</td>
 
-                    <td className="text-center">
+                <td className="text-center">
+                          <div className="d-flex gap-1 justify-content-center">
+                             
                       <Link
                         to={`/view-production-panels/${item._id}`}
                         className="btn btn-info btn-xs sharp me-2"
@@ -191,6 +193,7 @@ const ViewProduction = () => {
                       >
                         <i className="fa fa-trash" />
                       </button>
+                      </div>
                     </td>
                   </tr>
                 ))

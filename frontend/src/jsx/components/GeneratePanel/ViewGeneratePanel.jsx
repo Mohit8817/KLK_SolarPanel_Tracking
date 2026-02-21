@@ -119,8 +119,10 @@ const ViewGeneratePanel = () => {
                         <td>{item.total_panels}</td>
                         <td>{item.panel_capacity}</td>
                         <td>{item.panel_type}</td>
+    <td className="text-center">
+                          <div className="d-flex gap-1 justify-content-center">
 
-                        <td className="text-center">
+                          
 
                           {/* VIEW */}
                           <Link
@@ -139,6 +141,7 @@ const ViewGeneratePanel = () => {
                           >
                             <i className="fa fa-trash" />
                           </button>
+                        </div>
                         </td>
                       </tr>
                     ))
