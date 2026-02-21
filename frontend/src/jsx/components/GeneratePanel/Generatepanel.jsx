@@ -85,20 +85,26 @@ const Generatepanel = () => {
                   </div>
 
                   {/* Capacity */}
+
                   <div className="col-xl-6 col-md-6">
                     <div className="form-group mb-3">
                       <label className="form-label">
                         Panel Capacity (W) <span className="text-danger">*</span>
                       </label>
-                      <input
-                        type="text"
+                      <select
                         className="form-control"
                         name="panel_capacity"
-                        placeholder="e.g. 540W"
                         value={formData.panel_capacity}
                         onChange={handleChange}
-                        required
-                      />
+                        required >
+                        <option value="">Select Capacity</option>
+                        <option value="510">510</option>
+                        <option value="520">520</option>
+                        <option value="525">525</option>
+                        <option value="530">530</option>
+                        <option value="535">535</option>
+                        <option value="540">540</option>
+                      </select>
                     </div>
                   </div>
 
@@ -116,8 +122,8 @@ const Generatepanel = () => {
                         required
                       >
                         <option value="">Select Type</option>
-                        <option value="1">Mono</option>
-                        <option value="2">Poly</option>
+                        <option value="1">Poly</option>
+                        <option value="2">Mono</option>                                               
                         <option value="3">Bifacial</option>
                       </select>
                     </div>

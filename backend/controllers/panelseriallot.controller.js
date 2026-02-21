@@ -32,7 +32,7 @@ export const createPanelSerialLot = async (req, res) => {
     const month = (new Date(date).getMonth() + 1).toString().padStart(2, "0"); // e.g., "02"
     const monthYear = month + year; // MMYY
 
-    const formattedPanelType = String(panel_type).padStart(2, "0");
+    const formattedPanelType = String(panel_type);
 
     /* ==========================
        2️⃣ Get or create counter

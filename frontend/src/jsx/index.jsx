@@ -31,6 +31,8 @@ import ViewSingleUser from "./components/User/ViewSingleUser";
 
 import ReceiveDamagedPanel from "./components/DamagePanel/ReceiveDamagedPanel";
 import LockScreen from "./pages/LockScreen";
+import ReceiveSafePanel from "./components/PanelReceiver/ReceiveSafePanel";
+import ViewReceiveSafePanel from "./components/PanelReceiver/ViewReceiveSafePanel";
 
 const Markup = () => {
   const allroutes = [
@@ -52,6 +54,8 @@ const Markup = () => {
     { url: "dispatch/list", component: <ViewDispatchPanel /> },
     { url: "view-dispatch-panels/:id", component: <ViewDispatchPanels /> },
 
+    { url: "receiver/safe/create", component: <ReceiveSafePanel /> },
+    { url: "receiver/safe/list", component: <ViewReceiveSafePanel /> },
 
     { url: "sender/damage/create", component: <DamagePanel /> },
     { url: "receiver/damage/create", component: <ReceiveDamagedPanel /> },

@@ -62,6 +62,23 @@ export const MenuList = [
 
 
 
+// Receive Panel
+{
+    title: "Receive Panel",
+    classsChange: 'mm-collapse',
+    iconStyle: <i className="fa-solid fa-truck-ramp-box fw-bold" />,
+    content: [
+        {
+            title: 'Receive Safe Panel',
+            to: 'receiver/safe/create',
+        },
+        {
+            title: 'View Safe Panels',
+            to: 'receiver/safe/list',
+        },
+    ],
+},
+
 
 // Damage Panel
 {

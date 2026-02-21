@@ -40,6 +40,12 @@ const PanelNumberSchema = new mongoose.Schema(
       trim: true,
       default: 0,
     },
+    
+     panel_type: {
+      type: Number,
+      enum: [1, 2, 3],
+      trim: true,
+    },
 
     // 🧩 Assignment
     production_id: {

@@ -31,6 +31,9 @@ export const createProductionPanel = async (req, res) => {
        - Must match capacity & type
        - Must be unassigned (production_status = 0)
     =============================== */
+
+      console.log(panel_capacity, panel_type);
+
     const panels = await PanelNumber.find({
       production_status: 0,
       panel_capacity: panel_capacity,
