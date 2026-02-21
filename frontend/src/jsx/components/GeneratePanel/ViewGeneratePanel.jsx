@@ -91,7 +91,6 @@ const ViewGeneratePanel = () => {
                                             <td>{item.total_panels}</td>
                                             <td>{item.panel_capacity}</td>
                                             <td>{item.panel_type}</td>
-
                                             <td className="text-center">
                                                 <Link
                                                     to={`/edit-panel/${item._id}`}
