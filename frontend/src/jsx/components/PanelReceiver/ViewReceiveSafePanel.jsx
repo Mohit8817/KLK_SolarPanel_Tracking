@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Card, Col, Table } from "react-bootstrap";
 import CommonPagination from "../Common/Pagination";
+import { Link } from "react-router-dom";
+
 
 const ReceiveList = () => {
 
@@ -80,9 +82,14 @@ const ReceiveList = () => {
                   </td>
 
                   <td>
-                    <button className="btn btn-primary btn-sm">
-                      View Panels
-                    </button>
+                    {/* VIEW */}
+                    <Link
+                      to={`/`}
+                      className="btn btn-primary btn-xs sharp me-2"
+                    >
+                      <i className="fa fa-eye" />
+                    </Link>
+
                   </td>
 
                 </tr>
