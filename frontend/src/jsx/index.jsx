@@ -33,6 +33,8 @@ import ReceiveDamagedPanel from "./components/DamagePanel/ReceiveDamagedPanel";
 import LockScreen from "./pages/LockScreen";
 import ReceiveSafePanel from "./components/PanelReceiver/ReceiveSafePanel";
 import ViewReceiveSafePanel from "./components/PanelReceiver/ViewReceiveSafePanel";
+import AddManufactureDamage from "./components/ManufactureDamage/AddManufactureDamage";
+import ViewManufactureDamage from "./components/ManufactureDamage/ViewManufactureDamage";
 
 const Markup = () => {
   const allroutes = [
@@ -44,6 +46,9 @@ const Markup = () => {
     { url: "panel/generate", component: <Generatepanel /> },
     { url: "generate/panel/list", component: <ViewGeneratePanel /> },
     { url: "view-panel-details/:id", component: <ViewPanelDetails /> },
+
+    { url: "manufacture-damage/add", component: <AddManufactureDamage /> },
+    { url: "manufacture-damage/list", component: <ViewManufactureDamage /> },
 
     { url: "production/add", component: <ProductionForm /> },
     { url: "production/list", component: <ViewProduction /> },
