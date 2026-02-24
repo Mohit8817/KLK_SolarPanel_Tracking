@@ -132,15 +132,12 @@ const ProductionForm = () => {
                                                 onChange={handleChange}
                                                 required>
                                                 <option value="">Select Capacity</option>
-                                                <option value="250">250 W</option>
-                                                <option value="300">300 W</option>
-                                                <option value="330">330 W</option>
-                                                <option value="350">350 W</option>
-                                                <option value="400">400 W</option>
-                                                <option value="510">510 W</option>
-                                                <option value="525">525 W</option>
-                                                <option value="530">530 W</option>
-                                                <option value="540">540 W</option>
+                                                <option value="510">510</option>
+                                                <option value="520">520</option>
+                                                <option value="525">525</option>
+                                                <option value="530">530</option>
+                                                <option value="535">535</option>
+                                                <option value="540">540</option>
                                             </select>
                                         </div>
                                     </div>

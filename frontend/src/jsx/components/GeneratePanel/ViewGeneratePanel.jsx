@@ -89,7 +89,6 @@ const ViewGeneratePanel = () => {
         </Card.Header>
 
         <Card.Body>
-
           {loading ? (
             <p>Loading...</p>
           ) : (
@@ -120,27 +119,29 @@ const ViewGeneratePanel = () => {
                         <td>{item.total_panels}</td>
                         <td>{item.panel_capacity}</td>
                         <td>{item.panel_type}</td>
-
                         <td className="text-center">
+                          <div className="d-flex gap-1 justify-content-center">
 
-                          {/* VIEW */}
-                          <Link
-                            to={`/view-panel-details/${item._id}`}
-                            className="btn btn-primary btn-xs sharp me-2"
-                          >
-                            <i className="fa fa-eye" />
-                          </Link>
 
-                          
 
-                          {/* DELETE */}
-                          <button
-                            className="btn btn-danger btn-xs sharp"
-                            onClick={() => handleDelete(item._id)}
-                          >
-                            <i className="fa fa-trash" />
-                          </button>
+                            {/* VIEW */}
+                            <Link
+                              to={`/view-panel-details/${item._id}`}
+                              className="btn btn-primary btn-xs sharp me-2"
+                            >
+                              <i className="fa fa-eye" />
+                            </Link>
 
+
+
+                            {/* DELETE */}
+                            <button
+                              className="btn btn-danger btn-xs sharp"
+                              onClick={() => handleDelete(item._id)}
+                            >
+                              <i className="fa fa-trash" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))

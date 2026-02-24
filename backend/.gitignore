@@ -57,4 +57,8 @@ pnpm-lock.yaml
 
 # Uploads (if user-generated files stored locally)
 uploads/
+<<<<<<< HEAD
 public/uploads/
+=======
+public/uploads/
+>>>>>>> d98555cbbe5b34e5a1938e2bd0e1ad4b62757367

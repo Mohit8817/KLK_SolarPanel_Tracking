@@ -5,6 +5,8 @@ import { Html5Qrcode } from "html5-qrcode";
 
 const DispatchPanel = () => {
   const scannerRef = useRef(null);
+  const scanTimeoutRef = useRef(null);
+  const lastScannedRef = useRef("");
 
   const [scanning, setScanning] = useState(false);
   const [dispatchStarted, setDispatchStarted] = useState(false);
@@ -26,7 +28,7 @@ const DispatchPanel = () => {
     nonDcrPanels: [],
   });
 
-  /* LOAD FROM LOCAL STORAGE */
+  /* ---------------- LOAD FROM LOCAL STORAGE ---------------- */
   useEffect(() => {
     const savedData = localStorage.getItem(STORAGE_KEY);
     if (savedData) {
@@ -38,17 +40,17 @@ const DispatchPanel = () => {
     }
   }, []);
 
-  /* SAVE TO LOCAL STORAGE */
+  /* ---------------- SAVE TO LOCAL STORAGE ---------------- */
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(dispatchData));
   }, [dispatchData]);
 
-  /* STOP SCANNER ON UNMOUNT */
+  /* ---------------- STOP SCANNER ON UNMOUNT ---------------- */
   useEffect(() => {
     return () => stopScan();
   }, []);
 
-  /* START SCANNER */
+  /* ---------------- START QR SCANNER ---------------- */
   const startScan = async () => {
     if (!dispatchStarted) return;
 
@@ -62,28 +64,17 @@ const DispatchPanel = () => {
         { facingMode: "environment" },
         { fps: 10, qrbox: 250 },
         (decodedText) => {
-          setManualPanel(decodedText);
           savePanel(decodedText);
-          stopScan();
         },
         () => {}
       );
     } catch (err) {
-      console.log(err);
-      alert("Camera start failed");
+      console.log("Camera start failed:", err);
       setScanning(false);
     }
   };
 
-  const handleScannerInput = async (panelCode) => {
-  if (!panelCode) return;
-
-  // Same logic as savePanel
-  await savePanel(panelCode);
-};
-
-
-  /* STOP SCANNER */
+  /* ---------------- STOP QR SCANNER ---------------- */
   const stopScan = async () => {
     if (scannerRef.current) {
       try {
@@ -95,13 +86,22 @@ const DispatchPanel = () => {
     setScanning(false);
   };
 
-  /* SAVE PANEL */
+  /* ---------------- SAVE PANEL ---------------- */
   const savePanel = async (panelCode) => {
+    if (!panelCode) return;
+
+    // prevent rapid duplicate scans
+    if (lastScannedRef.current === panelCode) return;
+    lastScannedRef.current = panelCode;
+
+    setTimeout(() => {
+      lastScannedRef.current = "";
+    }, 500);
+
     if (
       dispatchData.dcrPanels.includes(panelCode) ||
       dispatchData.nonDcrPanels.includes(panelCode)
     ) {
-      alert("Panel already scanned");
       return;
     }
 
@@ -129,18 +129,24 @@ const DispatchPanel = () => {
         return { ...prev, nonDcrPanels: [...prev.nonDcrPanels, panelCode] };
       });
     } catch (err) {
-      alert(err.response?.data?.message || "Panel not found");
+      console.log("Scan error:", err.response?.data?.message);
     }
   };
 
-  /* MANUAL ADD */
+  /* ---------------- SCANNER GUN INPUT ---------------- */
+  const handleScannerInput = async (panelCode) => {
+    if (!panelCode) return;
+    await savePanel(panelCode);
+  };
+
+  /* ---------------- MANUAL ADD ---------------- */
   const handleManualAdd = async () => {
     if (!manualPanel.trim()) return;
     await savePanel(manualPanel.trim());
     setManualPanel("");
   };
 
-  /* INPUT CHANGE */
+  /* ---------------- INPUT CHANGE ---------------- */
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -155,7 +161,7 @@ const DispatchPanel = () => {
     }));
   };
 
-  /* START DISPATCH */
+  /* ---------------- START DISPATCH ---------------- */
   const handleStartDispatch = async (e) => {
     e.preventDefault();
 
@@ -185,14 +191,14 @@ const DispatchPanel = () => {
 
       localStorage.setItem("dispatch_main_id", res.data.data.dispatch_id);
 
-      alert("Dispatch Started Successfully");
       setDispatchStarted(true);
+      console.log("Dispatch Started");
     } catch (error) {
-      alert(error.response?.data?.message || "Failed to start dispatch");
+      console.log("Failed to start dispatch");
     }
   };
 
-  /* END DISPATCH */
+  /* ---------------- END DISPATCH ---------------- */
   const handleEndDispatch = (e) => {
     e.preventDefault();
 
@@ -200,7 +206,6 @@ const DispatchPanel = () => {
     localStorage.removeItem("dispatch_panel_type");
     localStorage.removeItem("dispatchPanelData");
 
-    alert("Dispatch Completed");
     window.location.href = "/view-dispatch";
   };
 
@@ -220,7 +225,8 @@ const DispatchPanel = () => {
             </div>
 
             <div className="card-body">
-              {/* FIRST FORM */}
+
+              {/* START DISPATCH FORM */}
               <form onSubmit={handleStartDispatch}>
                 <div className="row">
                   {[
@@ -273,10 +279,12 @@ const DispatchPanel = () => {
                   </button>
                 </div>
               </form>
-              <hr/>
 
-              {/* SECOND FORM */}
+              <hr />
+
+              {/* SCANNING SECTION */}
               <form onSubmit={handleEndDispatch}>
+
                 <div className="text-center my-3">
                   <label className="form-label">Panel Type *</label>
                   <div className="d-flex justify-content-center gap-3">
@@ -307,45 +315,52 @@ const DispatchPanel = () => {
                   </div>
                 </div>
 
-                <div className="text-center row mb-3">
-                <div className="col-md-4 justify-content-center">
-                    <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Scan panel with scanner"
-                  style={{ maxWidth: "250px" }}
-                  value={scannerInput}
-                  onChange={(e) => setScannerInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleScannerInput(scannerInput.trim());
-                      setScannerInput("");
-                    }
-                  }}
-                  disabled={!dispatchStarted}
-                />
-                </div>
+                <div className="row mb-3 text-center">
 
-                <div className="col-md-4">
-                  <button
-                    type="button"
-                    className="btn btn-primary px-5 mb-2"
-                    onClick={startScan}
-                    disabled={!dispatchStarted}
-                  >
-                    Scan Panel QR
-                  </button>
+                  {/* SCANNER GUN INPUT */}
+                  <div className="col-md-4">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Scan panel with scanner"
+                      value={scannerInput}
+                      autoFocus
+                      disabled={!dispatchStarted}
+                      onChange={(e) => setScannerInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          const value = scannerInput.trim();
+                          if (value) {
+                            handleScannerInput(value);
+                            setScannerInput("");
+                          }
+                        }
+                      }}
+                    />
                   </div>
 
-                  <div className="col-md-4 d-flex justify-content-center gap-2">
+                  {/* QR BUTTON */}
+                  <div className="col-md-4">
+                    <button
+                      type="button"
+                      className="btn btn-primary px-5"
+                      onClick={startScan}
+                      disabled={!dispatchStarted}
+                    >
+                      Scan Panel QR
+                    </button>
+                  </div>
+
+                  {/* MANUAL INPUT */}
+                  <div className="col-md-4 d-flex gap-2">
                     <input
                       type="text"
                       className="form-control"
                       placeholder="Enter Panel No"
-                      style={{ maxWidth: "250px" }}
                       value={manualPanel}
-                      onChange={(e) => setManualPanel(e.target.value)}
                       disabled={!dispatchStarted}
+                      onChange={(e) => setManualPanel(e.target.value)}
                     />
                     <button
                       type="button"
@@ -357,15 +372,22 @@ const DispatchPanel = () => {
                     </button>
                   </div>
 
-
                 </div>
 
                 {scanning && (
                   <div className="text-center mb-3">
                     <div id="reader" style={{ width: 320, margin: "auto" }} />
+                    <button
+                      type="button"
+                      className="btn btn-danger mt-2"
+                      onClick={stopScan}
+                    >
+                      Stop Camera
+                    </button>
                   </div>
                 )}
 
+                {/* PANEL LIST */}
                 <div className="row mt-4">
                   <div className="col-md-6">
                     <label>DCR Panels ({dispatchData.dcrPanels.length})</label>
@@ -401,6 +423,7 @@ const DispatchPanel = () => {
                     End Dispatch
                   </button>
                 </div>
+
               </form>
             </div>
           </div>

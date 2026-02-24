@@ -31,6 +31,10 @@ import ViewSingleUser from "./components/User/ViewSingleUser";
 
 import ReceiveDamagedPanel from "./components/DamagePanel/ReceiveDamagedPanel";
 import LockScreen from "./pages/LockScreen";
+import ReceiveSafePanel from "./components/PanelReceiver/ReceiveSafePanel";
+import ViewReceiveSafePanel from "./components/PanelReceiver/ViewReceiveSafePanel";
+import AddManufactureDamage from "./components/ManufactureDamage/AddManufactureDamage";
+import ViewManufactureDamage from "./components/ManufactureDamage/ViewManufactureDamage";
 
 const Markup = () => {
   const allroutes = [
@@ -43,6 +47,9 @@ const Markup = () => {
     { url: "generate/panel/list", component: <ViewGeneratePanel /> },
     { url: "view-panel-details/:id", component: <ViewPanelDetails /> },
 
+    { url: "manufacture-damage/add", component: <AddManufactureDamage /> },
+    { url: "manufacture-damage/list", component: <ViewManufactureDamage /> },
+
     { url: "production/add", component: <ProductionForm /> },
     { url: "production/list", component: <ViewProduction /> },
     { url: "view-production-panels/:id", component: <ViewProductionPanels /> },
@@ -52,6 +59,8 @@ const Markup = () => {
     { url: "dispatch/list", component: <ViewDispatchPanel /> },
     { url: "view-dispatch-panels/:id", component: <ViewDispatchPanels /> },
 
+    { url: "receiver/safe/create", component: <ReceiveSafePanel /> },
+    { url: "receiver/safe/list", component: <ViewReceiveSafePanel /> },
 
     { url: "sender/damage/create", component: <DamagePanel /> },
     { url: "receiver/damage/create", component: <ReceiveDamagedPanel /> },

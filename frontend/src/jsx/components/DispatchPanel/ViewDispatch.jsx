@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Card, Col, Table, Badge } from "react-bootstrap";
+import { Card, Col, Table } from "react-bootstrap";
 import TableExportActions from "../Common/TableExportActions";
 import ScannedPanelsModal from "./ScannedPanelsModal";
 import axios from "axios";
@@ -14,10 +14,7 @@ const ViewDispatchPanel = () => {
     const [showModal, setShowModal] = useState(false);
     const [selectedDispatch, setSelectedDispatch] = useState(null);
 
-    const openModal = (item) => {
-        setSelectedDispatch(item);
-        setShowModal(true);
-    };
+
 
     const closeModal = () => {
         setShowModal(false);
@@ -84,7 +81,8 @@ const ViewDispatchPanel = () => {
     return (
         <Col lg={12}>
             <Card>
-                <Card.Header className="d-flex justify-content-between align-items-center">
+                <Card.Header className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+
                     <Card.Title className="mb-0">
                         Dispatch Panel List
                     </Card.Title>
@@ -98,7 +96,7 @@ const ViewDispatchPanel = () => {
 
                 <Card.Body>
                     <Table responsive className="table-hover align-middle">
-                      <thead>
+                        <thead>
                             <tr>
                                 <th>S No.</th>
                                 <th>Dispatch ID</th>
@@ -108,51 +106,55 @@ const ViewDispatchPanel = () => {
                                 <th>Panel Count</th>
                                 <th className="text-center">Action</th>
                             </tr>
-                            </thead>
-                       <tbody>
-                    {dispatchList.length > 0 ? (
-                   dispatchList.map((item, index) => (
-                       <tr key={item._id}>
-        <td><strong>{index + 1}</strong></td>
+                        </thead>
+                        <tbody>
+                            {dispatchList.length > 0 ? (
+                                dispatchList.map((item, index) => (
+                                    <tr key={item._id}>
+                                        <td><strong>{index + 1}</strong></td>
 
-        <td>{item.dispatch_id}</td>
+                                        <td>{item.dispatch_id}</td>
 
-        <td>{item.truck_no}</td>
+                                        <td>{item.truck_no}</td>
 
-        <td>{item.challan_no}</td>
+                                        <td>{item.challan_no}</td>
 
-        <td>
-          <strong>{item.driver_name}</strong>
-          <br />
-          <small>{item.driver_no}</small>
-        </td>
+                                        <td>
+                                            <strong>{item.driver_name}</strong>
+                                            <br />
+                                            <small>{item.driver_no}</small>
+                                        </td>
 
-        <td>
-          <strong>{item.dispatch_panel_count}</strong>
-        </td>
+                                        <td>
+                                            <strong>{item.dispatch_panel_count}</strong>
+                                        </td>
 
-        <td className="text-center">
-         <Link
-  to={`/view-dispatch-panels/${item._id}`}
-  className="btn btn-info btn-xs sharp"
->
-  <i className="fa fa-eye" />
-</Link>          
+                                           <td className="text-center">
+                          <div className="d-flex gap-1 justify-content-center">
 
-          <button className="btn btn-danger btn-xs sharp">
-            <i className="fa fa-trash" />
-          </button>
-        </td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan="7" className="text-center text-muted">
-        No dispatch records found
-      </td>
-    </tr>
-  )}
-</tbody>
+                          
+                                            <Link
+                                                to={`/view-dispatch-panels/${item._id}`}
+                                                className="btn btn-info btn-xs sharp"
+                                            >
+                                                <i className="fa fa-eye" />
+                                            </Link>
+
+                                            <button className="btn btn-danger btn-xs sharp">
+                                                <i className="fa fa-trash" />
+                                            </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="7" className="text-center text-muted">
+                                        No dispatch records found
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
 
                     </Table>
                 </Card.Body>
