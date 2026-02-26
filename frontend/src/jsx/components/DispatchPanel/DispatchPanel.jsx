@@ -1,322 +1,436 @@
 import { Fragment, useState, useRef, useEffect } from "react";
-import { useParams } from "react-router-dom";
 import PageTitle from "../../layouts/PageTitle";
+import axios from "axios";
 import { Html5Qrcode } from "html5-qrcode";
 
-const ReceiveSafePanel = () => {
-  const { id } = useParams();
-
-  const html5QrCodeRef = useRef(null);
-  const qrRegionId = "qr-reader";
-
-  const [dispatchDetails, setDispatchDetails] = useState(null);
-  const [loading, setLoading] = useState(true);
+const DispatchPanel = () => {
+  const scannerRef = useRef(null);
+  const scanTimeoutRef = useRef(null);
+  const lastScannedRef = useRef("");
 
   const [scanning, setScanning] = useState(false);
+  const [dispatchStarted, setDispatchStarted] = useState(false);
+  const [manualPanel, setManualPanel] = useState("");
   const [scannerInput, setScannerInput] = useState("");
-  const [manualCode, setManualCode] = useState("");
 
-  const [panels, setPanels] = useState([]);
-  const [remarks, setRemarks] = useState("");
+  const STORAGE_KEY = "dispatchPanelData";
 
-  /* ================= FETCH DISPATCH DETAILS ================= */
+  const [dispatchData, setDispatchData] = useState({
+    dispatch_id: "",
+    state: "",
+    truck_no: "",
+    driver_no: "",
+    driver_name: "",
+    challan_no: "",
+    dispatch_panel_count: "",
+    dispatchType: "",
+    dcrPanels: [],
+    nonDcrPanels: [],
+  });
+
+  /* ---------------- LOAD FROM LOCAL STORAGE ---------------- */
   useEffect(() => {
-    if (!id) return;
-
-    const fetchDispatchData = async () => {
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
       try {
-        const token = localStorage.getItem("token");
-
-        const res = await fetch(
-          `${import.meta.env.VITE_BACKEND_API_URL}dispatch/fetch-recieve-dispatched-panel/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        const result = await res.json();
-        setDispatchDetails(result.data || result);
+        setDispatchData(JSON.parse(savedData));
       } catch (error) {
-        console.error("Fetch Error:", error);
-      } finally {
-        setLoading(false);
+        console.error("Error loading data:", error);
       }
-    };
-
-    fetchDispatchData();
-  }, [id]);
-
-  /* ================= CLEANUP ================= */
-  useEffect(() => {
-    return () => {
-      stopScan();
-    };
+    }
   }, []);
 
-  /* ================= START QR SCAN ================= */
+  /* ---------------- SAVE TO LOCAL STORAGE ---------------- */
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(dispatchData));
+  }, [dispatchData]);
+
+  /* ---------------- STOP SCANNER ON UNMOUNT ---------------- */
+  useEffect(() => {
+    return () => stopScan();
+  }, []);
+
+  /* ---------------- START QR SCANNER ---------------- */
   const startScan = async () => {
-    if (scanning) return;
+    if (!dispatchStarted) return;
+
+    setScanning(true);
+
+    const html5QrCode = new Html5Qrcode("reader");
+    scannerRef.current = html5QrCode;
 
     try {
-      setScanning(true);
-
-      const html5QrCode = new Html5Qrcode(qrRegionId);
-      html5QrCodeRef.current = html5QrCode;
-
       await html5QrCode.start(
         { facingMode: "environment" },
-        {
-          fps: 10,
-          qrbox: 250,
-        },
-        async (decodedText) => {
-          await addPanel(decodedText);
-          stopScan();
+        { fps: 10, qrbox: 250 },
+        (decodedText) => {
+          savePanel(decodedText);
         },
         () => {}
       );
     } catch (err) {
-      console.error("Camera start failed:", err);
+      console.log("Camera start failed:", err);
       setScanning(false);
     }
   };
 
-  /* ================= STOP QR SCAN ================= */
+  /* ---------------- STOP QR SCANNER ---------------- */
   const stopScan = async () => {
-    try {
-      if (html5QrCodeRef.current) {
-        await html5QrCodeRef.current.stop();
-        await html5QrCodeRef.current.clear();
-        html5QrCodeRef.current = null;
-      }
-    } catch (err) {
-      console.error("Stop scan error:", err);
+    if (scannerRef.current) {
+      try {
+        await scannerRef.current.stop();
+        scannerRef.current.clear();
+      } catch {}
+      scannerRef.current = null;
     }
     setScanning(false);
   };
 
-  /* ================= ADD PANEL ================= */
-  const addPanel = async (panelCode) => {
+  /* ---------------- SAVE PANEL ---------------- */
+  const savePanel = async (panelCode) => {
     if (!panelCode) return;
 
-    // prevent duplicate
-    if (panels.includes(panelCode)) {
-      alert("Panel already scanned");
+    // prevent rapid duplicate scans
+    if (lastScannedRef.current === panelCode) return;
+    lastScannedRef.current = panelCode;
+
+    setTimeout(() => {
+      lastScannedRef.current = "";
+    }, 500);
+
+    if (
+      dispatchData.dcrPanels.includes(panelCode) ||
+      dispatchData.nonDcrPanels.includes(panelCode)
+    ) {
       return;
     }
 
     try {
       const token = localStorage.getItem("token");
+      const dispatch_id = localStorage.getItem("dispatch_main_id");
+      const panel_type = localStorage.getItem("dispatch_panel_type");
 
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_API_URL}dispatch/receive-panel-scan`,
+      await axios.post(
+        `${import.meta.env.VITE_BACKEND_API_URL}dispatch/scan-panel`,
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            dispatch_id: id,
-            panel_no: panelCode,
-          }),
+          panel_no: panelCode,
+          dispatch_id,
+          panel_type,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      const result = await res.json();
-
-      if (!res.ok) {
-        alert(result.message || "Scan failed");
-        return;
-      }
-
-      setPanels((prev) => [...prev, panelCode]);
-
-      setDispatchDetails((prev) => ({
-        ...prev,
-        collect_count: result.collect_count,
-      }));
-
-    } catch (error) {
-      console.error(error);
+      setDispatchData((prev) => {
+        if (panel_type == 1) {
+          return { ...prev, dcrPanels: [...prev.dcrPanels, panelCode] };
+        }
+        return { ...prev, nonDcrPanels: [...prev.nonDcrPanels, panelCode] };
+      });
+    } catch (err) {
+      console.log("Scan error:", err.response?.data?.message);
     }
   };
 
-  /* ================= MACHINE SCANNER ================= */
-  const handleScannerInput = (code) => {
-    if (!code.trim()) return;
-    addPanel(code.trim());
-    setScannerInput("");
+  /* ---------------- SCANNER GUN INPUT ---------------- */
+  const handleScannerInput = async (panelCode) => {
+    if (!panelCode) return;
+    await savePanel(panelCode);
   };
 
-  /* ================= MANUAL ENTRY ================= */
-  const addManualPanel = () => {
-    if (!manualCode.trim()) {
-      alert("Enter panel code");
-      return;
+  /* ---------------- MANUAL ADD ---------------- */
+  const handleManualAdd = async () => {
+    if (!manualPanel.trim()) return;
+    await savePanel(manualPanel.trim());
+    setManualPanel("");
+  };
+
+  /* ---------------- INPUT CHANGE ---------------- */
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === "dispatchType") {
+      const typeValue = value === "DCR" ? 1 : 2;
+      localStorage.setItem("dispatch_panel_type", typeValue);
     }
-    addPanel(manualCode.trim());
-    setManualCode("");
+
+    setDispatchData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  /* ================= SUBMIT ================= */
-  const handleSubmit = async (e) => {
+  /* ---------------- START DISPATCH ---------------- */
+  const handleStartDispatch = async (e) => {
     e.preventDefault();
 
-    if (panels.length === 0) {
-      return alert("No panels scanned");
-    }
-
     try {
+      const sessionUser = JSON.parse(localStorage.getItem("user"));
       const token = localStorage.getItem("token");
+      const company_id = sessionUser?.company_id;
 
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_API_URL}dispatch/complete-receive/${id}`,
+      const payload = {
+        dispatch_id: dispatchData.dispatch_id,
+        state: dispatchData.state,
+        truck_no: dispatchData.truck_no,
+        driver_no: dispatchData.driver_no,
+        driver_name: dispatchData.driver_name,
+        challan_no: dispatchData.challan_no,
+        dispatch_panel_count: dispatchData.dispatch_panel_count,
+        company_id,
+      };
+
+      const res = await axios.post(
+        `${import.meta.env.VITE_BACKEND_API_URL}dispatch/create-dispatch-panel`,
+        payload,
         {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ remarks }),
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      const result = await res.json();
+      localStorage.setItem("dispatch_main_id", res.data.data.dispatch_id);
 
-      if (!res.ok) {
-        alert(result.message || "Completion failed");
-        return;
-      }
-
-      alert("Receive completed successfully!");
-
-      setPanels([]);
-      setRemarks("");
-
+      setDispatchStarted(true);
+      console.log("Dispatch Started");
     } catch (error) {
-      console.error("Complete Error:", error);
-      alert("Submission failed");
+      console.log("Failed to start dispatch");
     }
+  };
+
+  /* ---------------- END DISPATCH ---------------- */
+  const handleEndDispatch = (e) => {
+    e.preventDefault();
+
+    localStorage.removeItem("dispatch_main_id");
+    localStorage.removeItem("dispatch_panel_type");
+    localStorage.removeItem("dispatchPanelData");
+
+    window.location.href = "/view-dispatch";
   };
 
   return (
     <Fragment>
       <PageTitle
-        activeMenu="Receive Safe Panel"
-        motherMenu="Dispatch Panel"
-        pageContent="Collect Safe Panels"
+        activeMenu="Dispatch Panel"
+        motherMenu="Panel Dispatch"
+        pageContent="Panel Dispatch"
       />
 
-      <div className="card">
-        <div className="card-header">
-          <h4>Receive Safe Panels</h4>
-        </div>
-
-        <div className="card-body">
-
-          {loading && <p>Loading dispatch details...</p>}
-
-          {dispatchDetails && (
-            <div className="alert alert-info">
-              <h6>Dispatch Details</h6>
-              <p><strong>Truck:</strong> {dispatchDetails.truck_no}</p>
-              <p><strong>Challan:</strong> {dispatchDetails.challan_no}</p>
-              <p><strong>Driver:</strong> {dispatchDetails.driver_name} / {dispatchDetails.driver_no}</p>
-              <p><strong>Expected Panels:</strong> {dispatchDetails.dispatch_panel_count}</p>
-              <p><strong>Scanned Panels:</strong> {panels.length}</p>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit}>
-
-            <div className="row mb-3">
-
-              <div className="col-md-4">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Scan with Scanner"
-                  value={scannerInput}
-                  onChange={(e) => setScannerInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleScannerInput(scannerInput);
-                    }
-                  }}
-                />
-              </div>
-
-              <div className="col-md-4">
-                <button
-                  type="button"
-                  className="btn btn-primary w-100"
-                  onClick={startScan}
-                >
-                  Scan QR
-                </button>
-              </div>
-
-              <div className="col-md-4 d-flex gap-2">
-                <input
-                  className="form-control"
-                  placeholder="Manual Panel Code"
-                  value={manualCode}
-                  onChange={(e) => setManualCode(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="btn btn-success"
-                  onClick={addManualPanel}
-                >
-                  Add
-                </button>
-              </div>
-
+      <div className="row">
+        <div className="col-lg-12">
+          <div className="card">
+            <div className="card-header">
+              <h4 className="card-title">Panel Dispatch</h4>
             </div>
 
-            {scanning && (
-              <div className="text-center mb-3">
-                <div
-                  id="qr-reader"
-                  style={{ width: "300px", margin: "0 auto" }}
-                ></div>
-              </div>
-            )}
+            <div className="card-body">
 
-            <div className="mb-3">
-              <label>Remarks</label>
-              <textarea
-                className="form-control"
-                rows="3"
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-              />
+              {/* START DISPATCH FORM */}
+              <form onSubmit={handleStartDispatch}>
+                <div className="row">
+                  {[
+                    "dispatch_id",
+                    "state",
+                    "truck_no",
+                    "driver_no",
+                    "driver_name",
+                    "challan_no",
+                  ].map((field) => (
+                    <div className="col-md-6 mb-3" key={field}>
+                      <label className="form-label">
+                        {field.replace(/_/g, " ").toUpperCase()}
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name={field}
+                        value={dispatchData[field]}
+                        onChange={handleChange}
+                        disabled={dispatchStarted}
+                        required
+                      />
+                    </div>
+                  ))}
+
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">
+                      Dispatch Panel Count *
+                    </label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      name="dispatch_panel_count"
+                      value={dispatchData.dispatch_panel_count}
+                      onChange={handleChange}
+                      disabled={dispatchStarted}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="text-center mt-4">
+                  <button
+                    type="submit"
+                    className="btn btn-success px-5"
+                    disabled={dispatchStarted}
+                  >
+                    Start Dispatch
+                  </button>
+                </div>
+              </form>
+
+              <hr />
+
+              {/* SCANNING SECTION */}
+              <form onSubmit={handleEndDispatch}>
+
+                <div className="text-center my-3">
+                  <label className="form-label">Panel Type *</label>
+                  <div className="d-flex justify-content-center gap-3">
+                    {["DCR", "NON_DCR"].map((type) => {
+                      const isActive = dispatchData.dispatchType === type;
+                      return (
+                        <label
+                          key={type}
+                          className={`btn ${
+                            isActive
+                              ? "btn-outline-success"
+                              : "btn-outline-danger"
+                          }`}
+                          style={{ width: "150px" }}
+                        >
+                          <input
+                            type="radio"
+                            name="dispatchType"
+                            value={type}
+                            hidden
+                            checked={isActive}
+                            onChange={handleChange}
+                          />
+                          {type}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="row mb-3 text-center">
+
+                  {/* SCANNER GUN INPUT */}
+                  <div className="col-md-4">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Scan panel with scanner"
+                      value={scannerInput}
+                      autoFocus
+                      disabled={!dispatchStarted}
+                      onChange={(e) => setScannerInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          const value = scannerInput.trim();
+                          if (value) {
+                            handleScannerInput(value);
+                            setScannerInput("");
+                          }
+                        }
+                      }}
+                    />
+                  </div>
+
+                  {/* QR BUTTON */}
+                  <div className="col-md-4">
+                    <button
+                      type="button"
+                      className="btn btn-primary px-5"
+                      onClick={startScan}
+                      disabled={!dispatchStarted}
+                    >
+                      Scan Panel QR
+                    </button>
+                  </div>
+
+                  {/* MANUAL INPUT */}
+                  <div className="col-md-4 d-flex gap-2">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Enter Panel No"
+                      value={manualPanel}
+                      disabled={!dispatchStarted}
+                      onChange={(e) => setManualPanel(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={handleManualAdd}
+                      disabled={!dispatchStarted}
+                    >
+                      Add
+                    </button>
+                  </div>
+
+                </div>
+
+                {scanning && (
+                  <div className="text-center mb-3">
+                    <div id="reader" style={{ width: 320, margin: "auto" }} />
+                    <button
+                      type="button"
+                      className="btn btn-danger mt-2"
+                      onClick={stopScan}
+                    >
+                      Stop Camera
+                    </button>
+                  </div>
+                )}
+
+                {/* PANEL LIST */}
+                <div className="row mt-4">
+                  <div className="col-md-6">
+                    <label>DCR Panels ({dispatchData.dcrPanels.length})</label>
+                    <div className="border rounded p-3">
+                      {dispatchData.dcrPanels.map((p, i) => (
+                        <span key={i} className="badge bg-success me-2 mb-2">
+                          {p}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <label>
+                      NON-DCR Panels ({dispatchData.nonDcrPanels.length})
+                    </label>
+                    <div className="border rounded p-3">
+                      {dispatchData.nonDcrPanels.map((p, i) => (
+                        <span key={i} className="badge bg-success me-2 mb-2">
+                          {p}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-center mt-4">
+                  <button
+                    type="submit"
+                    className="btn btn-success px-5"
+                    disabled={!dispatchStarted}
+                  >
+                    End Dispatch
+                  </button>
+                </div>
+
+              </form>
             </div>
-
-            <div className="mb-3">
-              <h6>Scanned Panels</h6>
-              {panels.map((p, i) => (
-                <span key={i} className="badge bg-success m-1">
-                  {p}
-                </span>
-              ))}
-            </div>
-
-            <div className="text-center">
-              <button className="btn btn-success">
-                Submit Safe Panels
-              </button>
-            </div>
-
-          </form>
+          </div>
         </div>
       </div>
     </Fragment>
   );
 };
 
-export default ReceiveSafePanel;
+export default DispatchPanel;
