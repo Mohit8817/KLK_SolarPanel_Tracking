@@ -206,7 +206,7 @@ const DispatchPanel = () => {
     localStorage.removeItem("dispatch_panel_type");
     localStorage.removeItem("dispatchPanelData");
 
-    window.location.href = "/view-dispatch";
+    window.location.href = "/dispatch/list";
   };
 
   return (

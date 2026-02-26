@@ -1,10 +1,16 @@
 import { Fragment, useState, useRef, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import PageTitle from "../../layouts/PageTitle";
 import { Html5Qrcode } from "html5-qrcode";
 
-const DamagePanel = () => {
+const ReceiveSafePanel = () => {
+  const { id } = useParams();
+
   const html5QrCodeRef = useRef(null);
   const qrRegionId = "qr-reader";
+
+  const [dispatchDetails, setDispatchDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const [scanning, setScanning] = useState(false);
   const [scannerInput, setScannerInput] = useState("");
@@ -12,14 +18,44 @@ const DamagePanel = () => {
 
   const [panels, setPanels] = useState([]);
   const [remarks, setRemarks] = useState("");
-  const [image, setImage] = useState(null);
 
-  /* ========= CLEANUP ========= */
+  /* ================= FETCH DISPATCH DETAILS ================= */
   useEffect(() => {
-    return () => stopScan();
+    if (!id) return;
+
+    const fetchDispatchData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await fetch(
+          `${import.meta.env.VITE_BACKEND_API_URL}dispatch/fetch-recieve-dispatched-panel/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const result = await res.json();
+        setDispatchDetails(result.data || result);
+      } catch (error) {
+        console.error("Fetch Error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDispatchData();
+  }, [id]);
+
+  /* ================= CLEANUP ================= */
+  useEffect(() => {
+    return () => {
+      stopScan();
+    };
   }, []);
 
-  /* ========= START SCAN ========= */
+  /* ================= START QR SCAN ================= */
   const startScan = async () => {
     if (scanning) return;
 
@@ -31,9 +67,12 @@ const DamagePanel = () => {
 
       await html5QrCode.start(
         { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
+        {
+          fps: 10,
+          qrbox: 250,
+        },
         async (decodedText) => {
-          addPanel(decodedText);
+          await addPanel(decodedText);
           stopScan();
         },
         () => {}
@@ -44,7 +83,7 @@ const DamagePanel = () => {
     }
   };
 
-  /* ========= STOP SCAN ========= */
+  /* ================= STOP QR SCAN ================= */
   const stopScan = async () => {
     try {
       if (html5QrCodeRef.current) {
@@ -58,26 +97,61 @@ const DamagePanel = () => {
     setScanning(false);
   };
 
-  /* ========= ADD PANEL ========= */
-  const addPanel = (panelCode) => {
+  /* ================= ADD PANEL ================= */
+  const addPanel = async (panelCode) => {
     if (!panelCode) return;
 
+    // prevent duplicate
     if (panels.includes(panelCode)) {
-      alert("Panel already added");
+      alert("Panel already scanned");
       return;
     }
 
-    setPanels((prev) => [...prev, panelCode]);
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_API_URL}dispatch/receive-panel-scan`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            dispatch_id: id,
+            panel_unique_no: panelCode,
+          }),
+        }
+      );
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        alert(result.message || "Scan failed");
+        return;
+      }
+
+      setPanels((prev) => [...prev, panelCode]);
+
+      setDispatchDetails((prev) => ({
+        ...prev,
+        collect_count: result.collect_count,
+      }));
+
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  /* ========= MACHINE SCANNER ========= */
+  /* ================= MACHINE SCANNER ================= */
   const handleScannerInput = (code) => {
     if (!code.trim()) return;
     addPanel(code.trim());
     setScannerInput("");
   };
 
-  /* ========= MANUAL ENTRY ========= */
+  /* ================= MANUAL ENTRY ================= */
   const addManualPanel = () => {
     if (!manualCode.trim()) {
       alert("Enter panel code");
@@ -87,78 +161,79 @@ const DamagePanel = () => {
     setManualCode("");
   };
 
-  /* ========= SUBMIT DAMAGE ========= */
+  /* ================= SUBMIT ================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (panels.length === 0) {
-      return alert("No panels added");
-    }
-
-    if (!image) {
-      return alert("Please upload damage image");
+      return alert("No panels scanned");
     }
 
     try {
       const token = localStorage.getItem("token");
 
-      for (let panel of panels) {
-        const formData = new FormData();
-        formData.append("panel_no", panel);
-        formData.append("damage_location_type", 3);
-        formData.append("remarks", remarks);
-        formData.append("image", image);
-
-        const res = await fetch(
-          `${import.meta.env.VITE_BACKEND_API_URL}damage/create-damage-panel`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: formData,
-          }
-        );
-
-        const result = await res.json();
-
-        if (!res.ok) {
-          throw new Error(result.message || "Submission failed");
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_API_URL}dispatch/complete-receive/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ remarks }),
         }
+      );
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        alert(result.message || "Completion failed");
+        return;
       }
 
-      alert("Damage Report Submitted Successfully");
+      alert("Receive completed successfully!");
 
       setPanels([]);
       setRemarks("");
-      setImage(null);
 
     } catch (error) {
-      console.error("Submit Error:", error);
-      alert(error.message);
+      console.error("Complete Error:", error);
+      alert("Submission failed");
     }
   };
 
   return (
     <Fragment>
       <PageTitle
-        activeMenu="Damage Panel"
-        motherMenu="Panel Management"
-        pageContent="Report Damaged Panels"
+        activeMenu="Receive Safe Panel"
+        motherMenu="Dispatch Panel"
+        pageContent="Collect Safe Panels"
       />
 
       <div className="card">
         <div className="card-header">
-          <h4>Damage Panel Scan</h4>
+          <h4>Receive Safe Panels</h4>
         </div>
 
         <div className="card-body">
+
+          {loading && <p>Loading dispatch details...</p>}
+
+          {dispatchDetails && (
+            <div className="alert alert-info">
+              <h6>Dispatch Details</h6>
+              <p><strong>Truck:</strong> {dispatchDetails.truck_no}</p>
+              <p><strong>Challan:</strong> {dispatchDetails.challan_no}</p>
+              <p><strong>Driver:</strong> {dispatchDetails.driver_name} / {dispatchDetails.driver_no}</p>
+              <p><strong>Expected Panels:</strong> {dispatchDetails.dispatch_panel_count}</p>
+              <p><strong>Scanned Panels:</strong> {panels.length}</p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit}>
 
-            {/* ===== INPUT ROW ===== */}
             <div className="row mb-3">
 
-              {/* Machine Scanner */}
               <div className="col-md-4">
                 <input
                   type="text"
@@ -175,7 +250,6 @@ const DamagePanel = () => {
                 />
               </div>
 
-              {/* QR Scan Button */}
               <div className="col-md-4">
                 <button
                   type="button"
@@ -186,7 +260,6 @@ const DamagePanel = () => {
                 </button>
               </div>
 
-              {/* Manual Entry */}
               <div className="col-md-4 d-flex gap-2">
                 <input
                   className="form-control"
@@ -205,7 +278,6 @@ const DamagePanel = () => {
 
             </div>
 
-            {/* ===== CAMERA ===== */}
             {scanning && (
               <div className="text-center mb-3">
                 <div
@@ -215,47 +287,28 @@ const DamagePanel = () => {
               </div>
             )}
 
-            {/* ===== IMAGE ===== */}
             <div className="mb-3">
-              <label>Damage Image *</label>
-              <input
-                type="file"
-                className="form-control"
-                onChange={(e) => setImage(e.target.files[0])}
-                required
-              />
-            </div>
-
-            {/* ===== REMARKS ===== */}
-            <div className="mb-3">
-              <label>Remarks *</label>
+              <label>Remarks</label>
               <textarea
                 className="form-control"
                 rows="3"
                 value={remarks}
                 onChange={(e) => setRemarks(e.target.value)}
-                required
               />
             </div>
 
-            {/* ===== PANEL LIST ===== */}
             <div className="mb-3">
-              <h6>Added Panels</h6>
-              {panels.length === 0 ? (
-                <p className="text-muted">No panels added</p>
-              ) : (
-                panels.map((p, i) => (
-                  <span key={i} className="badge bg-danger m-1">
-                    {p}
-                  </span>
-                ))
-              )}
+              <h6>Scanned Panels</h6>
+              {panels.map((p, i) => (
+                <span key={i} className="badge bg-success m-1">
+                  {p}
+                </span>
+              ))}
             </div>
 
-            {/* ===== SUBMIT ===== */}
             <div className="text-center">
-              <button className="btn btn-danger">
-                Submit Damage Report
+              <button className="btn btn-success">
+                Submit Safe Panels
               </button>
             </div>
 
@@ -266,4 +319,4 @@ const DamagePanel = () => {
   );
 };
 
-export default DamagePanel;
+export default ReceiveSafePanel;

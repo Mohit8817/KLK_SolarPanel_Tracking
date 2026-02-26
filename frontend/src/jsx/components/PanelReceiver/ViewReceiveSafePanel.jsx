@@ -112,7 +112,7 @@ const ReceiveList = () => {
                      
                       </Link>
                         <Link
-                        to={`/receiver/fetch-panesl-detail/${item._id}`}
+                        to={`/receiver/fetch-panels-detail/${item._id}`}
                         className="btn btn-primary btn-xs sharp me-2"
                       >
                            <i className="fa fa-eye" />

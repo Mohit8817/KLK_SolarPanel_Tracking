@@ -69,7 +69,7 @@ const Markup = () => {
 
     { url: "receiver/panels/:id", component: <ReceiveSafePanel /> },
     { url: "receiver/safe/list", component: <ViewReceiveSafePanel /> }, 
-     { url: "receiver/fetch-panesl-detail/:id", component: <ViewReceivedPanels /> },
+    { url: "receiver/fetch-panels-detail/:id", component: <ViewReceivedPanels /> },
 
 
     { url: "sender/damage/create", component: <DamagePanel /> },
