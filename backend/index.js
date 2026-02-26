@@ -11,6 +11,7 @@ import panelseriallotroutes from './routes/panelseriallot.routes.js'
 import productionopanelroures from './routes/productionpanel.routes.js'
 import dispatchpanelroures from './routes/dispatchpanel.routes.js'
 import damagepanelroures from './routes/damagepanel.routes.js'
+import dashboardroutes from './routes/dashboard.routes.js'
 
 
 const app = express()
@@ -42,9 +43,11 @@ ConnectDb()
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 
+
 app.use("/api/login", loginroutes)
 
 app.use(auth)
+app.use("/api/dashboard", dashboardroutes);
 app.use("/api/users", userRoutes);
 app.use("/api/tasks", taskRoutes)
 app.use("/api/panels", panelseriallotroutes)

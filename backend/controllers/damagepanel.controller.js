@@ -3,50 +3,110 @@ import PanelNumber from "../models/PanelNumber.model.js";
 import mongoose from "mongoose";
 
 export const createDamagePanel = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
     let { panel_no, remarks } = req.body;
     const damage_location_type = Number(req.body.damage_location_type);
 
-    // Normalize panel list
-    const panels = Array.isArray(panel_no) ? panel_no : [panel_no];
-    if (!panels.length) {
+    // ✅ Validate damage type
+    if (![1, 2, 3].includes(damage_location_type)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid damage_location_type",
+      });
+    }
+
+    // ✅ Validate panel_no
+    if (!panel_no || (Array.isArray(panel_no) && panel_no.length === 0)) {
       return res.status(400).json({
         success: false,
         message: "panel_no is required",
       });
     }
 
+    const panels = Array.isArray(panel_no) ? panel_no : [panel_no];
+
     const invalidPanels = [];
     const validPanels = [];
 
-    // 1️⃣ Validate all panels first
+    // =====================================================
+    // 1️⃣ VALIDATE PANELS
+    // =====================================================
+
     for (let pNo of panels) {
-      const panel = await PanelNumber.findOne({ panel_unique_no: pNo }).session(session);
+      const panel = await PanelNumber.findOne({
+        panel_unique_no: pNo,
+      });
 
       if (!panel) {
-        invalidPanels.push({ panel_no: pNo, reason: "Panel not found" });
+        invalidPanels.push({
+          panel_no: pNo,
+          reason: "Panel not found",
+        });
         continue;
       }
 
-      if (damage_location_type === 1 && panel.production_status !== 1) {
-        invalidPanels.push({ panel_no: pNo, reason: "Production not completed" });
-        continue;
+      // ---------- Production Damage ----------
+      if (damage_location_type === 1) {
+        if (panel.production_status !== 1) {
+          invalidPanels.push({
+            panel_no: pNo,
+            reason: "Production not completed",
+          });
+          continue;
+        }
+
+        if (panel.production_damage_status === 1) {
+          invalidPanels.push({
+            panel_no: pNo,
+            reason: "Already marked production damaged",
+          });
+          continue;
+        }
       }
 
-      if (damage_location_type === 2 && panel.dispatch_status !== 1) {
-        invalidPanels.push({ panel_no: pNo, reason: "Panel not dispatched yet" });
-        continue;
+      // ---------- Dispatch Damage ----------
+      if (damage_location_type === 2) {
+        if (panel.dispatch_status !== 1) {
+          invalidPanels.push({
+            panel_no: pNo,
+            reason: "Panel not dispatched yet",
+          });
+          continue;
+        }
+
+        if (panel.damage_status === 1) {
+          invalidPanels.push({
+            panel_no: pNo,
+            reason: "Already marked dispatch damaged",
+          });
+          continue;
+        }
+      }
+
+      // ---------- Collect/Site Damage ----------
+      if (damage_location_type === 3) {
+        if (panel.collect_status !== 1) {
+          invalidPanels.push({
+            panel_no: pNo,
+            reason: "Panel not collected yet",
+          });
+          continue;
+        }
+
+        if (panel.collect_damage_status === 1) {
+          invalidPanels.push({
+            panel_no: pNo,
+            reason: "Already marked collect damaged",
+          });
+          continue;
+        }
       }
 
       validPanels.push(panel);
     }
 
+    // ❌ Stop if invalid panels exist
     if (invalidPanels.length > 0) {
-      await session.abortTransaction();
-      session.endSession();
       return res.status(400).json({
         success: false,
         message: "Some panels failed validation",
@@ -54,49 +114,58 @@ export const createDamagePanel = async (req, res) => {
       });
     }
 
-    // 2️⃣ Handle image
-   const imagePath = req.file ? `uploads/${req.file.filename}` : "";
+    // =====================================================
+    // 2️⃣ IMAGE
+    // =====================================================
+
+    const imagePath = req.file
+      ? `/uploads/${req.file.filename}`
+      : null;
 
     const savedDamages = [];
 
-    // 3️⃣ Process valid panels
+    // =====================================================
+    // 3️⃣ PROCESS PANELS
+    // =====================================================
+
     for (let panel of validPanels) {
-      // First update panel table
+
       if (damage_location_type === 1) {
+        panel.production_damage_status = 1;
+        panel.production_status = 0;
+      }
+
+      else if (damage_location_type === 2) {
         panel.damage_status = 1;
         panel.dispatch_status = 0;
-      } else if (damage_location_type === 2) {
-        panel.collect_status = 1;
+      }
+
+      else if (damage_location_type === 3) {
         panel.collect_damage_status = 1;
       }
 
-      await panel.save({ session });
+      const damagePanel = await DamagePanel.create({
+        panel_no: panel.panel_unique_no,
+        damage_location_type,
+        image: imagePath,
+        remarks,
+      });
 
-      // Now create damage panel
-      const damagePanel = await DamagePanel.create(
-        [
-          {
-            panel_no: panel.panel_unique_no,
-            damage_location_type,
-            image: imagePath,
-            remarks,
-          },
-        ],
-        { session }
-      );
+      const damageId = damagePanel._id;
 
-      // Link damage ID to panel
-      if (damage_location_type === 1) panel.damage_id = damagePanel[0]._id;
-      if (damage_location_type === 2) panel.collect_id = damagePanel[0]._id;
+      if (damage_location_type === 1)
+        panel.production_damage_id = damageId;
 
-      await panel.save({ session });
+      if (damage_location_type === 2)
+        panel.damage_id = damageId;
 
-      savedDamages.push(damagePanel[0]);
+      if (damage_location_type === 3)
+        panel.collect_id = damageId;
+
+      await panel.save();
+
+      savedDamages.push(damagePanel);
     }
-
-    // 4️⃣ Commit transaction
-    await session.commitTransaction();
-    session.endSession();
 
     return res.status(201).json({
       success: true,
@@ -104,17 +173,16 @@ export const createDamagePanel = async (req, res) => {
       total_saved: savedDamages.length,
       data: savedDamages,
     });
+
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    console.log("ERROR:", error);
+    console.error("CREATE DAMAGE ERROR:", error);
+
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message || "Internal Server Error",
     });
   }
 };
-
 
 
 /* =========================================
@@ -230,22 +298,23 @@ export const updateDamagePanel = async (req, res) => {
   }
 };
 
+
 export const getDamageTypeOnePanels = async (req, res) => {
   try {
-    const panels = await DamagePanel.find({
+    const damages = await DamagePanel.find({
       damage_location_type: 1,
     }).sort({ createdAt: -1 });
 
-    // Attach panel details
     const result = await Promise.all(
-      panels.map(async (damage) => {
-        const panelDetail = await PanelNumber.findOne({
-          damage_id: damage._id,
+      damages.map(async (damage) => {
+        const panel = await PanelNumber.findOne({
+          production_damage_id: damage._id,
         });
 
         return {
           ...damage.toObject(),
-          panel_category: panelDetail?.panel_category || null,
+          panel_unique_no: panel?.panel_unique_no || null,
+          panel_category: panel?.panel_category || null,
         };
       })
     );
@@ -256,6 +325,7 @@ export const getDamageTypeOnePanels = async (req, res) => {
       data: result,
     });
   } catch (error) {
+    console.error("Type 1 Damage Fetch Error:", error);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -264,22 +334,22 @@ export const getDamageTypeOnePanels = async (req, res) => {
 };
 
 
-
 export const getDamageTypeTwoPanels = async (req, res) => {
   try {
-    const panels = await DamagePanel.find({
+    const damages = await DamagePanel.find({
       damage_location_type: 2,
     }).sort({ createdAt: -1 });
 
     const result = await Promise.all(
-      panels.map(async (damage) => {
-        const panelDetail = await PanelNumber.findOne({
-          collect_id: damage._id,
+      damages.map(async (damage) => {
+        const panel = await PanelNumber.findOne({
+          damage_id: damage._id,
         });
 
         return {
           ...damage.toObject(),
-          panel_category: panelDetail?.panel_category || null,
+          panel_unique_no: panel?.panel_unique_no || null,
+          panel_category: panel?.panel_category || null,
         };
       })
     );
@@ -290,6 +360,42 @@ export const getDamageTypeTwoPanels = async (req, res) => {
       data: result,
     });
   } catch (error) {
+    console.error("Type 2 Damage Fetch Error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+export const getDamageTypeThreePanels = async (req, res) => {
+  try {
+    const damages = await DamagePanel.find({
+      damage_location_type: 3,
+    }).sort({ createdAt: -1 });
+
+    const result = await Promise.all(
+      damages.map(async (damage) => {
+        const panel = await PanelNumber.findOne({
+          collect_id: damage._id,
+        });
+
+        return {
+          ...damage.toObject(),
+          panel_unique_no: panel?.panel_unique_no || null,
+          panel_category: panel?.panel_category || null,
+        };
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      total: result.length,
+      data: result,
+    });
+  } catch (error) {
+    console.error("Type 3 Damage Fetch Error:", error);
     res.status(500).json({
       success: false,
       message: error.message,

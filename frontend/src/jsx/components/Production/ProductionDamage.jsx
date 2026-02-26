@@ -105,7 +105,7 @@ const DamagePanel = () => {
       for (let panel of panels) {
         const formData = new FormData();
         formData.append("panel_no", panel);
-        formData.append("damage_location_type", 3);
+        formData.append("damage_location_type", 1);
         formData.append("remarks", remarks);
         formData.append("image", image);
 

@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom';
 import loadable from "@loadable/component";
 import pMinDelay from "p-min-delay";
 
-
-//Components
+// Components
 import { ThemeContext } from "../../../context/ThemeContext";
 import DropdownBlog from '../Dompet/DropdownBlog';
 import PreviousTab from '../Dompet/Home/PreviousTab';
@@ -25,46 +24,91 @@ const TransactionApexBar = loadable(() =>
 
 const Home = () => {
 	const [checked, setChecked] = useState(true);
-	const { changeBackground,
-		// changeSideBarStyle, 
+	const [dashboardData, setDashboardData] = useState(null);
+	const [loading, setLoading] = useState(true);
+
+	const {
+		changeBackground,
 		changePrimaryColor,
 		chnageSidebarColor,
 	} = useContext(ThemeContext);
+
+	/* ================= THEME ================= */
 	useEffect(() => {
 		changeBackground({ value: "light", label: "Light" });
-		// if (window.innerWidth >= 768) {
-		// 	changeSideBarStyle({ value: "full", label: "full" });
-		// }
 		changePrimaryColor("color_1");
 		chnageSidebarColor("color_1");
-	}, [
-	]);
+	}, []);
+
+	/* ================= FETCH DASHBOARD ================= */
+	useEffect(() => {
+		const fetchDashboard = async () => {
+			try {
+				const res = await fetch("/api/dashboard/main-dashboard");
+				const data = await res.json();
+
+				if (data.success) {
+					setDashboardData(data.data);
+				}
+			} catch (error) {
+				console.error("Dashboard Fetch Error:", error);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchDashboard();
+	}, []);
+
+	/* ================= SAFE VALUES ================= */
+	const totalPanels =
+		dashboardData?.production?.totalPanelsProduced || 0;
+
+	const totalDispatch =
+		dashboardData?.dispatch?.totalDispatch || 0;
+
+	const totalDamage =
+		dashboardData?.damage?.totalDamage || 0;
+
+	const generatedPercent = totalPanels
+		? ((totalPanels - totalDispatch - totalDamage) / totalPanels) * 100
+		: 0;
+
+	const dispatchedPercent = totalPanels
+		? (totalDispatch / totalPanels) * 100
+		: 0;
+
+	const damagedPercent = totalPanels
+		? (totalDamage / totalPanels) * 100
+		: 0;
 
 	return (
 		<>
 			<div className="row invoice-card-row">
 				<InvoiceCard />
 			</div>
+
 			<div className="row">
-				
 
-
+				{/* ================= MAIN PANEL CARD ================= */}
 				<div className="col-xl-9 col-xxl-12">
 					<div className="card">
 						<div className="card-body">
 							<div className="row align-items-center">
 
-								{/* Left Main Card */}
+								{/* LEFT SIDE */}
 								<div className="col-xl-6">
 									<div className="card-bx bg-blue">
-										{/* <img className="pattern-img" src={pattern6} alt="" /> */}
 										<div className="card-info text-white">
-											{/* <img src={circle} className="mb-4" alt="" /> */}
-											<h2 className="text-white card-balance">12,480</h2>
+											<h2 className="text-white card-balance">
+												{totalPanels}
+											</h2>
 											<p className="fs-16">Total Panels Tracked</p>
-											<span>+5.2% growth compared to last week</span>
+											<span>
+												Today Produced: {dashboardData?.production?.todayProduction || 0}
+											</span>
 										</div>
-										<Link to={"#"} className="change-btn" id="change-btn">
+										<Link to={"#"} className="change-btn">
 											<i className="fa fa-caret-up up-ico" /> Update
 											<span className="reload-icon">
 												<i className="fa fa-refresh reload active" />
@@ -73,11 +117,11 @@ const Home = () => {
 									</div>
 								</div>
 
-								{/* Right Overview */}
+								{/* RIGHT SIDE */}
 								<div className="col-xl-6">
 									<div className="row mt-xl-0 mt-4">
 
-										<div className="col-md-6">	
+										<div className="col-md-6">
 											<h4 className="card-title">Panel Status Overview</h4>
 											<span>
 												Real-time distribution of solar panels across
@@ -88,28 +132,30 @@ const Home = () => {
 												<li>
 													<span className="bg-blue circle"></span>
 													Generated
-													<span>45%</span>
+													<span>{generatedPercent.toFixed(0)}%</span>
 												</li>
 												<li>
 													<span className="bg-success circle"></span>
 													Dispatched
-													<span>35%</span>
+													<span>{dispatchedPercent.toFixed(0)}%</span>
 												</li>
 												<li>
 													<span className="bg-warning circle"></span>
-													Pending Dispatch
-													<span>15%</span>
+													Pending Receive
+													<span>
+														{dashboardData?.dispatch?.pendingReceive || 0}
+													</span>
 												</li>
 												<li>
 													<span className="bg-light circle"></span>
 													Damaged
-													<span>5%</span>
+													<span>{damagedPercent.toFixed(0)}%</span>
 												</li>
 											</ul>
 										</div>
 
 										<div className="col-md-6">
-											<PolarChart />
+											<PolarChart data={dashboardData} />
 										</div>
 
 									</div>
@@ -120,13 +166,15 @@ const Home = () => {
 					</div>
 				</div>
 
-
+				{/* ================= PLANT ACTIVITY ================= */}
 				<div className="col-xl-3 col-xxl-5">
 					<div className="card">
 						<div className="card-header pb-0 border-0">
 							<div>
 								<h4 className="card-title mb-2">Plant Activity</h4>
-								<h2 className="mb-0">78,120 kWh</h2>
+								<h2 className="mb-0">
+									{dashboardData?.production?.totalProduction || 0}
+								</h2>
 							</div>
 							<ul className="card-list">
 								<li className="justify-content-end">
@@ -140,18 +188,18 @@ const Home = () => {
 							</ul>
 						</div>
 						<div className="card-body pb-0 pt-3">
-							<div id="chartBar" className="bar-chart flex-grow-1">
-								<ActivityApexBarGraph />
+							<div className="bar-chart flex-grow-1">
+								<ActivityApexBarGraph data={dashboardData} />
 							</div>
 						</div>
 					</div>
 				</div>
 
-
-
+				{/* ================= REMAINING COMPONENTS (UNCHANGED) ================= */}
 				<div className="col-xl-3 col-xxl-7">
 					<QuickTransferBlog />
 				</div>
+
 				<div className="col-xl-3 col-xxl-5">
 					<SpendingsBlog />
 				</div>
@@ -160,7 +208,9 @@ const Home = () => {
 					<div className="card">
 						<div className="card-header d-flex flex-wrap border-0 pb-0">
 							<div className="me-auto mb-sm-0 mb-3">
-								<h4 className="card-title mb-2">Panel Movement Overview</h4>
+								<h4 className="card-title mb-2">
+									Panel Movement Overview
+								</h4>
 								<span className="fs-12">
 									Daily tracking of generated vs dispatched panels
 								</span>
@@ -183,29 +233,11 @@ const Home = () => {
 									<input
 										className="form-check-input"
 										type="checkbox"
-										id="flexSwitchCheckDefault"
 										defaultChecked={checked}
 										onChange={() => setChecked(!checked)}
 									/>
-									<label
-										className="form-check-label"
-										htmlFor="flexSwitchCheckDefault"
-									>
+									<label className="form-check-label">
 										Units
-									</label>
-								</div>
-
-								<div className="form-check toggle-switch text-end form-switch me-auto">
-									<input
-										className="form-check-input"
-										type="checkbox"
-										id="flexSwitchCheckDefault1"
-									/>
-									<label
-										className="form-check-label"
-										htmlFor="flexSwitchCheckDefault1"
-									>
-										Analytics
 									</label>
 								</div>
 
@@ -221,23 +253,24 @@ const Home = () => {
 								</ul>
 							</div>
 
-							<div id="chartBar2" className="bar-chart">
-								<TransactionApexBar />
+							<div className="bar-chart">
+								<TransactionApexBar data={dashboardData} />
 							</div>
 						</div>
 					</div>
 				</div>
 
-
 				<div className="col-xl-6 col-xxl-12">
 					<PreviousTab />
 				</div>
+
 				<div className="col-xl-6 col-xxl-12">
 					<CardBlog />
 				</div>
 
 			</div>
 		</>
-	)
-}
+	);
+};
+
 export default Home;

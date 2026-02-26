@@ -10,7 +10,7 @@ const DamagePanelSchema = new mongoose.Schema(
 
     damage_location_type: {
         type: Number,
-        enum: [0, 1, 2],
+        enum: [0, 1, 2,3],
         default: 0,
         },
 

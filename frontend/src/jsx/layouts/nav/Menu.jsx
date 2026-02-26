@@ -25,22 +25,6 @@ export const MenuList = [
         ],
     },
 
-    {
-        title: "Manufacture Damage",
-        classsChange: "mm-collapse",
-        iconStyle: <i className="fa-solid fa-screwdriver-wrench fw-bold" />,
-        content: [
-            {
-                title: "Add Damage Panel",
-                to: "manufacture-damage/add",
-            },
-            {
-                title: "View Damage Panel",
-                to: "manufacture-damage/list",
-            },
-        ],
-    },
-
     // Production
     {
         title: 'Production',
@@ -54,6 +38,14 @@ export const MenuList = [
             {
                 title: 'View Production List',
                 to: 'production/list',
+            },
+            {
+                title: 'Add Damage',
+                to: 'production-damage/add',
+            },
+            {
+                title: 'Damage List',
+                to: 'production-damage/list',
             },
         ],
     },
@@ -73,10 +65,17 @@ export const MenuList = [
                 title: 'View Dispatch List',
                 to: '/dispatch/list',
             },
+            {
+                title: 'Add Damage',
+                to: 'sender/damage/create',
+            },
+
+            {
+                title: 'View Damage List',
+                to: '/damage/list',
+            },
         ],
     },
-
-
 
     // Receive Panel
     {
@@ -85,39 +84,19 @@ export const MenuList = [
         iconStyle: <i className="fa-solid fa-truck-ramp-box fw-bold" />,
         content: [
             {
-                title: 'Receive Safe Panel',
-                to: 'receiver/safe/create',
-            },
-            {
                 title: 'View Safe Panels',
                 to: 'receiver/safe/list',
             },
-        ],
-    },
-
-
-    // Damage Panel
-    {
-        title: "Damage Panel",
-        classsChange: 'mm-collapse',
-        iconStyle: <i className="fa-solid fa-triangle-exclamation fw-bold" />,
-        content: [
-            {
-                title: 'Sender Damage Report',
-                to: 'sender/damage/create',
-            },
-            {
-                title: 'Receiver Damage Report',
+           {
+                title: 'Add Damage Panel',
                 to: 'receiver/damage/create',
             },
             {
                 title: 'View Damage List',
-                to: '/damage/list',
+                to: 'receiver/damage/list',
             },
         ],
     },
-
-
 
     // User Management
     {

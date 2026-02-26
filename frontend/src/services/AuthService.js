@@ -66,25 +66,25 @@ export function runLogoutTimer(dispatch, timer, navigate) {
     }, timer);
 }
 
-export function checkAutoLogin(dispatch, navigate) {
+
+export function checkAutoLogin(dispatch) {
     const tokenDetailsString = localStorage.getItem('userDetails');
-    let tokenDetails = '';
+
     if (!tokenDetailsString) {
-        dispatch(Logout(navigate));
-		return;
+        return; // redirect mat karo
     }
 
-    tokenDetails = JSON.parse(tokenDetailsString);
-    let expireDate = new Date(tokenDetails.expireDate);
-    let todaysDate = new Date();
+    const tokenDetails = JSON.parse(tokenDetailsString);
+    const expireDate = new Date(tokenDetails.expireDate);
+    const todaysDate = new Date();
 
     if (todaysDate > expireDate) {
-        dispatch(Logout(navigate));
+        dispatch(Logout()); // navigate mat bhejo
         return;
     }
-		
+
     dispatch(loginConfirmedAction(tokenDetails));
-	
+
     const timer = expireDate.getTime() - todaysDate.getTime();
-    runLogoutTimer(dispatch, timer, navigate);
+    runLogoutTimer(dispatch, timer);
 }

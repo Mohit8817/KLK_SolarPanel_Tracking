@@ -25,10 +25,33 @@ const DispatchPanelSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    state: {
+      type: String,
+      required: true,
+    },
     dispatch_panel_count: {
       type: Number,
       required: true,
     },
+    collect_status : {
+      type: Number,
+      enum: [0, 1],
+      default: 0,
+    },
+    collect_count : {
+      type: Number,
+      default: 0,
+    },
+    collect_date : {
+      type: String,
+    },
+    collect_document: {
+      type: String,
+    },
+    collect_remarks : {
+      type: String,
+      trim: true,
+    }
   },
   { timestamps: true }
 );

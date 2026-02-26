@@ -9,7 +9,8 @@ import {
   getDamageById,
   updateDamagePanel,
   getDamageTypeOnePanels,
-  getDamageTypeTwoPanels
+  getDamageTypeTwoPanels,
+  getDamageTypeThreePanels
 } from "../controllers/damagepanel.controller.js"
 
 const router = express.Router();
@@ -41,15 +42,22 @@ router.get("/damage-panel/:id", getDamageById);
 
 router.put("/update-damage-panel/:id", updateDamagePanel);
 
+
+
 /* ===============================
    FETCH DAMAGE TYPE 1
 =============================== */
-router.get("/get-damage-panel", getDamageTypeOnePanels);
+router.get("/get-production-damage-panel", getDamageTypeOnePanels);
+
+/* ===============================
+   FETCH DAMAGE TYPE 1
+=============================== */
+router.get("/get-damage-panel", getDamageTypeTwoPanels);
 
 /* ===============================
    FETCH DAMAGE TYPE 2
 =============================== */
-router.get("/get-damage-panel-onsite", getDamageTypeTwoPanels);
+router.get("/get-damage-panel-onsite", getDamageTypeThreePanels);
 
 
 export default router;

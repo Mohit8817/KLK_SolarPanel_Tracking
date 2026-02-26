@@ -40,7 +40,7 @@ const PanelNumberSchema = new mongoose.Schema(
       trim: true,
       default: 0,
     },
-    
+
      panel_type: {
       type: Number,
       enum: [1, 2, 3],
@@ -58,6 +58,16 @@ const PanelNumberSchema = new mongoose.Schema(
     production_status: {
       type: Number,
       enum: [0, 1], // 0 = pending, 1 = assigned
+      default: 0,
+    },
+
+    production_damage_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "DamagePanel",
+    },
+    production_damage_status: {
+      type: Number,
+      enum: [0, 1],
       default: 0,
     },
 
@@ -88,16 +98,17 @@ const PanelNumberSchema = new mongoose.Schema(
       default: 0,
     },
 
-    // 🔄 Collection
-    collect_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "DamagePanel",
-    },
     collect_status: {
       type: Number,
       enum: [0, 1],
       default: 0,
     },
+    
+    collect_damage_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "DamagePanel",
+    },
+
     collect_damage_status: {
       type: Number,
       enum: [0, 1],
