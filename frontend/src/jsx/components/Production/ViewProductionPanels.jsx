@@ -70,7 +70,7 @@ const ViewProductionPanels = () => {
     { label: "Capacity", key: "capacity" },
     { label: "Production Status", key: "production_status" },
     { label: "Dispatch Status", key: "dispatch_status" },
-    { label: "Damage Status", key: "damage_status" },
+    { label: "Damage Status", key: "production_damage_status" },
   ];
 
   return (
@@ -142,7 +142,7 @@ const ViewProductionPanels = () => {
                           )}
                         </td>
                         <td>
-                          {item.damage_status === 1 ? (
+                          {item.production_damage_status === 1 ? (
                             <Badge bg="warning">Damage</Badge>
                           ) : (
                             <Badge bg="success">Safe</Badge>

@@ -63,7 +63,6 @@ const ViewGeneratePanel = () => {
     panelType: item.panel_type,
     panelState: item.panel_alot_state,
     panelProject: item.panel_alot_project,
-    panelType: item.panel_type,
   }));
 
   const exportColumns = [

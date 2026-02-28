@@ -132,7 +132,6 @@ export const createDamagePanel = async (req, res) => {
 
       if (damage_location_type === 1) {
         panel.production_damage_status = 1;
-        panel.production_status = 0;
       }
 
       else if (damage_location_type === 2) {

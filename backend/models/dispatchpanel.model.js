@@ -10,7 +10,6 @@ const DispatchPanelSchema = new mongoose.Schema(
     truck_no: {
       type: String,
       required: true,
-      unique: true,
     },
     challan_no: {
       type: String,

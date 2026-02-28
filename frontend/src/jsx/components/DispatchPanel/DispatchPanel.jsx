@@ -187,52 +187,61 @@ const DispatchPanel = () => {
       setDispatchStarted(true);
       alert("Dispatch Started Successfully");
       forceFocus();
-    } catch {
-      alert("Failed to start dispatch");
-    }
+    } catch (error) {
+  console.log("Start Dispatch Error:", error);
+  console.log("Response:", error.response);
+  alert(error.response?.data?.message || "Failed to start dispatch");
+}
   };
 
   /* ================= END DISPATCH ================= */
-  const handleEndDispatch = async (e) => {
-    e.preventDefault();
-    await stopScan();
+const handleEndDispatch = async (e) => {
+  e.preventDefault();
+  await stopScan();
 
-    try {
-      const token = localStorage.getItem("token");
-      const dispatch_id = localStorage.getItem("dispatch_main_id");
+  const totalPanels =
+    dispatchData.dcrPanels.length +
+    dispatchData.nonDcrPanels.length;
 
-      const totalPanels =
-        dispatchData.dcrPanels.length + dispatchData.nonDcrPanels.length;
+  if (totalPanels === 0) {
+    alert("No panels scanned");
+    return;
+  }
 
-      if (totalPanels === 0) {
-        alert("No panels scanned");
-        return;
-      }
+  if (Number(dispatchData.dispatch_panel_count) !== totalPanels) {
+    alert(
+      `Expected ${dispatchData.dispatch_panel_count} panels but scanned ${totalPanels}`
+    );
+    return;
+  }
 
-      if (Number(dispatchData.dispatch_panel_count) !== totalPanels) {
-        alert(
-          `Expected ${dispatchData.dispatch_panel_count} panels but scanned ${totalPanels}`
-        );
-        return;
-      }
+  alert(`Dispatch completed with ${totalPanels} panels`);
 
-      await axios.post(
-        `${import.meta.env.VITE_BACKEND_API_URL}dispatch/end-dispatch-panel`,
-        { dispatch_id, dispatch_panel_count: totalPanels },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+  /* ===== FULL RESET ===== */
+  localStorage.removeItem("dispatch_main_id");
+  localStorage.removeItem("dispatch_panel_type");
+  localStorage.removeItem(STORAGE_KEY);
 
-      alert(`Dispatch completed with ${totalPanels} panels`);
+  setDispatchStarted(false);
 
-      localStorage.removeItem("dispatch_main_id");
-      localStorage.removeItem("dispatch_panel_type");
-      localStorage.removeItem(STORAGE_KEY);
+  setDispatchData({
+    dispatch_id: "",
+    state: "",
+    truck_no: "",
+    driver_no: "",
+    driver_name: "",
+    challan_no: "",
+    dispatch_panel_count: "",
+    dispatchType: "",
+    dcrPanels: [],
+    nonDcrPanels: [],
+  });
 
-      window.location.href = "/dispatch/list";
-    } catch {
-      alert("Failed to finalize dispatch");
-    }
-  };
+  setManualPanel("");
+  setScannerInput("");
+
+  window.location.href = "/dispatch/list";
+};
 
   return (
     <Fragment>
@@ -541,12 +550,17 @@ const DispatchPanel = () => {
             </div>
 
             <div className="text-center mt-4">
-              <button
-                className="btn btn-success px-5"
-                onClick={handleEndDispatch}
-              >
-                End Dispatch
-              </button>
+            <button
+  className="btn btn-success px-5"
+  onClick={handleEndDispatch}
+  disabled={
+    dispatchData.dcrPanels.length +
+      dispatchData.nonDcrPanels.length !==
+    Number(dispatchData.dispatch_panel_count)
+  }
+>
+  End Dispatch
+</button>
             </div>
 
           </fieldset>
