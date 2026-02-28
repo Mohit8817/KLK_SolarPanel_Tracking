@@ -130,7 +130,7 @@ const ViewDispatchPanel = () => {
                                         </td>
 
                                            <td className="text-center">
-                          <div className="d-flex gap-1 justify-content-center">
+                                          <div className="d-flex gap-1 justify-content-center">
 
                           
                                             <Link
@@ -138,6 +138,14 @@ const ViewDispatchPanel = () => {
                                                 className="btn btn-info btn-xs sharp"
                                             >
                                                 <i className="fa fa-eye" />
+                                            </Link>
+
+                                            
+                                            <Link
+                                                to={`/dispatch/panel/update/${item._id}`}
+                                                className="btn btn-info btn-xs sharp"
+                                            >
+                                                <i className="fa fa-pen" />
                                             </Link>
 
                                             <button className="btn btn-danger btn-xs sharp">

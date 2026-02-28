@@ -24,6 +24,7 @@ import ViewProductionDamage from "./components/Production/ViewProductionDamage";
 import DispatchPanel from "./components/DispatchPanel/DispatchPanel";
 import ViewDispatchPanel from "./components/DispatchPanel/ViewDispatch";
 import ViewDispatchPanels from "./components/DispatchPanel/ViewDispatchPanels";
+import UpdateDispatchPanel from "./components/DispatchPanel/UpdateDispatchPanel";
 import DamagePanel from "./components/DamagePanel/Damagepanel";
 import ViewDamagePanel from "./components/DamagePanel/ViewDamagePanel";
 import AddUser from "./components/User/AddUser";
@@ -66,6 +67,8 @@ const Markup = () => {
     { url: "dispatch/create", component: <DispatchPanel /> },
     { url: "dispatch/list", component: <ViewDispatchPanel /> },
     { url: "view-dispatch-panels/:id", component: <ViewDispatchPanels /> },
+    { url: "dispatch/panel/update/:id", component: <UpdateDispatchPanel /> },
+
 
     { url: "receiver/panels/:id", component: <ReceiveSafePanel /> },
     { url: "receiver/safe/list", component: <ViewReceiveSafePanel /> }, 

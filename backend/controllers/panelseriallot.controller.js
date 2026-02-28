@@ -12,13 +12,15 @@ export const createPanelSerialLot = async (req, res) => {
       panel_capacity,
       panel_category,
       date,
+      panel_alot_state,
+      panel_alot_project,
       starting_no,
       company_id,
       created_by,
       updated_by,
     } = req.body;
 
-    if (!total_panels || !prefix || !panel_type || !panel_capacity || !date) {
+    if (!total_panels || !prefix || !panel_type || !panel_capacity || !date || !panel_alot_state || !panel_alot_project) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields",
@@ -74,6 +76,8 @@ export const createPanelSerialLot = async (req, res) => {
       panel_capacity,
       panel_type,
       panel_category,
+      panel_alot_state,
+      panel_alot_project,
       total_panels,
       created_by,
       updated_by,

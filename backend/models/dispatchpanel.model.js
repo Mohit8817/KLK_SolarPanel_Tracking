@@ -31,7 +31,6 @@ const DispatchPanelSchema = new mongoose.Schema(
     },
     dispatch_panel_count: {
       type: Number,
-      required: true,
     },
     collect_status : {
       type: Number,

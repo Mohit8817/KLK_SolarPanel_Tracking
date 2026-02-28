@@ -34,6 +34,16 @@ const PanelSerialLotSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    panel_alot_state: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    panel_alot_project: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     created_by: {
       type: String,
       trim: true,

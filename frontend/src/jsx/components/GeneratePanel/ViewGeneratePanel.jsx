@@ -61,6 +61,9 @@ const ViewGeneratePanel = () => {
     totalPanels: item.total_panels,
     capacity: item.panel_capacity,
     panelType: item.panel_type,
+    panelState: item.panel_alot_state,
+    panelProject: item.panel_alot_project,
+    panelType: item.panel_type,
   }));
 
   const exportColumns = [
@@ -101,6 +104,8 @@ const ViewGeneratePanel = () => {
                     <th>Total Panels</th>
                     <th>Capacity</th>
                     <th>Panel Type</th>
+                    <th>State</th>
+                    <th>Project</th>
                     <th className="text-center">Action</th>
                   </tr>
                 </thead>
@@ -119,6 +124,8 @@ const ViewGeneratePanel = () => {
                         <td>{item.total_panels}</td>
                         <td>{item.panel_capacity}</td>
                         <td>{item.panel_type}</td>
+                        <td>{item.panel_alot_state}</td>
+                        <td>{item.panel_alot_project}</td>
                         <td className="text-center">
                           <div className="d-flex gap-1 justify-content-center">
 
