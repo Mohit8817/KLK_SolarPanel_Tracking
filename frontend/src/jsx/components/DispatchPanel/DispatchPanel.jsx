@@ -5,7 +5,10 @@ import { Html5Qrcode } from "html5-qrcode";
 
 const DispatchPanel = () => {
   const scannerRef = useRef(null);
+  const inputRef = useRef(null);
+  const scanTimerRef = useRef(null);
   const lastScannedRef = useRef("");
+
   const STORAGE_KEY = "dispatchPanelData";
 
   const [scanning, setScanning] = useState(false);
@@ -26,23 +29,36 @@ const DispatchPanel = () => {
     nonDcrPanels: [],
   });
 
-  /* ================= LOAD STORAGE ================= */
+  /* ================= STORAGE ================= */
   useEffect(() => {
     const savedData = localStorage.getItem(STORAGE_KEY);
     if (savedData) setDispatchData(JSON.parse(savedData));
   }, []);
 
-  /* ================= SAVE STORAGE ================= */
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(dispatchData));
   }, [dispatchData]);
 
-  /* ================= CLEANUP ================= */
   useEffect(() => {
     return () => stopScan();
   }, []);
 
-  /* ================= START QR SCANNER ================= */
+  /* ================= BEEP ================= */
+  const playBeep = () => {
+    const audio = new Audio(
+      "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQgAAAAA"
+    );
+    audio.play().catch(() => {});
+  };
+
+  /* ================= FORCE FOCUS ================= */
+  const forceFocus = () => {
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
+  };
+
+  /* ================= START CAMERA ================= */
   const startScan = async () => {
     if (!dispatchStarted || !dispatchData.dispatchType) {
       alert("Please start dispatch & select panel type first.");
@@ -53,32 +69,28 @@ const DispatchPanel = () => {
 
     setScanning(true);
 
-    setTimeout(async () => {
-      try {
-        const qr = new Html5Qrcode("reader");
-        scannerRef.current = qr;
+    try {
+      const qr = new Html5Qrcode("reader");
+      scannerRef.current = qr;
 
-        await qr.start(
-          { facingMode: "environment" },
-          {
-            fps: 15,
-            qrbox: { width: 300, height: 300 },
-            aspectRatio: 1.0,
-          },
-          (decodedText) => {
-            console.log("Scanned:", decodedText);
-            savePanel(decodedText);
-          },
-          (err) => {}
-        );
-      } catch (err) {
-        console.log("Camera failed:", err);
-        setScanning(false);
-      }
-    }, 300);
+      await qr.start(
+        { facingMode: "environment" },
+        {
+          fps: 25,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0,
+          disableFlip: true,
+        },
+        (decodedText) => {
+          savePanel(decodedText);
+        }
+      );
+    } catch (err) {
+      console.log("Camera failed:", err);
+      setScanning(false);
+    }
   };
 
-  /* ================= STOP SCANNER ================= */
   const stopScan = async () => {
     if (scannerRef.current) {
       try {
@@ -101,13 +113,13 @@ const DispatchPanel = () => {
 
     if (lastScannedRef.current === panelCode) return;
     lastScannedRef.current = panelCode;
-    setTimeout(() => (lastScannedRef.current = ""), 500);
 
     if (
       dispatchData.dcrPanels.includes(panelCode) ||
       dispatchData.nonDcrPanels.includes(panelCode)
     ) {
       alert("Panel already scanned");
+      lastScannedRef.current = "";
       return;
     }
 
@@ -128,8 +140,16 @@ const DispatchPanel = () => {
           ? { ...prev, dcrPanels: [...prev.dcrPanels, panelCode] }
           : { ...prev, nonDcrPanels: [...prev.nonDcrPanels, panelCode] }
       );
+
+      playBeep();
+      forceFocus();
+
+      setTimeout(() => {
+        lastScannedRef.current = "";
+      }, 200);
     } catch (err) {
       alert(err.response?.data?.message || "Scan failed");
+      lastScannedRef.current = "";
     }
   };
 
@@ -138,10 +158,7 @@ const DispatchPanel = () => {
     const { name, value } = e.target;
 
     if (name === "dispatchType") {
-      localStorage.setItem(
-        "dispatch_panel_type",
-        value === "DCR" ? 1 : 2
-      );
+      localStorage.setItem("dispatch_panel_type", value === "DCR" ? 1 : 2);
     }
 
     setDispatchData((prev) => ({ ...prev, [name]: value }));
@@ -155,9 +172,8 @@ const DispatchPanel = () => {
       const sessionUser = JSON.parse(localStorage.getItem("user"));
       const token = localStorage.getItem("token");
 
-          const payload = {
+      const payload = {
         ...dispatchData,
-        dispatch_panel_count: dispatchData.dispatch_panel_count,
         company_id: sessionUser?.company_id,
       };
 
@@ -170,52 +186,53 @@ const DispatchPanel = () => {
       localStorage.setItem("dispatch_main_id", res.data.data.dispatch_id);
       setDispatchStarted(true);
       alert("Dispatch Started Successfully");
-    } catch (err) {
+      forceFocus();
+    } catch {
       alert("Failed to start dispatch");
     }
   };
 
   /* ================= END DISPATCH ================= */
-const handleEndDispatch = async (e) => {
-  e.preventDefault();
-  await stopScan();
+  const handleEndDispatch = async (e) => {
+    e.preventDefault();
+    await stopScan();
 
-  try {
-    const token = localStorage.getItem("token");
-    const dispatch_id = localStorage.getItem("dispatch_main_id");
+    try {
+      const token = localStorage.getItem("token");
+      const dispatch_id = localStorage.getItem("dispatch_main_id");
 
-    const totalPanels =
-      (dispatchData.dcrPanels?.length || 0) +
-      (dispatchData.nonDcrPanels?.length || 0);
+      const totalPanels =
+        dispatchData.dcrPanels.length + dispatchData.nonDcrPanels.length;
 
-    // ❗ Only check if nothing scanned
-    if (totalPanels === 0) {
-      alert("No panels scanned");
-      return;
+      if (totalPanels === 0) {
+        alert("No panels scanned");
+        return;
+      }
+
+      if (Number(dispatchData.dispatch_panel_count) !== totalPanels) {
+        alert(
+          `Expected ${dispatchData.dispatch_panel_count} panels but scanned ${totalPanels}`
+        );
+        return;
+      }
+
+      await axios.post(
+        `${import.meta.env.VITE_BACKEND_API_URL}dispatch/end-dispatch-panel`,
+        { dispatch_id, dispatch_panel_count: totalPanels },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert(`Dispatch completed with ${totalPanels} panels`);
+
+      localStorage.removeItem("dispatch_main_id");
+      localStorage.removeItem("dispatch_panel_type");
+      localStorage.removeItem(STORAGE_KEY);
+
+      window.location.href = "/dispatch/list";
+    } catch {
+      alert("Failed to finalize dispatch");
     }
-
-    await axios.post(
-      `${import.meta.env.VITE_BACKEND_API_URL}dispatch/end-dispatch-panel`,
-      {
-        dispatch_id,
-        dispatch_panel_count: totalPanels, // actual scanned count
-      },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    alert(`Dispatch completed with ${totalPanels} panels`);
-
-    localStorage.removeItem("dispatch_main_id");
-    localStorage.removeItem("dispatch_panel_type");
-    localStorage.removeItem(STORAGE_KEY);
-
-    window.location.href = "/dispatch/list";
-
-  } catch (err) {
-    console.log(err.response?.data);
-    alert("Failed to finalize dispatch");
-  }
-};
+  };
 
   return (
     <Fragment>
@@ -361,18 +378,19 @@ const handleEndDispatch = async (e) => {
   </div>
 
   {/* PANEL COUNT */}
-  <div className="col-md-6 mb-3">
-    <label className="form-label">Dispatch Panel Count *</label>
-    <input
-      type="number"
-      className="form-control"
-      name="dispatch_panel_count"
-      value={dispatchData.dispatch_panel_count}
-      onChange={handleChange}
-      disabled={dispatchStarted}
-      required
-    />
-  </div>
+ <div className="col-md-6 mb-3">
+  <label className="form-label">Dispatch Panel Count *</label>
+  <input
+    type="number"
+    className="form-control"
+    name="dispatch_panel_count"
+    value={dispatchData.dispatch_panel_count}
+    onChange={handleChange}
+    min="0"
+    disabled={dispatchStarted}
+    required
+  />
+</div>
 
 </div>
 
@@ -427,20 +445,31 @@ const handleEndDispatch = async (e) => {
             {/* SCANNER INPUT */}
             <div className="row mb-3 text-center">
               <div className="col-md-4">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Scan with scanner gun"
-                  value={scannerInput}
-                  onChange={(e) => setScannerInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      savePanel(scannerInput.trim());
-                      setScannerInput("");
-                    }
-                  }}
-                />
+                   <input
+            ref={inputRef}
+            type="text"
+            className="form-control"
+            placeholder="Scan with scanner gun"
+            value={scannerInput}
+            autoFocus
+            onChange={(e) => {
+              const value = e.target.value;
+              setScannerInput(value);
+
+              if (scanTimerRef.current) {
+                clearTimeout(scanTimerRef.current);
+              }
+
+              scanTimerRef.current = setTimeout(() => {
+                const finalValue = value.trim();
+                if (!finalValue) return;
+
+                setScannerInput("");
+                savePanel(finalValue);
+              }, 70);
+            }}
+            onBlur={forceFocus}
+          />
               </div>
 
               <div className="col-md-4">

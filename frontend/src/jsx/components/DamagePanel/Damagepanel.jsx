@@ -1,61 +1,54 @@
 import { Fragment, useState, useRef, useEffect } from "react";
 import PageTitle from "../../layouts/PageTitle";
-import { Html5Qrcode } from "html5-qrcode";
+import { Html5QrcodeScanner } from "html5-qrcode";
 
 const DamagePanel = () => {
-  const html5QrCodeRef = useRef(null);
   const qrRegionId = "qr-reader";
 
-  const [scanning, setScanning] = useState(false);
   const [scannerInput, setScannerInput] = useState("");
   const [manualCode, setManualCode] = useState("");
-
   const [panels, setPanels] = useState([]);
   const [remarks, setRemarks] = useState("");
   const [image, setImage] = useState(null);
+  const [scanning, setScanning] = useState(false);
+
+  const scannerRef = useRef(null);
 
   /* ========= CLEANUP ========= */
   useEffect(() => {
-    return () => stopScan();
+    return () => {
+      if (scannerRef.current) {
+        scannerRef.current.clear().catch(() => {});
+      }
+    };
   }, []);
 
-  /* ========= START SCAN ========= */
-  const startScan = async () => {
+  /* ========= START QR SCANNER ========= */
+  const startScan = () => {
     if (scanning) return;
 
-    try {
-      setScanning(true);
+    setScanning(true);
 
-      const html5QrCode = new Html5Qrcode(qrRegionId);
-      html5QrCodeRef.current = html5QrCode;
+    const scanner = new Html5QrcodeScanner(
+      qrRegionId,
+      {
+        fps: 10,
+        qrbox: 250,
+        rememberLastUsedCamera: true,
+      },
+      false
+    );
 
-      await html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        async (decodedText) => {
-          addPanel(decodedText);
-          stopScan();
-        },
-        () => {}
-      );
-    } catch (err) {
-      console.error("Camera start failed:", err);
-      setScanning(false);
-    }
-  };
+    scanner.render(
+      (decodedText) => {
+        addPanel(decodedText);
+        scanner.clear();
+        setScanning(false);
+      },
+      (error) => {}
+    );
 
-  /* ========= STOP SCAN ========= */
-  const stopScan = async () => {
-    try {
-      if (html5QrCodeRef.current) {
-        await html5QrCodeRef.current.stop();
-        await html5QrCodeRef.current.clear();
-        html5QrCodeRef.current = null;
-      }
-    } catch (err) {
-      console.error("Stop scan error:", err);
-    }
-    setScanning(false);
+    scannerRef.current = scanner;
   };
 
   /* ========= ADD PANEL ========= */
@@ -83,6 +76,7 @@ const DamagePanel = () => {
       alert("Enter panel code");
       return;
     }
+
     addPanel(manualCode.trim());
     setManualCode("");
   };
@@ -106,7 +100,6 @@ const DamagePanel = () => {
         const formData = new FormData();
         formData.append("panel_no", panel);
         formData.append("damage_location_type", 2);
-        formData.append("panel_type", 1); // fixed type (change if needed)
         formData.append("remarks", remarks);
         formData.append("image", image);
 
@@ -206,7 +199,7 @@ const DamagePanel = () => {
 
             </div>
 
-            {/* ===== CAMERA ===== */}
+            {/* ===== CAMERA SECTION ===== */}
             {scanning && (
               <div className="text-center mb-3">
                 <div
