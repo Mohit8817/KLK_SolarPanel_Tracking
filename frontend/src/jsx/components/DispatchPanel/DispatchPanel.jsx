@@ -83,12 +83,7 @@ const DispatchPanel = () => {
         },
         (decodedText) => {
           savePanel(decodedText);
-<<<<<<< HEAD
-        },
-        () => { }
-=======
         }
->>>>>>> dd48eb10628dbdf4d6cf0b70d9cba749cb824c39
       );
     } catch (err) {
       console.log("Camera failed:", err);
@@ -100,13 +95,8 @@ const DispatchPanel = () => {
     if (scannerRef.current) {
       try {
         await scannerRef.current.stop();
-<<<<<<< HEAD
-        scannerRef.current.clear();
-      } catch { }
-=======
         await scannerRef.current.clear();
       } catch {}
->>>>>>> dd48eb10628dbdf4d6cf0b70d9cba749cb824c39
       scannerRef.current = null;
     }
     setScanning(false);
@@ -456,179 +446,9 @@ const handleEndDispatch = async (e) => {
                       />
                       {type}
                     </label>
-<<<<<<< HEAD
-                    <input
-                      type="number"
-                      className="form-control"
-                      name="dispatch_panel_count"
-                      value={dispatchData.dispatch_panel_count}
-                      onChange={handleChange}
-                      disabled={dispatchStarted}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="text-center mt-4">
-                  <button
-                    type="submit"
-                    className="btn btn-success px-5"
-                    disabled={dispatchStarted}
-                  >
-                    Start Dispatch
-                  </button>
-                </div>
-              </form>
-
-              <hr />
-
-              {/* SCANNING SECTION */}
-              <form onSubmit={handleEndDispatch}>
-
-                <div className="text-center my-3">
-                  <label className="form-label">Panel Type *</label>
-                  <div className="d-flex justify-content-center gap-3">
-                    {["DCR", "NON_DCR"].map((type) => {
-                      const isActive = dispatchData.dispatchType === type;
-                      return (
-                        <label
-                          key={type}
-                          className={`btn ${isActive
-                              ? "btn-outline-success"
-                              : "btn-outline-danger"
-                            }`}
-                          style={{ width: "150px" }}
-                        >
-                          <input
-                            type="radio"
-                            name="dispatchType"
-                            value={type}
-                            hidden
-                            checked={isActive}
-                            onChange={handleChange}
-                          />
-                          {type}
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="row mb-3 text-center">
-
-                  {/* SCANNER GUN INPUT */}
-                  <div className="col-md-4">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Scan panel with scanner"
-                      value={scannerInput}
-                      autoFocus
-                      disabled={!dispatchStarted}
-                      onChange={(e) => setScannerInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          const value = scannerInput.trim();
-                          if (value) {
-                            handleScannerInput(value);
-                            setScannerInput("");
-                          }
-                        }
-                      }}
-                    />
-                  </div>
-
-                  {/* QR BUTTON */}
-                  <div className="col-md-4">
-                    <button
-                      type="button"
-                      className="btn btn-primary px-5"
-                      onClick={startScan}
-                      disabled={!dispatchStarted}
-                    >
-                      Scan Panel QR
-                    </button>
-                  </div>
-
-                  {/* MANUAL INPUT */}
-                  <div className="col-md-4 d-flex gap-2">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Enter Panel No"
-                      value={manualPanel}
-                      disabled={!dispatchStarted}
-                      onChange={(e) => setManualPanel(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={handleManualAdd}
-                      disabled={!dispatchStarted}
-                    >
-                      Add
-                    </button>
-                  </div>
-
-                </div>
-
-                {scanning && (
-                  <div className="text-center mb-3">
-                    <div id="reader" style={{ width: 320, margin: "auto" }} />
-                    <button
-                      type="button"
-                      className="btn btn-danger mt-2"
-                      onClick={stopScan}
-                    >
-                      Stop Camera
-                    </button>
-                  </div>
-                )}
-
-                {/* PANEL LIST */}
-                <div className="row mt-4">
-                  <div className="col-md-6">
-                    <label>DCR Panels ({dispatchData.dcrPanels.length})</label>
-                    <div className="border rounded p-3">
-                      {dispatchData.dcrPanels.map((p, i) => (
-                        <span key={i} className="badge bg-success me-2 mb-2">
-                          {p}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="col-md-6">
-                    <label>
-                      NON-DCR Panels ({dispatchData.nonDcrPanels.length})
-                    </label>
-                    <div className="border rounded p-3">
-                      {dispatchData.nonDcrPanels.map((p, i) => (
-                        <span key={i} className="badge bg-success me-2 mb-2">
-                          {p}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-center mt-4">
-                  <button
-                    type="submit"
-                    className="btn btn-success px-5"
-                    disabled={!dispatchStarted}
-                  >
-                    End Dispatch
-                  </button>
-                </div>
-
-              </form>
-=======
                   );
                 })}
               </div>
->>>>>>> dd48eb10628dbdf4d6cf0b70d9cba749cb824c39
             </div>
 
             {/* SCANNER INPUT */}
