@@ -2,16 +2,16 @@ import  { useState, useContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import loadable from "@loadable/component";
 import pMinDelay from "p-min-delay";
-import { ThemeContext } from "../../../context/ThemeContext";
+// import { ThemeContext } from "../../../context/ThemeContext";
 
 //Images
 //Components
-import DropdownBlog from '../Dompet/DropdownBlog';
-import PreviousTab from '../Dompet/Home/PreviousTab';
-import InvoiceCard from '../Dompet/Home/InvoiceCard';
-import SpendingsBlog from '../Dompet/Home/SpendingsBlog';
-import QuickTransferBlog from '../Dompet/Home/QuickTransferBlog';
-import CardBlog from '../Dompet/Home/CardBlog';
+// import DropdownBlog from '../Dompet/DropdownBlog';
+// import PreviousTab from '../Dompet/Home/PreviousTab';
+// import InvoiceCard from '../Dompet/Home/InvoiceCard';
+// import SpendingsBlog from '../Dompet/Home/SpendingsBlog';
+// import QuickTransferBlog from '../Dompet/Home/QuickTransferBlog';
+// import CardBlog from '../Dompet/Home/CardBlog';
 
 const PolarChart = loadable(() =>
 	pMinDelay(import("../Dompet/Home/PolarChart"), 1000)
@@ -43,7 +43,7 @@ const DashboardDark = () => {
 	return (
 		<>
 			<div className="row invoice-card-row">
-				<InvoiceCard />
+				{/* <InvoiceCard /> */}
 			</div>
 			<div className="row">
 				<div className="col-xl-9 col-xxl-12">
@@ -104,10 +104,10 @@ const DashboardDark = () => {
 					</div>
 				</div>
 				<div className="col-xl-3 col-xxl-7">
-					<QuickTransferBlog />
+					{/* <QuickTransferBlog /> */}
 				</div>
 				<div className="col-xl-3 col-xxl-5">
-					<SpendingsBlog />
+					{/* <SpendingsBlog /> */}
 				</div>
 				<div className="col-xl-6 col-xxl-7">
 					<div className="card">
@@ -118,7 +118,7 @@ const DashboardDark = () => {
 							</div>
 							<Link to={"#"} className="btn btn-rounded btn-md btn-primary mr-3 me-3"><i className="las la-download scale5 me-3"></i>		Download Report
 							</Link>
-							<DropdownBlog />
+							{/* <DropdownBlog /> */}
 						</div>
 						<div className="card-body pb-2">
 							<div className="d-sm-flex d-block">
@@ -144,10 +144,10 @@ const DashboardDark = () => {
 					</div>
 				</div>
 				<div className="col-xl-6 col-xxl-12">
-					<PreviousTab />
+					{/* <PreviousTab /> */}
 				</div>
 				<div className="col-xl-6 col-xxl-12">
-					<CardBlog />
+					{/* <CardBlog /> */}
 				</div>
 
 			</div>
