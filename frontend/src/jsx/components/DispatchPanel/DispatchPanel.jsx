@@ -31,15 +31,6 @@ const DispatchPanel = () => {
 
   /* ================= STORAGE ================= */
   useEffect(() => {
-    const savedData = localStorage.getItem(STORAGE_KEY);
-    if (savedData) setDispatchData(JSON.parse(savedData));
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dispatchData));
-  }, [dispatchData]);
-
-  useEffect(() => {
     return () => stopScan();
   }, []);
 
