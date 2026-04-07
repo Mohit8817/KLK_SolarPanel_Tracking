@@ -3,6 +3,48 @@ import PanelSerialLot from "../models/PanelSerialLot.model.js";
 import PanelNumber from "../models/PanelNumber.model.js";
 import PanelCounter from "../models/PanelCounter.model.js";
 
+
+export const getNextPanelNumber = async (req, res) => {
+  try {
+    const { prefix, panel_type, panel_capacity, date } = req.body;
+
+    if (!prefix || !panel_type || !panel_capacity || !date) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields",
+      });
+    }
+
+    const year = new Date(date).getFullYear().toString().slice(-2);
+    const month = (new Date(date).getMonth() + 1).toString().padStart(2, "0");
+    const monthYear = month + year;
+
+    const counter = await PanelCounter.findOne({
+      prefix,
+      panel_capacity,
+      panel_type,
+      monthYear,
+    });
+
+    let nextNumber = 1;
+
+    if (counter) {
+      nextNumber = counter.seq + 1;
+    }
+
+    return res.status(200).json({
+      success: true,
+      next_starting_no: nextNumber,
+    });
+
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export const createPanelSerialLot = async (req, res) => {
   try {
     const {
@@ -20,53 +62,66 @@ export const createPanelSerialLot = async (req, res) => {
       updated_by,
     } = req.body;
 
-    if (!total_panels || !prefix || !panel_type || !panel_capacity || !date || !panel_alot_state || !panel_alot_project) {
+    /* ==========================
+       1️⃣ Validation
+    ========================== */
+    if (
+      !total_panels ||
+      !prefix ||
+      !panel_type ||
+      !panel_capacity ||
+      !date ||
+      !panel_alot_state ||
+      !panel_alot_project
+    ) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields",
       });
     }
 
+    const totalPanelsNum = Number(total_panels);
+
     /* ==========================
-       1️⃣ Year & Month
+       2️⃣ MonthYear
     ========================== */
-    const year = new Date(date).getFullYear().toString().slice(-2); // e.g., "26"
-    const month = (new Date(date).getMonth() + 1).toString().padStart(2, "0"); // e.g., "02"
-    const monthYear = month + year; // MMYY
+    const d = new Date(date);
+    const year = d.getFullYear().toString().slice(-2);
+    const month = (d.getMonth() + 1).toString().padStart(2, "0");
+    const monthYear = month + year;
 
     const formattedPanelType = String(panel_type);
 
     /* ==========================
-       2️⃣ Get or create counter
-       Uniqueness: prefix + capacity + type + monthYear
+       3️⃣ Counter Logic
     ========================== */
+    let actualStartingNo;
+
     let counter = await PanelCounter.findOne({
-      prefix,
-      panel_capacity,
-      panel_type,
-      monthYear,
+      prefix: String(prefix).trim(),
+      panel_capacity: String(panel_capacity).trim(),
+      panel_type: String(panel_type).trim(),
+      monthYear: String(monthYear).trim(),
     });
 
-    let actualStartingNo;
     if (counter) {
-      // Continue from last sequence
+      // Continue sequence
       actualStartingNo = counter.seq + 1;
-      counter.seq += Number(total_panels);
-      await counter.save();
     } else {
-      // New combination → use provided starting_no or default 1
+      // First time → allow custom start
       actualStartingNo = starting_no ? Number(starting_no) : 1;
+
       counter = await PanelCounter.create({
-        prefix,
-        panel_capacity,
-        panel_type,
-        monthYear,
-        seq: actualStartingNo + Number(total_panels) - 1,
+        prefix: String(prefix).trim(),
+        panel_capacity: String(panel_capacity).trim(),
+        panel_type: String(panel_type).trim(),
+        monthYear: String(monthYear).trim(),
+        seq: 0,
       });
     }
 
     /* ==========================
-       3️⃣ Create LOT
+       4️⃣ Create LOT
     ========================== */
     const lot = await PanelSerialLot.create({
       company_id,
@@ -78,52 +133,66 @@ export const createPanelSerialLot = async (req, res) => {
       panel_category,
       panel_alot_state,
       panel_alot_project,
-      total_panels,
+      total_panels: totalPanelsNum,
       created_by,
       updated_by,
     });
 
     /* ==========================
-       4️⃣ Generate PANELS
+       5️⃣ Update Counter (IMPORTANT)
+    ========================== */
+    const endingNo = actualStartingNo + totalPanelsNum - 1;
+
+    counter.seq = endingNo;
+    counter.last_lot_id = lot._id;
+    await counter.save();
+
+    /* ==========================
+       6️⃣ Create PANELS
     ========================== */
     const panels = [];
-    for (let i = 0; i < total_panels; i++) {
-      const serial = actualStartingNo + i;
-      const paddedSerial = String(serial).padStart(6, "0"); // 000001
 
-      const panel_unique_no = `${prefix}${panel_capacity}${formattedPanelType}${monthYear}${paddedSerial}`;
+    for (let i = 0; i < totalPanelsNum; i++) {
+      const serial = actualStartingNo + i;
+
+      if (serial <= 0) {
+        throw new Error("Invalid serial generated");
+      }
+
+      const padded = String(serial).padStart(6, "0");
 
       panels.push({
+        company_id,
         panel_lot_id: lot._id,
         panel_capacity,
         panel_type,
         panel_category,
-        panel_lot_count: total_panels,
-        panel_no: paddedSerial,
-        panel_unique_no,
+        panel_lot_count: totalPanelsNum,
+        panel_no: padded,
+        panel_unique_no: `${prefix}${panel_capacity}${formattedPanelType}${monthYear}${padded}`,
       });
     }
 
     await PanelNumber.insertMany(panels);
 
     /* ==========================
-       5️⃣ Response
+       7️⃣ Response
     ========================== */
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Panel lot created successfully",
-      total_created: panels.length,
       starting_number: actualStartingNo,
+      ending_number: endingNo,
     });
+
   } catch (error) {
-    console.error("Create Panel Lot Error:", error);
-    res.status(400).json({
+    console.error("Create Error:", error);
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
-
 
 
 export const getAllPanelSerialLots = async (req, res) => {
@@ -145,45 +214,74 @@ export const getAllPanelSerialLots = async (req, res) => {
 };
 
 export const deletePanelSerialLot = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
-    const { id } = req.params;
+    const lot_id = req.params.id;
+    const company_id = req.user?.company_id;
 
-    // 1️⃣ Check if lot exists
-    const lot = await PanelSerialLot.findById(id);
-    if (!lot) {
-      return res.status(404).json({
-        success: false,
-        message: "Panel lot not found",
-      });
+    if (!company_id) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    // 2️⃣ Delete all panels linked to this lot
-    await PanelNumber.deleteMany(
-      { panel_lot_id: id },
-      { session }
-    );
+    /* ==========================
+       1️⃣ Get LOT
+    ========================== */
+    const lot = await PanelSerialLot.findOne({ _id: lot_id, company_id });
+    if (!lot) return res.status(404).json({ success: false, message: "Lot not found" });
 
-    // 3️⃣ Delete the lot
-    await PanelSerialLot.findByIdAndDelete(id, { session });
-
-    await session.commitTransaction();
-    session.endSession();
-
-    res.status(200).json({
-      success: true,
-      message: "Panel lot and related panel numbers deleted successfully",
+    /* ==========================
+       2️⃣ Check USED PANELS
+    ========================== */
+    const usedPanel = await PanelNumber.exists({
+      panel_lot_id: lot_id,
+      company_id,
+      $or: [{ production_status: { $ne: 0 } }, { dispatch_status: { $ne: 0 } }],
     });
+    if (usedPanel) return res.status(400).json({ success: false, message: "Cannot delete. Panels already used." });
+
+    /* ==========================
+       3️⃣ Prepare COUNTER KEY
+    ========================== */
+    const d = new Date(lot.date);
+    const monthYear = (d.getMonth() + 1).toString().padStart(2, "0") + d.getFullYear().toString().slice(-2);
+
+    const counter = await PanelCounter.findOne({
+      prefix: lot.prefix,
+      panel_capacity: lot.panel_capacity,
+      panel_type: lot.panel_type,
+      monthYear,
+    });
+
+    if (!counter) return res.status(400).json({ success: false, message: "Counter not found" });
+
+    const expectedLast = lot.starting_no + lot.total_panels - 1;
+
+    /* ==========================
+       Only last lot can be deleted
+    ========================== */
+    if (counter.last_lot_id?.toString() !== lot._id.toString() || counter.seq !== expectedLast) {
+      return res.status(400).json({ success: false, message: "Only last lot can be deleted" });
+    }
+
+    /* ==========================
+       Rollback counter
+    ========================== */
+    counter.seq = lot.starting_no - 1;
+    counter.last_lot_id = undefined;
+    await counter.save();
+
+    /* ==========================
+       Delete panels & lot
+    ========================== */
+    await Promise.all([
+      PanelNumber.deleteMany({ panel_lot_id: lot_id, company_id }),
+      PanelSerialLot.deleteOne({ _id: lot_id, company_id }),
+    ]);
+
+    return res.status(200).json({ success: true, message: "Lot deleted, panels removed, counter rolled back" });
+
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    console.error("Delete Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 

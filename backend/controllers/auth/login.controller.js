@@ -22,6 +22,7 @@ export const loginUser = async (req, res) => {
         id: user._id,
         email: user.email,
         role: user.role,
+        company_id : user.company_id,
         state_access: user.state_access 
       },
       process.env.JWT_SECRET || "secretkey", // use your secret from .env

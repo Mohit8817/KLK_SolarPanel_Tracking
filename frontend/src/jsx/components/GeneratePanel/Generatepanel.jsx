@@ -330,8 +330,8 @@ const Generatepanel = () => {
                         required
                       >
                         <option value="">Select Category</option>
-                        <option value="1">Type 1</option>
-                        <option value="2">Type 2</option>
+                        <option value="1">DCR</option>
+                        <option value="2">NON DCR</option>
                       </select>
                     </div>
                   </div>
