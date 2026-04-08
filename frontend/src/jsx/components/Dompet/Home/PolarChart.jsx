@@ -38,6 +38,7 @@ class PolarChart extends Component {
 			datasets: [
 				{
 					data: [totalProduction, totalDispatched, inStock, totalDamage],
+					
 					backgroundColor: ["#496ecc", "#68e365", "#ffa755", "#c8c8c8"],
 				},
 			],

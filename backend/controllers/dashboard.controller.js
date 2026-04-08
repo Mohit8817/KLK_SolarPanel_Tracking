@@ -132,16 +132,19 @@ export const getDashboardStats = async (req, res) => {
       dispatch_status: 1,
       collect_status: 1,
     });
+    const dispatchedAndCollectedDamaged = await PanelNumber.countDocuments({
+      collect_damage_status: 1,
+    });
 
     /* ================= DAMAGE ================= */
 
     // Damaged during collection/onsite (after dispatch)
     const dispatchedDamaged = await PanelNumber.countDocuments({
-      collect_damage_status: 1,
+      damage_status: 1,
     });
 
     // Overall damage (production + collection)
-    const totalDamage = productionDamaged + dispatchedDamaged;
+    const totalDamage = productionDamaged + dispatchedDamaged+dispatchedAndCollectedDamaged;
 
     /* ================= STOCK ================= */
 
@@ -150,6 +153,70 @@ export const getDashboardStats = async (req, res) => {
       production_status: 0,
       production_damage_status: 0,
     });
+
+
+
+    const panelCapacityWise = await PanelNumber.aggregate([
+      {
+        $group: {
+          _id: "$panel_capacity",
+
+          // ── Total panels of this capacity ──
+          total: { $sum: 1 },
+
+          // ── Production ──
+          totalProduced: {
+            $sum: { $cond: [{ $eq: ["$production_status", 1] }, 1, 0] },
+          },
+          productionDamaged: {
+            $sum: { $cond: [{ $eq: ["$production_damage_status", 1] }, 1, 0] },
+          },
+
+          // ── Dispatch ──
+          totalDispatched: {
+            $sum: { $cond: [{ $eq: ["$dispatch_status", 1] }, 1, 0] },
+          },
+          DispatchedDamaged: {
+            $sum: { $cond: [{ $eq: ["$damage_status", 1] }, 1, 0] },
+          },
+          dispatchedNotCollected: {
+            $sum: {
+              $cond: [
+                { $and: [{ $eq: ["$dispatch_status", 1] }, { $eq: ["$collect_status", 0] }] },
+                1, 0,
+              ],
+            },
+          },
+          dispatchedAndCollected: {
+            $sum: {
+              $cond: [
+                { $and: [{ $eq: ["$dispatch_status", 1] }, { $eq: ["$collect_status", 1] }] },
+                1, 0,
+              ],
+            },
+          },
+          dispatchedAndCollectedDamaged: {
+            $sum: {
+              $cond: [
+                { $and: [{ $eq: ["$dispatch_status", 1] }, { $eq: ["$collect_damage_status", 1] }] },
+                1, 0,
+              ],
+            },
+          },
+          totalDamage: {
+            $sum: {
+              $cond: [
+                { $or: [{ $eq: ["$production_damage_status", 1] }, { $eq: ["$damage_status", 1] }, { $eq: ["$collect_damage_status", 1] }] },
+                1, 0
+              ]
+            }
+          }
+
+        }
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
 
     /* ================= RESPONSE ================= */
     return res.status(200).json({
@@ -172,8 +239,11 @@ export const getDashboardStats = async (req, res) => {
         damage: {
           productionDamaged,
           dispatchedDamaged,
+          dispatchedAndCollectedDamaged,
           totalDamage,
         },
+
+        panelCapacityWise,
 
       },
     });
