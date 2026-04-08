@@ -34,6 +34,7 @@ export const createDamagePanel = async (req, res) => {
 
     for (let pNo of panels) {
       const panel = await PanelNumber.findOne({
+        
         panel_unique_no: pNo,
       });
 

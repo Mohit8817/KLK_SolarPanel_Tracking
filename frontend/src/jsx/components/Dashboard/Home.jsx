@@ -73,6 +73,15 @@ const Home = () => {
 
 
 
+	const currentMonth = new Date().getMonth() + 1;
+	const currentYear = new Date().getFullYear();
+
+	const currentMonthData = dashboardData?.monthWiseData?.find(
+		(m) =>
+			m?._id?.month === currentMonth &&
+			m?._id?.year === currentYear
+	);
+
 	return (
 		<>
 			<div className="row invoice-card-row">
@@ -299,28 +308,32 @@ const Home = () => {
 							<div>
 								<h4 className="card-title mb-2">panel Activity</h4>
 							</div>
-							<ul className="card-list d-flex align-items-center mb-0 gap-5">
+							<ul className="card-list d-flex align-items-center mb-0 gap-3">
 
-								<li className="justify-content-end">
+								<li>
 									<span className="bg-success circle me-1 ms-2"></span>
 									Panels Produced :
-									{dashboardData?.stock?.totalPanelsProduced || 0}
+									{currentMonthData?.totalGenerated || 0}
 								</li>
-								<li className="justify-content-end">
+
+								<li>
 									<span className="oranger-bg circle me-1 ms-2"></span>
 									Total Production :
-									{dashboardData?.production?.totalProduction || 0}
+									{currentMonthData?.totalProduction || 0}
 								</li>
-								<li className="justify-content-end">
+
+								<li>
 									<span style={{ backgroundColor: "#2196F3" }} className="circle me-1 ms-2"></span>
 									Total Dispatched :
-									{dashboardData?.dispatch?.totalDispatched || 0}
+									{currentMonthData?.totalDispatched || 0}
 								</li>
-								<li className="justify-content-end">
+
+								<li>
 									<span style={{ backgroundColor: "#F44336" }} className="circle me-1 ms-2"></span>
 									Total Damage :
-									{dashboardData?.damage?.totalDamage || 0}
+									{currentMonthData?.totalDamage || 0}
 								</li>
+
 							</ul>
 						</div>
 						<div className="card-body pb-0 pt-3">

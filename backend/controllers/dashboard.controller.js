@@ -218,6 +218,96 @@ export const getDashboardStats = async (req, res) => {
     ]);
 
 
+
+    /* ================= MONTH-WISE ================= */
+const monthWiseData = await PanelNumber.aggregate([
+  // {
+  //   $match: { company_id: companyId }
+  // },
+  {
+    $group: {
+      _id: {
+        year:  { $year: "$createdAt" },
+        month: { $month: "$createdAt" },
+      },
+
+      // Total panels created that month
+      totalGenerated: { $sum: 1 },
+
+      // Production
+      totalProduction: {
+        $sum: { $cond: [{ $eq: ["$production_status", 1] }, 1, 0] },
+      },
+      productionDamaged: {
+        $sum: { $cond: [{ $eq: ["$production_damage_status", 1] }, 1, 0] },
+      },
+
+      // Dispatch
+      totalDispatched: {
+        $sum: { $cond: [{ $eq: ["$dispatch_status", 1] }, 1, 0] },
+      },
+      dispatchedNotCollected: {
+        $sum: {
+          $cond: [
+            { $and: [{ $eq: ["$dispatch_status", 1] }, { $eq: ["$collect_status", 0] }] },
+            1, 0,
+          ],
+        },
+      },
+      dispatchedAndCollected: {
+        $sum: {
+          $cond: [
+            { $and: [{ $eq: ["$dispatch_status", 1] }, { $eq: ["$collect_status", 1] }] },
+            1, 0,
+          ],
+        },
+      },
+
+      // Damage (all types)
+      dispatchedDamaged: {
+        $sum: { $cond: [{ $eq: ["$damage_status", 1] }, 1, 0] },
+      },
+      collectDamaged: {
+        $sum: { $cond: [{ $eq: ["$collect_damage_status", 1] }, 1, 0] },
+      },
+      totalDamage: {
+        $sum: {
+          $cond: [
+            {
+              $or: [
+                { $eq: ["$production_damage_status", 1] },
+                { $eq: ["$damage_status", 1] },
+                { $eq: ["$collect_damage_status", 1] },
+              ],
+            },
+            1, 0,
+          ],
+        },
+      },
+    },
+  },
+  {
+    // Add a readable month label e.g. "2025-03"
+    $addFields: {
+      monthLabel: {
+        $concat: [
+          { $toString: "$_id.year" },
+          "-",
+          {
+            $cond: [
+              { $lt: ["$_id.month", 10] },
+              { $concat: ["0", { $toString: "$_id.month" }] },
+              { $toString: "$_id.month" },
+            ],
+          },
+        ],
+      },
+    },
+  },
+  { $sort: { "_id.year": 1, "_id.month": 1 } },
+]);
+
+
     /* ================= RESPONSE ================= */
     return res.status(200).json({
       success: true,
@@ -244,6 +334,7 @@ export const getDashboardStats = async (req, res) => {
         },
 
         panelCapacityWise,
+        monthWiseData
 
       },
     });

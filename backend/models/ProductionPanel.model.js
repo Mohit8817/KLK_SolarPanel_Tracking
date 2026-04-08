@@ -61,5 +61,3 @@ const ProductionPanelSchema = new mongoose.Schema({
 )
 
 export default mongoose.model("ProductionPanel", ProductionPanelSchema)
-
-

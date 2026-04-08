@@ -77,58 +77,41 @@ class ActivityApexBarGraph extends React.Component {
     };
   }
 
-  getSeries() {
-    const { data } = this.props;
+getSeries() {
+  const { data } = this.props;
 
-    // If monthlyData exists from API, use it
-    const monthly = data?.monthlyData;
+  const monthly = data?.monthWiseData;
 
-    if (monthly && monthly.length > 0) {
-      // Map 12 months, fill missing months with 0
-      const months = Array.from({ length: 12 }, (_, i) => i + 1); // [1..12]
+  if (monthly && monthly.length > 0) {
+    const months = Array.from({ length: 12 }, (_, i) => i + 1);
 
-      const getMonthVal = (key, month) => {
-        const found = monthly.find((m) => m.month === month);
-        return found ? found[key] || 0 : 0;
-      };
-
-      return [
-        {
-          name: "Panels Produced",
-          data: months.map((m) => getMonthVal("totalPanelsProduced", m)),
-        },
-        {
-          name: "Total Production",
-          data: months.map((m) => getMonthVal("totalProduction", m)),
-        },
-        {
-          name: "Total Dispatched",
-          data: months.map((m) => getMonthVal("totalDispatched", m)),
-        },
-        {
-          name: "Total Damage",
-          data: months.map((m) => getMonthVal("totalDamage", m)),
-        },
-      ];
-    }
-
-    // ── Fallback: use current totals spread across current month only ──
-    const currentMonth = new Date().getMonth(); // 0-indexed
-    const totalPanelsProduced = data?.stock?.totalPanelsProduced || 0;
-    const totalProduction     = data?.production?.totalProduction || 0;
-    const totalDispatched     = data?.dispatch?.totalDispatched || 0;
-    const totalDamage         = data?.damage?.totalDamage || 0;
-
-    const fillMonth = (val) =>
-      Array.from({ length: 12 }, (_, i) => (i === currentMonth ? val : 0));
+    const getMonthVal = (key, month) => {
+      const found = monthly.find((m) => m?._id?.month === month);
+      return found ? found[key] || 0 : 0;
+    };
 
     return [
-      { name: "Panels Produced",  data: fillMonth(totalPanelsProduced) },
-      { name: "Total Production", data: fillMonth(totalProduction) },
-      { name: "Total Dispatched", data: fillMonth(totalDispatched) },
-      { name: "Total Damage",     data: fillMonth(totalDamage) },
+      {
+        name: "Panels Generated",
+        data: months.map((m) => getMonthVal("totalGenerated", m)),
+      },
+      {
+        name: "Total Production",
+        data: months.map((m) => getMonthVal("totalProduction", m)),
+      },
+      {
+        name: "Total Dispatched",
+        data: months.map((m) => getMonthVal("totalDispatched", m)),
+      },
+      {
+        name: "Total Damage",
+        data: months.map((m) => getMonthVal("totalDamage", m)),
+      },
     ];
   }
+
+  return [];
+}
 
   render() {
     return (
