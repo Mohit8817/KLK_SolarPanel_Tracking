@@ -246,14 +246,15 @@ const Home = () => {
 
 								{/* RIGHT SIDE */}
 								<div className="col-xl-6">
+									<div>
+										<h4 className="card-title">Panel Status Overview</h4>
+										<span>
+											Real-time distribution of solar panels across generation, dispatch, and inspection stages.
+										</span>
+									</div>
 									<div className="row mt-xl-0 mt-4">
 
 										<div className="col-md-6">
-											<h4 className="card-title">Panel Status Overview</h4>
-											<span>
-												Real-time distribution of solar panels across
-												generation, dispatch, and inspection stages.
-											</span>
 
 											<ul className="card-list mt-4">
 												<li>
@@ -292,23 +293,33 @@ const Home = () => {
 				</div>
 
 				{/* ================= PLANT ACTIVITY ================= */}
-				<div className="col-xl-3 col-xxl-7">
+				<div className="col-xl-12 col-xxl-12">
 					<div className="card">
 						<div className="card-header pb-0 border-0">
 							<div>
-								<h4 className="card-title mb-2">Plant Activity</h4>
-								<h2 className="mb-0">
-									{dashboardData?.production?.totalProduction || 0}
-								</h2>
+								<h4 className="card-title mb-2">panel Activity</h4>
 							</div>
-							<ul className="card-list">
+							<ul className="card-list d-flex align-items-center mb-0 gap-5">
+
 								<li className="justify-content-end">
-									Energy Generated
-									<span className="bg-success circle me-0 ms-2"></span>
+									<span className="bg-success circle me-1 ms-2"></span>
+									Panels Produced :
+									{dashboardData?.stock?.totalPanelsProduced || 0}
 								</li>
 								<li className="justify-content-end">
-									Energy Dispatched
-									<span className="oranger-bg circle me-0 ms-2"></span>
+									<span className="oranger-bg circle me-1 ms-2"></span>
+									Total Production :
+									{dashboardData?.production?.totalProduction || 0}
+								</li>
+								<li className="justify-content-end">
+									<span style={{ backgroundColor: "#2196F3" }} className="circle me-1 ms-2"></span>
+									Total Dispatched :
+									{dashboardData?.dispatch?.totalDispatched || 0}
+								</li>
+								<li className="justify-content-end">
+									<span style={{ backgroundColor: "#F44336" }} className="circle me-1 ms-2"></span>
+									Total Damage :
+									{dashboardData?.damage?.totalDamage || 0}
 								</li>
 							</ul>
 						</div>
@@ -320,74 +331,8 @@ const Home = () => {
 					</div>
 				</div>
 
-				{/* ================= REMAINING COMPONENTS (UNCHANGED) ================= */}
-				<div className="col-xl-3 col-xxl-5">
-					<div className="card">
-						<div className="card-header border-0 pb-0">
-							<div>
-								<h4 className="card-title mb-2">Quick Dispatch</h4>
-								<span className="fs-12">
-									Manage panel dispatch assignments instantly
-								</span>
-							</div>
-						</div>
+				{/* ================= Operational COMPONENTS  ================= */}
 
-						<div className="card-body">
-							<div className="user-bx">
-								{/* <img src={small} alt="" /> */}
-								<div>
-									<h6 className="user-name">Plant Supervisor</h6>
-									<span className="meta">KLK Solar Unit</span>
-								</div>
-								<i className="las la-check-circle check-icon"></i>
-							</div>
-
-							<h4 className="mt-3 mb-3">
-								Recent Dispatch Team
-								<Link
-									to={"#"}
-									className="fs-16 float-end text-secondary font-w600"
-								>
-									View All
-								</Link>
-							</h4>
-
-							<ul className="user-list">
-								{/* <li><img src={avatar1} alt="" /></li>
-						<li><img src={avatar2} alt="" /></li>
-						<li><img src={avatar3} alt="" /></li>
-						<li><img src={avatar4} alt="" /></li>
-						<li><img src={avatar5} alt="" /></li>
-						<li><img src={avatar6} alt="" /></li> */}
-							</ul>
-
-							<h4 className="mt-3 mb-0">Select Panels for Dispatch</h4>
-
-							<div className="format-slider">
-								<input
-									className="form-control amount-input"
-									readOnly
-								/>
-
-
-							</div>
-
-							<div className="text-secondary fs-16 d-flex justify-content-between font-w600 mt-4">
-								<span>Available Panels</span>
-								<span>1,245 Units</span>
-							</div>
-						</div>
-
-						<div className="card-footer border-0 pt-0">
-							<Link
-								to={"#"}
-								className="btn btn-primary d-block btn-lg text-uppercase"
-							>
-								Assign Dispatch
-							</Link>
-						</div>
-					</div>
-				</div>
 
 				<div className="col-xl-3 col-xxl-5">
 					<div className="card">
