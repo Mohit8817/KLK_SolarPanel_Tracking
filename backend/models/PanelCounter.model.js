@@ -6,6 +6,7 @@ const PanelCounterSchema = new mongoose.Schema({
   panel_type: { type: String, required: true },
   monthYear: { type: String, required: true }, // MMYY
   seq: { type: Number, default: 0 },
+  last_lot_id: { type: mongoose.Schema.Types.ObjectId },
 }, { timestamps: true });
 
 // Unique per combination of prefix + capacity + type + MMYY

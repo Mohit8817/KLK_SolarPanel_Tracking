@@ -122,7 +122,7 @@ const ViewGeneratePanel = () => {
                         <td>{item.date}</td>
                         <td>{item.total_panels}</td>
                         <td>{item.panel_capacity}</td>
-                        <td>{item.panel_type}</td>
+                        <td>{item.panel_type == "1" ? "DCR" : "NON DCR"}</td>
                         <td>{item.panel_alot_state}</td>
                         <td>{item.panel_alot_project}</td>
                         <td className="text-center">

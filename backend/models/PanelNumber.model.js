@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const PanelNumberSchema = new mongoose.Schema(
   {
+    company_id: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     panel_lot_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "PanelSerialLot",
