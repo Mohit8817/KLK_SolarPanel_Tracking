@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 import ReactApexChart from "react-apexcharts";
 
 class ActivityApexBarGraph extends React.Component {
@@ -124,5 +125,21 @@ getSeries() {
     );
   }
 }
+
+ActivityApexBarGraph.propTypes = {
+  data: PropTypes.shape({
+    monthWiseData: PropTypes.arrayOf(
+      PropTypes.shape({
+        _id: PropTypes.shape({
+          month: PropTypes.number,
+        }),
+        totalGenerated: PropTypes.number,
+        totalProduction: PropTypes.number,
+        totalDispatched: PropTypes.number,
+        totalDamage: PropTypes.number,
+      })
+    ),
+  }),
+};
 
 export default ActivityApexBarGraph;
