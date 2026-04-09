@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import ReactApexChart from "react-apexcharts";
 
 const TransactionApexBar = ({ data = [] }) => {
@@ -84,6 +85,16 @@ const TransactionApexBar = ({ data = [] }) => {
 			/>
 		</div>
 	);
+};
+
+TransactionApexBar.propTypes = {
+	data: PropTypes.arrayOf(
+		PropTypes.shape({
+			monthLabel: PropTypes.string,
+			totalGenerated: PropTypes.number,
+			totalDispatched: PropTypes.number,
+		})
+	),
 };
 
 export default TransactionApexBar;
