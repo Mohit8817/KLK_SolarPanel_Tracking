@@ -10,8 +10,6 @@ import ScrollToTop from './pages/ScrollToTop';
 import { ThemeContext } from "../context/ThemeContext";
 
 import Home from "./components/Dashboard/Home";
-import DashboardDark from "./components/Dashboard/DashboardDark";
-import CardsCenter from "./components/Dashboard/CardsCenter";
 
 import Generatepanel from "./components/GeneratePanel/Generatepanel";
 import ViewGeneratePanel from "./components/GeneratePanel/ViewGeneratePanel";
@@ -57,8 +55,7 @@ const Markup = () => {
   const allroutes = [
     { url: "", component: <Home /> },
     { url: "dashboard", component: <Home /> },
-    { url: "dashboard-dark", component: <DashboardDark /> },
-    { url: "cards-center", component: <CardsCenter /> },
+
 
     { url: "panel/generate", component: <Generatepanel /> },
     { url: "generate/panel/list", component: <ViewGeneratePanel /> },

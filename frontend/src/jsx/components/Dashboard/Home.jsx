@@ -433,22 +433,14 @@ const Home = () => {
 						<div className="card-header d-flex flex-wrap border-0 pb-0">
 							<div className="me-auto mb-sm-0 mb-3">
 								<h4 className="card-title mb-2">
-									Panel Movement Overview
+									Monthly Panel  Overview
+
 								</h4>
 								<span className="fs-12">
-									Daily tracking of generated vs dispatched panels
+									Month-wise generated vs dispatched panels
 								</span>
 							</div>
-
-							<Link
-								to={"#"}
-								className="btn btn-rounded btn-md btn-primary mr-3 me-3"
-							>
-								<i className="las la-download scale5 me-3" />
-								Download Report
-							</Link>
-
-
+				
 						</div>
 
 						<div className="card-body pb-2">
@@ -468,7 +460,7 @@ const Home = () => {
 							</div>
 
 							<div className="bar-chart">
-								<TransactionApexBar data={dashboardData} />
+								<TransactionApexBar data={dashboardData?.monthWiseData || []} /> 
 							</div>
 						</div>
 					</div>
@@ -543,7 +535,7 @@ const Home = () => {
 
 
 
-				<div className="col-xl-6 col-xxl-12">
+				{/* <div className="col-xl-6 col-xxl-12">
 					<div className="row">
 						<div className="col-xl-12">
 							<div className="card coin-card">
@@ -645,7 +637,7 @@ const Home = () => {
 						</div>
 
 					</div>
-				</div>
+				</div> */}
 
 			</div>
 		</>
