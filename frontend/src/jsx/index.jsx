@@ -41,6 +41,7 @@ import ViewReceiveDamagedPanel from "./components/PanelReceiver/ViewReceiveDamag
 import AddManufactureDamage from "./components/ManufactureDamage/AddManufactureDamage";
 import ViewManufactureDamage from "./components/ManufactureDamage/ViewManufactureDamage";
 import RoleList from "./components/RolePermission/RoleList";
+import ReceiverDashboard from "./components/Dashboard/ReciverDashboard";
 
 
 const ProtectedRoute = () => {
@@ -55,6 +56,7 @@ const Markup = () => {
   const allroutes = [
     { url: "", component: <Home /> },
     { url: "dashboard", component: <Home /> },
+    { url: "receiver/dashboard", component: <ReceiverDashboard /> },
 
 
     { url: "panel/generate", component: <Generatepanel /> },

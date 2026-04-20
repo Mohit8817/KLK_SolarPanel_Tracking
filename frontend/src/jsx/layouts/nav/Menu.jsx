@@ -6,6 +6,12 @@ export const MenuList = [
         iconStyle: <i className="flaticon-025-dashboard"></i>,
         to: 'dashboard',
     },
+    {
+        title: 'Receiver dashboard',
+        classsChange: '',
+        iconStyle: <i className="flaticon-025-dashboard"></i>,
+        to: 'receiver/dashboard',
+    },
 
 
     // Panel Generation
