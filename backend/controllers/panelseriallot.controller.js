@@ -3,7 +3,6 @@ import PanelSerialLot from "../models/PanelSerialLot.model.js";
 import PanelNumber from "../models/PanelNumber.model.js";
 import PanelCounter from "../models/PanelCounter.model.js";
 
-
 export const getNextPanelNumber = async (req, res) => {
   try {
     const { prefix, panel_type, panel_capacity, date } = req.body;
@@ -15,15 +14,13 @@ export const getNextPanelNumber = async (req, res) => {
       });
     }
 
-    const year = new Date(date).getFullYear().toString().slice(-2);
-    const month = (new Date(date).getMonth() + 1).toString().padStart(2, "0");
-    const monthYear = month + year;
+    const year = new Date(date).getFullYear().toString();
 
     const counter = await PanelCounter.findOne({
-      prefix,
-      panel_capacity,
-      panel_type,
-      monthYear,
+      prefix: String(prefix).trim(),
+      panel_capacity: String(panel_capacity).trim(),
+      panel_type: String(panel_type).trim(),
+      year: String(year).trim(),
     });
 
     let nextNumber = 1;
@@ -38,7 +35,7 @@ export const getNextPanelNumber = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: error.message,
     });
@@ -83,39 +80,42 @@ export const createPanelSerialLot = async (req, res) => {
     const totalPanelsNum = Number(total_panels);
 
     /* ==========================
-       2️⃣ MonthYear
+       2️⃣ Date Handling
     ========================== */
     const d = new Date(date);
-    const year = d.getFullYear().toString().slice(-2);
+
+    const yearFull = d.getFullYear().toString();      // ✅ for counter
+    const yearShort = yearFull.slice(-2);             // ✅ for display
     const month = (d.getMonth() + 1).toString().padStart(2, "0");
-    const monthYear = month + year;
+
+    const monthYear = month + yearShort;              // ✅ ONLY for unique_no
 
     const formattedPanelType = String(panel_type);
 
     /* ==========================
-       3️⃣ Counter Logic
+       3️⃣ Counter Logic (YEAR BASED)
     ========================== */
-    let actualStartingNo;
-
     let counter = await PanelCounter.findOne({
       prefix: String(prefix).trim(),
       panel_capacity: String(panel_capacity).trim(),
       panel_type: String(panel_type).trim(),
-      monthYear: String(monthYear).trim(),
+      year: String(yearFull).trim(), // ✅ ONLY year
     });
 
+    let actualStartingNo;
+
     if (counter) {
-      // Continue sequence
+      // Continue sequence (even if month changes)
       actualStartingNo = counter.seq + 1;
     } else {
-      // First time → allow custom start
+      // First entry of the year
       actualStartingNo = starting_no ? Number(starting_no) : 1;
 
       counter = await PanelCounter.create({
         prefix: String(prefix).trim(),
         panel_capacity: String(panel_capacity).trim(),
         panel_type: String(panel_type).trim(),
-        monthYear: String(monthYear).trim(),
+        year: String(yearFull).trim(), // ✅ store year
         seq: 0,
       });
     }
@@ -139,7 +139,7 @@ export const createPanelSerialLot = async (req, res) => {
     });
 
     /* ==========================
-       5️⃣ Update Counter (IMPORTANT)
+       5️⃣ Update Counter
     ========================== */
     const endingNo = actualStartingNo + totalPanelsNum - 1;
 
@@ -169,6 +169,8 @@ export const createPanelSerialLot = async (req, res) => {
         panel_category,
         panel_lot_count: totalPanelsNum,
         panel_no: padded,
+
+        // ✅ MonthYear for display, but sequence is YEAR-based
         panel_unique_no: `${prefix}${panel_capacity}${formattedPanelType}${monthYear}${padded}`,
       });
     }

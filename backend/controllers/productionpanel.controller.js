@@ -193,7 +193,7 @@ export const getPanelsByProductionId = async (req, res) => {
 
     const panels = await PanelNumber.find({
       production_id: new mongoose.Types.ObjectId(id),
-    }).sort({ createdAt: -1 });
+    }).sort({ panel_no: 1 });
 
     res.status(200).json({
       success: true,

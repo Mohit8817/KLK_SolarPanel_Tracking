@@ -67,6 +67,18 @@ const ViewDispatchPanel = () => {
         fetchDispatchPanels();
     }, []);
 
+    /* ================= HELPERS ================= */
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return "-";
+        const date = new Date(dateStr);
+        return date.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+        });
+    };
+
     /* ================= EXPORT ================= */
 
     const exportData = dispatchList.map((item, index) => {
@@ -81,6 +93,7 @@ const ViewDispatchPanel = () => {
             challanNo    : item.challan_no,
             driver       : `${item.driver_name} (${item.driver_no})`,
             state        : item.state,
+            date         : formatDate(item.createdAt),
             totalPanels  : total,
             scanned      : scanned,
             remaining    : remaining,
@@ -94,6 +107,7 @@ const ViewDispatchPanel = () => {
         { label: "Challan No",    key: "challanNo"   },
         { label: "Driver",        key: "driver"      },
         { label: "State",         key: "state"       },
+        { label: "Date",          key: "date"        },
         { label: "Total Panels",  key: "totalPanels" },
         { label: "Scanned",       key: "scanned"     },
         { label: "Remaining",     key: "remaining"   },
@@ -128,12 +142,14 @@ const ViewDispatchPanel = () => {
                                     <th>Truck No</th>
                                     <th>Challan No</th>
                                     <th>Driver</th>
+                                    <th>State</th>
+                                    <th>Date</th>
                                     <th>Panel Count</th>
                                     <th className="text-center">Action</th>
                                 </tr>
                             </thead>
 
-                            <tbody>
+                            <tbody className="text-dark">
                                 {dispatchList.length > 0 ? (
                                     dispatchList.map((item, index) => {
 
@@ -158,7 +174,12 @@ const ViewDispatchPanel = () => {
                                                     <small className="text-muted">{item.driver_no}</small>
                                                 </td>
 
-                                          
+                                                <td>{item.state || "-"}</td>
+
+                                                <td>
+                                                    <small>{formatDate(item.createdAt)}</small>
+                                                </td>
+
                                                 <td>
                                                     <div className="d-flex flex-column gap-1">
                                                         <span>
@@ -207,7 +228,7 @@ const ViewDispatchPanel = () => {
                                     })
                                 ) : (
                                     <tr>
-                                        <td colSpan="7" className="text-center text-muted py-4">
+                                        <td colSpan="9" className="text-center text-muted py-4">
                                             No dispatch records found
                                         </td>
                                     </tr>

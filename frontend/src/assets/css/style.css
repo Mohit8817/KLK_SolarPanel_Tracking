@@ -17956,6 +17956,7 @@ html[dir="rtl"] [direction="rtl"][data-sidebar-style="compact"]:not([data-layout
   border-radius: 2px;
   line-height: 1;
   border-radius: 2px;
+  color: #5bcfc6 !important;
 }
 
 [data-sidebar-style="compact"] .dlabnav .metismenu>li a>i {
