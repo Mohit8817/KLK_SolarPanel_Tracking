@@ -149,7 +149,7 @@ const SideBar = () => {
                   </b>
                 </span>
 
-                <small className="text-end font-w400">
+                <small className="text-start font-w400">
                   {user?.email || "No Email"}
                 </small>
               </div>
@@ -206,8 +206,10 @@ const SideBar = () => {
                         onClick={() => handleMenuActive(data.title)}
                       >
                         {data.iconStyle}
-                        <span className="nav-text">{data.title}</span>
+                        <span className="nav-text ">{data.title}</span>
                       </Link>
+
+
 
                       <Collapse
                         in={state.active === data.title ? true : false}
