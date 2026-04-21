@@ -14,7 +14,7 @@ import { Dropdown } from "react-bootstrap";
 import LogoutPage from './Logout';
 
 import { ThemeContext } from "../../../context/ThemeContext";
-import SkyGreeting from "./SkyGreeting";
+// import SkyGreeting from "./SkyGreeting";
 
 
 const baseURL = import.meta.env.VITE_BACKEND_URL;
@@ -84,11 +84,7 @@ const Header = () => {
 
               <div>
                 {/* <SkyGreeting /> */}
-
               </div>
-
-
-
               <div className="header-left">
                 <div
                   className="dashboard_bar mx-3"
