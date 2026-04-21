@@ -1,103 +1,100 @@
-import React from "react";
+import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import ReactApexChart from "react-apexcharts";
 
-class TransactionApexBar extends React.Component {
-	constructor(props) {
-		super(props);
+const TransactionApexBar = ({ data = [] }) => {
+	const [chartData, setChartData] = useState({
+		series: [],
+		options: {
+			chart: {
+				type: "bar",
+				toolbar: { show: false },
+			},
+			plotOptions: {
+				bar: {
+					borderRadius: 10,
+					columnWidth: "20%",
+				},
+			},
+			colors: ["#80ec67", "#fe7d65"],
+			legend: { show: true },
+			dataLabels: { enabled: false },
+			stroke: {
+				show: true,
+				width: 2,
+				colors: ["transparent"],
+			},
+			grid: {
+				borderColor: "#eee",
+			},
+			xaxis: {
+				categories: [],
+			},
+			yaxis: {
+				title: {
+					text: "Panels (Units)",
+				},
+			},
+			tooltip: {
+				y: {
+					formatter: (val) => `${val} Panels`,
+				},
+			},
+		},
+	});
 
-		this.state = {
+	// 🔥 update chart when API data changes
+	useEffect(() => {
+		if (!data || data.length === 0) return;
+
+		const categories = data.map(item => item.monthLabel);
+
+		const generated = data.map(item => item.totalGenerated || 0);
+		const dispatched = data.map(item => item.totalDispatched || 0);
+
+		setChartData(prev => ({
+			...prev,
 			series: [
 				{
-					name: 'Panels Generated',
-					data: [120, 180, 150, 200, 220, 190],
+					name: "Panels Generated",
+					data: generated,
 				},
 				{
-					name: 'Panels Dispatched',
-					data: [90, 140, 130, 170, 180, 160],
+					name: "Panels Dispatched",
+					data: dispatched,
 				},
 			],
 			options: {
-				chart: {
-					type: "bar",
-					toolbar: { show: false },
-				},
-				plotOptions: {
-					bar: {
-						borderRadius: 10,
-						horizontal: false,
-						columnWidth: '70%',
-					},
-				},
-				colors: ['#80ec67', '#fe7d65'],
-				legend: { show: false },
-				fill: {
-					opacity: 1,
-				},
-				dataLabels: {
-					enabled: false,
-				},
-				stroke: {
-					show: true,
-					width: 5,
-					colors: ['transparent'],
-				},
-				grid: {
-					borderColor: '#eee',
-				},
+				...prev.options,
 				xaxis: {
-					categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-					labels: {
-						style: {
-							colors: '#3e4954',
-							fontSize: '13px',
-							fontFamily: 'poppins',
-						},
-					},
+					...prev.options.xaxis,
+					categories: categories,
 				},
-				yaxis: {
-					labels: {
-						offsetX: -16,
-						style: {
-							colors: '#3e4954',
-							fontSize: '13px',
-							fontFamily: 'poppins',
-						},
-					},
-					title: {
-						text: 'Panels (Units)',
-					},
-				},
-				tooltip: {
-					y: {
-						formatter: (val) => `${val} Panels`,
-					},
-				},
-				responsive: [
-					{
-						breakpoint: 575,
-						options: {
-							chart: {
-								height: 250,
-							},
-						},
-					},
-				],
 			},
-		};
-	}
+		}));
 
-	render() {
-		return (
-			<div id="chart">
-				<ReactApexChart
-					options={this.state.options}
-					series={this.state.series}
-					type="bar"
-					height={400}
-				/>
-			</div>
-		);
-	}
-}
+	}, [data]);
+
+	return (
+		<div id="chart">
+			<ReactApexChart
+				options={chartData.options}
+				series={chartData.series}
+				type="bar"
+				height={400}
+			/>
+		</div>
+	);
+};
+
+TransactionApexBar.propTypes = {
+	data: PropTypes.arrayOf(
+		PropTypes.shape({
+			monthLabel: PropTypes.string,
+			totalGenerated: PropTypes.number,
+			totalDispatched: PropTypes.number,
+		})
+	),
+};
 
 export default TransactionApexBar;

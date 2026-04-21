@@ -1,4 +1,5 @@
 /* eslint-disable react/prop-types */
+import { useState, useEffect } from "react";
 import { useContext } from "react";
 
 import { Link } from "react-router-dom";
@@ -14,16 +15,29 @@ import LogoutPage from './Logout';
 
 import { ThemeContext } from "../../../context/ThemeContext";
 
+
+const baseURL = import.meta.env.VITE_BACKEND_URL;
+
 const Header = ({ onNote }) => {
-var path = window.location.pathname.split("/").filter(Boolean);
 
-var lastSegment = path[path.length - 1];
+  const [user, setUser] = useState(null);
 
-var isMongoId = /^[0-9a-fA-F]{24}$/.test(lastSegment);
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
 
-var segment = isMongoId ? path[path.length - 2] : lastSegment;
+  var path = window.location.pathname.split("/").filter(Boolean);
 
-var name = segment ? segment.split("-") : [];
+  var lastSegment = path[path.length - 1];
+
+  var isMongoId = /^[0-9a-fA-F]{24}$/.test(lastSegment);
+
+  var segment = isMongoId ? path[path.length - 2] : lastSegment;
+
+  var name = segment ? segment.split("-") : [];
 
   var filterName = name.length >= 3 ? name.filter((n, i) => i > 0) : name;
   var finalName = filterName.includes("app")
@@ -350,19 +364,25 @@ var name = segment ? segment.split("-") : [];
                 <Dropdown.Toggle
                   variant=""
                   as="a"
-                  className="nav-link i-false c-pointer"
+                  className=" i-false c-pointer"
                   // href="#"
                   role="button"
                   data-toggle="dropdown"
                 >
                   <img
-                    src={profile}
+                    src={
+                      user?.emp_image
+                        ? `${baseURL}/uploads/${user.emp_image}`
+                        : profile
+                    }
+                    onError={(e) => {
+                      e.target.src = profile;
+                    }}
                     width="50"
                     height="50"
                     alt="profile"
                     className="rounded-circle object-fit-cover"
                   />
-
 
                 </Dropdown.Toggle>
 

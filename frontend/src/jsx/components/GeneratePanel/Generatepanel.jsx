@@ -34,6 +34,22 @@ const Generatepanel = () => {
     }
   };
 
+
+  const handlePrefixChange = (e) => {
+    let value = e.target.value;
+
+    // Remove spaces & special characters, allow only letters
+    value = value.replace(/[^a-zA-Z]/g, "");
+
+    // Convert to uppercase
+    value = value.toUpperCase();
+
+    setFormData({
+      ...formData,
+      prefix: value,
+    });
+  };
+
   return (
     <Fragment>
       <PageTitle
@@ -310,7 +326,7 @@ const Generatepanel = () => {
                       >
                         <option value="">Select Type</option>
                         <option value="1">Poly</option>
-                        <option value="2">Mono</option>                                               
+                        <option value="2">Mono</option>
                         <option value="3">Bifacial</option>
                       </select>
                     </div>
@@ -348,75 +364,75 @@ const Generatepanel = () => {
                         name="prefix"
                         placeholder="e.g. KLK"
                         value={formData.prefix}
-                        onChange={handleChange}
+                        onChange={handlePrefixChange}
                         required
                       />
                     </div>
                   </div>
 
 
-                                    
-                       <div className="col-xl-6 col-md-6">
-                                <div className="form-group mb-3">
-                                    <label className="form-label">
-                                    State <span className="text-danger">*</span>
-                                    </label>
 
-                                    <select
-                                    className="form-control"
-                                    name="panel_alot_state"
-                                    value={formData.panel_alot_state}
-                                    onChange={handleChange}
-                                    required
-                                    >
-                                    <option value="">Select State</option>
+                  <div className="col-xl-6 col-md-6">
+                    <div className="form-group mb-3">
+                      <label className="form-label">
+                        State <span className="text-danger">*</span>
+                      </label>
 
-                                    {/* States */}
-                                    <option value="Andhra_Pradesh">Andhra Pradesh</option>
-                                    <option value="Arunachal_Pradesh">Arunachal Pradesh</option>
-                                    <option value="Assam">Assam</option>
-                                    <option value="Bihar">Bihar</option>
-                                    <option value="Chhattisgarh">Chhattisgarh</option>
-                                    <option value="Goa">Goa</option>
-                                    <option value="Gujarat">Gujarat</option>
-                                    <option value="Haryana">Haryana</option>
-                                    <option value="Himachal_Pradesh">Himachal Pradesh</option>
-                                    <option value="Jharkhand">Jharkhand</option>
-                                    <option value="Karnataka">Karnataka</option>
-                                    <option value="Kerala">Kerala</option>
-                                    <option value="Madhya_Pradesh">Madhya Pradesh</option>
-                                    <option value="Maharashtra">Maharashtra</option>
-                                    <option value="Manipur">Manipur</option>
-                                    <option value="Meghalaya">Meghalaya</option>
-                                    <option value="Mizoram">Mizoram</option>
-                                    <option value="Nagaland">Nagaland</option>
-                                    <option value="Odisha">Odisha</option>
-                                    <option value="Punjab">Punjab</option>
-                                    <option value="Rajasthan">Rajasthan</option>
-                                    <option value="Sikkim">Sikkim</option>
-                                    <option value="Tamil_Nadu">Tamil Nadu</option>
-                                    <option value="Telangana">Telangana</option>
-                                    <option value="Tripura">Tripura</option>
-                                    <option value="Uttar_Pradesh">Uttar Pradesh</option>
-                                    <option value="Uttarakhand">Uttarakhand</option>
-                                    <option value="West_Bengal">West Bengal</option>
+                      <select
+                        className="form-control"
+                        name="panel_alot_state"
+                        value={formData.panel_alot_state}
+                        onChange={handleChange}
+                        required
+                      >
+                        <option value="">Select State</option>
 
-                                    {/* Union Territories */}
-                                    <option value="Andaman_Nicobar">Andaman and Nicobar Islands</option>
-                                    <option value="Chandigarh">Chandigarh</option>
-                                    <option value="Dadra_Nagar_Haveli_Daman_Diu">
-                                        Dadra and Nagar Haveli and Daman and Diu
-                                    </option>
-                                    <option value="Delhi">Delhi</option>
-                                    <option value="Jammu_Kashmir">Jammu and Kashmir</option>
-                                    <option value="Ladakh">Ladakh</option>
-                                    <option value="Lakshadweep">Lakshadweep</option>
-                                    <option value="Puducherry">Puducherry</option>
-                                    </select>
-                                </div>
-                                </div>
+                        {/* States */}
+                        <option value="Andhra_Pradesh">Andhra Pradesh</option>
+                        <option value="Arunachal_Pradesh">Arunachal Pradesh</option>
+                        <option value="Assam">Assam</option>
+                        <option value="Bihar">Bihar</option>
+                        <option value="Chhattisgarh">Chhattisgarh</option>
+                        <option value="Goa">Goa</option>
+                        <option value="Gujarat">Gujarat</option>
+                        <option value="Haryana">Haryana</option>
+                        <option value="Himachal_Pradesh">Himachal Pradesh</option>
+                        <option value="Jharkhand">Jharkhand</option>
+                        <option value="Karnataka">Karnataka</option>
+                        <option value="Kerala">Kerala</option>
+                        <option value="Madhya_Pradesh">Madhya Pradesh</option>
+                        <option value="Maharashtra">Maharashtra</option>
+                        <option value="Manipur">Manipur</option>
+                        <option value="Meghalaya">Meghalaya</option>
+                        <option value="Mizoram">Mizoram</option>
+                        <option value="Nagaland">Nagaland</option>
+                        <option value="Odisha">Odisha</option>
+                        <option value="Punjab">Punjab</option>
+                        <option value="Rajasthan">Rajasthan</option>
+                        <option value="Sikkim">Sikkim</option>
+                        <option value="Tamil_Nadu">Tamil Nadu</option>
+                        <option value="Telangana">Telangana</option>
+                        <option value="Tripura">Tripura</option>
+                        <option value="Uttar_Pradesh">Uttar Pradesh</option>
+                        <option value="Uttarakhand">Uttarakhand</option>
+                        <option value="West_Bengal">West Bengal</option>
 
-                          
+                        {/* Union Territories */}
+                        <option value="Andaman_Nicobar">Andaman and Nicobar Islands</option>
+                        <option value="Chandigarh">Chandigarh</option>
+                        <option value="Dadra_Nagar_Haveli_Daman_Diu">
+                          Dadra and Nagar Haveli and Daman and Diu
+                        </option>
+                        <option value="Delhi">Delhi</option>
+                        <option value="Jammu_Kashmir">Jammu and Kashmir</option>
+                        <option value="Ladakh">Ladakh</option>
+                        <option value="Lakshadweep">Lakshadweep</option>
+                        <option value="Puducherry">Puducherry</option>
+                      </select>
+                    </div>
+                  </div>
+
+
                   <div className="col-xl-6 col-md-6">
                     <div className="form-group mb-3">
                       <label className="form-label">
@@ -451,9 +467,9 @@ const Generatepanel = () => {
                     </div>
                   </div>
 
-                  
-                  
-                  
+
+
+
 
                 </div>
 

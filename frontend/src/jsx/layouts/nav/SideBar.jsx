@@ -8,6 +8,8 @@ import { ThemeContext } from "../../../context/ThemeContext";
 import LogoutPage from "./Logout";
 import profile from "../../../assets/images/profile/profileimg3.jpg";
 
+const baseURL = import.meta.env.VITE_BACKEND_URL;
+
 // REDUX
 import { useDispatch, useSelector } from "react-redux";
 import { navtoggle } from "../../../store/actions/AuthActions";
@@ -34,6 +36,8 @@ const SideBar = () => {
   const dispatch = useDispatch();
   const sideMenu = useSelector((state) => state.sideMenu);
 
+
+
   const [state, setState] = useReducer(reducer, initialState);
 
   // Toggle listener
@@ -51,6 +55,18 @@ const SideBar = () => {
       if (btn) btn.removeEventListener("click", toggleFunc);
     };
   }, []);
+
+  const [user, setUser] = useState(null);
+
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const parsed = JSON.parse(storedUser);
+      setUser(parsed);
+    }
+  }, []);
+
 
   // Scroll hide
   const [hideOnScroll, setHideOnScroll] = useState(true);
@@ -94,19 +110,18 @@ const SideBar = () => {
     <div
       onMouseEnter={() => ChangeIconSidebar(true)}
       onMouseLeave={() => ChangeIconSidebar(false)}
-      className={`dlabnav ${iconHover} ${
-        sidebarposition.value === "fixed" &&
+      className={`dlabnav ${iconHover} ${sidebarposition.value === "fixed" &&
         sidebarLayout.value === "horizontal" &&
         headerposition.value === "static"
-          ? hideOnScroll > 120
-            ? "fixed"
-            : ""
+        ? hideOnScroll > 120
+          ? "fixed"
           : ""
-      }`}
+        : ""
+        }`}
     >
       <PerfectScrollbar className="dlabnav-scroll">
         <ul className="metismenu" id="menu">
-          
+
           {/* Profile */}
           <Dropdown as="li" className="nav-item dropdown header-profile">
             <Dropdown.Toggle
@@ -114,8 +129,12 @@ const SideBar = () => {
               as="a"
               className="nav-link i-false c-pointer"
             >
+
               <img
-                src={profile}
+                src={`${baseURL}/uploads/${user?.emp_image}`}
+                onError={(e) => {
+                  e.target.src = profile;
+                }}
                 width="50"
                 height="50"
                 alt="profile"
@@ -123,26 +142,42 @@ const SideBar = () => {
               />
               <div className="header-info ms-3">
                 <span className="font-w600">
-                  Hi,<b> Admin</b>
+                  Hi,<b>
+                    {user
+                      ? `${user.first_name} ${user.last_name}`
+                      : "User"}
+                  </b>
                 </span>
-                <small className="text-end font-w400">
-                  superadmin@gmail.com
+
+                <small className="text-start font-w400">
+                  {user?.email || "No Email"}
                 </small>
               </div>
             </Dropdown.Toggle>
 
-            <Dropdown.Menu align="end" className="mt-2">
-              <Link
-                to="/app-profile"
-                className="dropdown-item ai-icon"
-                onClick={closeSidebarMobile}
-              >
-                Profile
+            <Dropdown.Menu align="end" className="mt-2 dropdown-menu dropdown-menu-end">
+              <Link to="/app-profile" className="dropdown-item ai-icon">
+                <svg
+                  id="icon-user1"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="text-primary"
+                  width={18}
+                  height={18}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx={12} cy={7} r={4} />
+                </svg>
+                <span className="ms-2">Profile </span>
               </Link>
 
-              <div onClick={closeSidebarMobile}>
-                <LogoutPage />
-              </div>
+              <LogoutPage />
+
             </Dropdown.Menu>
           </Dropdown>
 
@@ -159,9 +194,8 @@ const SideBar = () => {
             } else {
               return (
                 <li
-                  className={`${
-                    state.active === data.title ? "mm-active" : ""
-                  }`}
+                  className={`${state.active === data.title ? "mm-active" : ""
+                    }`}
                   key={index}
                 >
                   {data.content && data.content.length > 0 ? (
@@ -179,9 +213,8 @@ const SideBar = () => {
                         in={state.active === data.title ? true : false}
                       >
                         <ul
-                          className={`${
-                            menuClass === "mm-collapse" ? "mm-show" : ""
-                          }`}
+                          className={`${menuClass === "mm-collapse" ? "mm-show" : ""
+                            }`}
                         >
                           {data.content.map((submenu, i) => {
                             return (

@@ -184,10 +184,12 @@ export const getPanelsByDispatchId = async (req, res) => {
     const panels = await PanelNumber.find({
       dispatch_id: id,   // no need to force new ObjectId()
     }).sort({ createdAt: -1 });
+    const dispatch = await DispatchPanel.findById(id);
 
     res.status(200).json({
       success: true,
       total: panels.length,
+      dispatch: dispatch, 
       data: panels,
     });
 
