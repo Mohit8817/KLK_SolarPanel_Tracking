@@ -52,6 +52,15 @@ const ProtectedRoute = () => {
   return <MainLayout />;
 };
 
+
+const ProtectedRoute = () => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return <MainLayout />;
+};
+
 const Markup = () => {
   const allroutes = [
     { url: "", component: <Home /> },

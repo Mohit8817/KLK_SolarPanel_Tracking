@@ -3,7 +3,6 @@ import PanelSerialLot from "../models/PanelSerialLot.model.js";
 import PanelNumber from "../models/PanelNumber.model.js";
 import PanelCounter from "../models/PanelCounter.model.js";
 
-
 export const getNextPanelNumber = async (req, res) => {
   try {
     const { prefix, panel_type, panel_capacity, date } = req.body;

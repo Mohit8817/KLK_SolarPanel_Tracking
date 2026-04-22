@@ -6,22 +6,23 @@ import mongoose from "mongoose";
 // ✅ CREATE DISPATCH
 export const createDispatch = async (req, res) => {
   try {
-    /* ===============================
-       1️⃣ Create dispatch
-    =============================== */
+    const company_id = req.user?.company_id;
+
+    if (!company_id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: company_id missing",
+      });
+    }
+
     const dispatch = await DispatchPanel.create({
       ...req.body,
+      company_id, // ✅ override from JWT
     });
 
-    /* ===============================
-       2️⃣ Save in SESSION
-    =============================== */
     req.session.dispatch_id = dispatch._id;
 
-    /* ===============================
-       3️⃣ Response
-    =============================== */
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Dispatch created & session started",
       data: {
@@ -30,26 +31,37 @@ export const createDispatch = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
 
-
 // ✅ GET ALL DISPATCHES
 export const getAllDispatches = async (req, res) => {
   try {
-    const dispatches = await DispatchPanel.find().sort({ createdAt: -1 });
+    const company_id = req.user?.company_id;
 
-    res.status(200).json({
+    if (!company_id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: company_id missing",
+      });
+    }
+
+    const dispatches = await DispatchPanel.find({
+      company_id, // ✅ filter by company
+    }).sort({ createdAt: -1 });
+
+    return res.status(200).json({
       success: true,
       count: dispatches.length,
       data: dispatches,
     });
+
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });

@@ -31,15 +31,6 @@ const DispatchPanel = () => {
 
   /* ================= STORAGE ================= */
   useEffect(() => {
-    const savedData = localStorage.getItem(STORAGE_KEY);
-    if (savedData) setDispatchData(JSON.parse(savedData));
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dispatchData));
-  }, [dispatchData]);
-
-  useEffect(() => {
     return () => stopScan();
   }, []);
 
@@ -96,7 +87,9 @@ const DispatchPanel = () => {
       try {
         await scannerRef.current.stop();
         await scannerRef.current.clear();
-      } catch {}
+      } catch (err) {
+        console.log("Stop camera failed:", err);
+      }
       scannerRef.current = null;
     }
     setScanning(false);

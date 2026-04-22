@@ -463,6 +463,7 @@ const Generatepanel = () => {
                         placeholder="e.g. 1"
                         value={formData.starting_no}
                         onChange={handleChange}
+                        disabled
                       />
                     </div>
                   </div>

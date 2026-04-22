@@ -17955,8 +17955,13 @@ html[dir="rtl"] [direction="rtl"][data-sidebar-style="compact"]:not([data-layout
   margin-right: 20px;
   border-radius: 2px;
   line-height: 1;
+<<<<<<< HEAD
   color: #5bcfc6 !important;
   border-radius: 2px;
+=======
+  border-radius: 2px;
+  color: #5bcfc6 !important;
+>>>>>>> origin/main
 }
 
 [data-sidebar-style="compact"] .dlabnav .metismenu>li a>i {
@@ -17971,7 +17976,10 @@ html[dir="rtl"] [direction="rtl"][data-sidebar-style="compact"]:not([data-layout
   margin-left: auto;
   margin-right: auto;
   margin-bottom: 5px;
+<<<<<<< HEAD
     color: #4ed3c8 !important;
+=======
+>>>>>>> origin/main
 }
 
 [data-sidebar-style="compact"] .dlabnav .metismenu>li a>i[data-theme-version="dark"] {
@@ -40855,7 +40863,10 @@ table.dataTable.display tbody td {
   background-position: center;
   position: relative;
   z-index: 1;
+<<<<<<< HEAD
   height: 100vh;
+=======
+>>>>>>> origin/main
 }
 
 .login-main-page .login-wrapper {

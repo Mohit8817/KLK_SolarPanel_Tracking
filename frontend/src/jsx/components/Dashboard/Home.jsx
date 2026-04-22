@@ -639,7 +639,11 @@ const Home = () => {
 					</div>
 				</div> */}
 
+<<<<<<< HEAD
 			</div>
+=======
+			</div>	
+>>>>>>> origin/main
 		</>
 	);
 };

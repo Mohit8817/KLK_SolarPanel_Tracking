@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const DispatchPanelSchema = new mongoose.Schema(
   {
+    company_id: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     dispatch_id: {
       type: String,
       required: true,
