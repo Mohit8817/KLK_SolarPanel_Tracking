@@ -76,6 +76,13 @@ const PanelNumberSchema = new mongoose.Schema(
       default: 0,
     },
 
+
+    manufacturing_status: {
+      type: Number,
+      enum: [0, 1],
+      default: 0,
+    },
+    
     // 🚚 Dispatch
     dispatch_id: {
       type: mongoose.Schema.Types.ObjectId,

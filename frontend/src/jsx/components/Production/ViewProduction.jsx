@@ -17,8 +17,9 @@ const ViewProduction = () => {
 
   // MODAL STATE
   const [showModal, setShowModal] = useState(false);
-  const [selectedId, setSelectedId] = useState(null);
-  const [modalLoading, setModalLoading] = useState(false);
+  const [selectedProductionId, setSelectedProductionId] = useState(null);
+  const [manufacturingList, setManufacturingList] = useState([]);
+
   const [modalForm, setModalForm] = useState({
     date: "",
     shift: "",
@@ -27,43 +28,68 @@ const ViewProduction = () => {
   });
 
   const handleModalOpen = (id) => {
-    setSelectedId(id);
+    setSelectedProductionId(id);
     setModalForm({ date: "", shift: "", panel_count: "", remark: "" });
+    fetchManufacturingEntries(id);
     setShowModal(true);
   };
 
   const handleModalClose = () => {
     setShowModal(false);
-    setSelectedId(null);
+    setManufacturingList([]);
+    setSelectedProductionId(null);
   };
 
   const handleModalChange = (e) => {
     setModalForm({ ...modalForm, [e.target.name]: e.target.value });
   };
 
-  const handleModalSubmit = async () => {
-    try {
-      setModalLoading(true);
-      const token = localStorage.getItem("token");
-
-      await axios.post(
-        `${import.meta.env.VITE_BACKEND_API_URL}production/add-entry/${selectedId}`,
-        modalForm,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      alert("Entry saved successfully!");
-      handleModalClose();
-      fetchProduction();
-    } catch (error) {
-      console.error("Modal Submit Error:", error);
-      alert("Failed to save entry");
-    } finally {
-      setModalLoading(false);
+  // Fetch manufacturing entries for a specific production item
+ const fetchManufacturingEntries = async (id) => {
+  try {
+    if (!id) {
+      console.log("Invalid ID:", id);
+      return;
     }
+
+    const token = localStorage.getItem("token");
+
+    const res = await axios.get(
+      `${import.meta.env.VITE_BACKEND_API_URL}production/all-manufacturing-panels/${id}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    setManufacturingList(res.data.data || []);
+  } catch (err) {
+    console.log("Error:", err?.response?.data || err.message);
+    setManufacturingList([]);
+  }
+};
+
+
+  // Add new manufacturing entry
+  const handleAddEntry = async () => {
+    try {
+      const token = localStorage.getItem("token");
+       const payload = { ...modalForm, production_id: selectedProductionId };
+    console.log("Sending payload:", payload);
+      await axios.post(
+        `${import.meta.env.VITE_BACKEND_API_URL}production/create-manufacturing-panel`,
+        { ...modalForm, production_id: selectedProductionId },
+
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setModalForm({ date: "", shift: "", panel_count: "", remark: "" });
+      fetchManufacturingEntries(selectedProductionId);
+    }catch (err) {
+    console.error("Add entry error:", err.response?.data);
+    alert(err.response?.data?.message || "Failed to add entry");
+  }
   };
+
+
 
   // Fetch Production List
   const fetchProduction = async () => {
@@ -182,7 +208,6 @@ const ViewProduction = () => {
                     <td>{item.state}</td>
                     <td className="text-center">
                       <div className="d-flex gap-1 justify-content-center">
-
                         <Link
                           to={`/view-production-panels/${item._id}`}
                           className="btn btn-info btn-xs sharp me-2"
@@ -190,7 +215,6 @@ const ViewProduction = () => {
                           <i className="fa fa-eye" />
                         </Link>
 
-                        {/*NEW BUTTON — opens modal */}
                         <button
                           className="btn btn-primary btn-xs sharp me-2"
                           onClick={() => handleModalOpen(item._id)}
@@ -234,15 +258,14 @@ const ViewProduction = () => {
         </Card.Body>
       </Card>
 
-
       {/* MODAL */}
-      <Modal className="w-100" show={showModal} onHide={handleModalClose} centered size="lg">
+      <Modal show={showModal} onHide={handleModalClose} centered size="lg">
         <Modal.Header closeButton>
           <Modal.Title>Add Production Entry</Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ maxHeight: "85vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
 
-          {/* FORM — fixed, no scroll */}
+          {/* FORM */}
           <div className="row flex-shrink-0">
             <div className="col-md-4">
               <div className="form-group mb-3">
@@ -312,6 +335,7 @@ const ViewProduction = () => {
             <div className="col-md-12 text-end mb-1">
               <Button
                 variant="success"
+                onClick={handleAddEntry}
                 disabled={!modalForm.date || !modalForm.shift || !modalForm.panel_count}
               >
                 <i className="fa fa-plus me-1" /> Add
@@ -319,7 +343,7 @@ const ViewProduction = () => {
             </div>
           </div>
 
-          {/* TABLE — scrollable only */}
+          {/* TABLE */}
           <div className="table-responsive" style={{ overflowY: "auto", maxHeight: "450px" }}>
             <table className="table table-hover align-middle">
               <thead style={{ position: "sticky", top: 0, backgroundColor: "#fff", zIndex: 1 }}>
@@ -333,151 +357,35 @@ const ViewProduction = () => {
                 </tr>
               </thead>
               <tbody>
-
-                <tr>
-                  <td>Sno</td>
-                  <td>Date</td>
-                  <td>Shift  </td>
-                  <td>
-                    panel count
-                  </td>
-                  <td>done</td>
-                  <td className="text-center">
-                    <button
-                      className="btn btn-danger btn-xs sharp"
-
-                    >
-                      <i className="fa fa-trash" />
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Sno</td>
-                  <td>Date</td>
-                  <td>Shift  </td>
-                  <td>
-                    panel count
-                  </td>
-                  <td>done</td>
-                  <td className="text-center">
-                    <button
-                      className="btn btn-danger btn-xs sharp"
-
-                    >
-                      <i className="fa fa-trash" />
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Sno</td>
-                  <td>Date</td>
-                  <td>Shift  </td>
-                  <td>
-                    panel count
-                  </td>
-                  <td>done</td>
-                  <td className="text-center">
-                    <button
-                      className="btn btn-danger btn-xs sharp"
-
-                    >
-                      <i className="fa fa-trash" />
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Sno</td>
-                  <td>Date</td>
-                  <td>Shift  </td>
-                  <td>
-                    panel count
-                  </td>
-                  <td>done</td>
-                  <td className="text-center">
-                    <button
-                      className="btn btn-danger btn-xs sharp"
-
-                    >
-                      <i className="fa fa-trash" />
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Sno</td>
-                  <td>Date</td>
-                  <td>Shift  </td>
-                  <td>
-                    panel count
-                  </td>
-                  <td>done</td>
-                  <td className="text-center">
-                    <button
-                      className="btn btn-danger btn-xs sharp"
-
-                    >
-                      <i className="fa fa-trash" />
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Sno</td>
-                  <td>Date</td>
-                  <td>Shift  </td>
-                  <td>
-                    panel count
-                  </td>
-                  <td>done</td>
-                  <td className="text-center">
-                    <button
-                      className="btn btn-danger btn-xs sharp"
-
-                    >
-                      <i className="fa fa-trash" />
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Sno</td>
-                  <td>Date</td>
-                  <td>Shift  </td>
-                  <td>
-                    panel count
-                  </td>
-                  <td>done</td>
-                  <td className="text-center">
-                    <button
-                      className="btn btn-danger btn-xs sharp"
-
-                    >
-                      <i className="fa fa-trash" />
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Sno</td>
-                  <td>Date</td>
-                  <td>Shift  </td>
-                  <td>
-                    panel count
-                  </td>
-                  <td>done</td>
-                  <td className="text-center">
-                    <button
-                      className="btn btn-danger btn-xs sharp"
-
-                    >
-                      <i className="fa fa-trash" />
-                    </button>
-                  </td>
-                </tr>
-
+                {manufacturingList.length > 0 ? (
+                  manufacturingList.map((entry, index) => (
+                    <tr key={entry._id}>
+                      <td>{index + 1}</td>
+                      <td>{entry.date}</td>
+                      <td>{entry.shift}</td>
+                      <td>{entry.panel_count}</td>
+                      <td>{entry.remark || "—"}</td>
+                      <td className="text-center">
+                        <button
+                          className="btn btn-danger btn-xs sharp"                        
+                        >
+                          <i className="fa fa-trash" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="text-center text-muted">
+                      No entries yet
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
 
         </Modal.Body>
-
-
       </Modal>
     </Col>
   );

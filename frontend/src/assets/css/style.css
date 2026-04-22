@@ -40855,6 +40855,7 @@ table.dataTable.display tbody td {
   background-position: center;
   position: relative;
   z-index: 1;
+  height: 100vh;
 }
 
 .login-main-page .login-wrapper {
