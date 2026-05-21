@@ -58,3 +58,6 @@ pnpm-lock.yaml
 # Uploads (if user-generated files stored locally)
 uploads/
 public/uploads/
+
+uploads/*
+!uploads/.gitkeep

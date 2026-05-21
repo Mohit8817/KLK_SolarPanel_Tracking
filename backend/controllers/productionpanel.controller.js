@@ -36,13 +36,13 @@ export const createProductionPanel = async (req, res) => {
 
       console.log(panel_capacity, panel_type);
 
-    const panels = await PanelNumber.find({
-      production_status: 0,
-      panel_capacity: panel_capacity,
-      panel_type: panel_type,
-    })
-      .sort({ createdAt: 1 })
-      .limit(count);
+        const panels = await PanelNumber.find({
+          production_status: 0,
+          panel_capacity: panel_capacity,
+          panel_type: panel_type,
+        })
+          .sort({ panel_no: 1 })
+          .limit(count);
 
     if (panels.length < count) {
       return res.status(400).json({
@@ -103,7 +103,6 @@ export const createProductionPanel = async (req, res) => {
 
 
 
-
 export const fetchAllProductionPanels = async (req, res) => {
   try {
     const productionPanels = await ProductionPanel.find()
@@ -125,7 +124,7 @@ export const fetchProductionPanelById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const productionPanel = await ProductionPanel.findById(id);
+    const productionPanel = await ProductionPanel.findById(id).sort({ panel_no: -1 });;
 
     if (!productionPanel) {
       return res.status(404).json({
@@ -348,6 +347,7 @@ export const createManufacturingPanel = async (req, res) => {
     }
 
     const panels = await PanelNumber.find({
+      production_id: new mongoose.Types.ObjectId(production_id),
       production_status: 1,
       manufacturing_status: { $ne: 1 }
     }).limit(Number(count));
