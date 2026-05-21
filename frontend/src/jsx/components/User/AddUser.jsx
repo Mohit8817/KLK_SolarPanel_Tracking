@@ -3,7 +3,7 @@ import PageTitle from "../../layouts/PageTitle";
 import { Row, Col, Card, Form, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
-import { createUser } from "./userApi"; 
+import { createUser } from "./userApi";
 
 const AddUser = () => {
   const navigate = useNavigate();
@@ -175,64 +175,65 @@ const AddUser = () => {
                   <option value="admin">Admin</option>
                   <option value="manager">Manager</option>
                   <option value="employee">Employee</option>
+                  <option value="vendor">Vendor</option>
                 </Form.Select>
               </Col>
 
-    <Col lg={4} className="mb-3">
-  <Form.Label>State *</Form.Label>
+              <Col lg={4} className="mb-3">
+                <Form.Label>State *</Form.Label>
 
-  <Form.Select
-    name="state_access"
-    value={formData.state_access}
-    onChange={handleChange}
-    className="form-control"
-    required
-  >
-    <option value="">Select State</option>
+                <Form.Select
+                  name="state_access"
+                  value={formData.state_access}
+                  onChange={handleChange}
+                  className="form-control"
+                  required
+                >
+                  <option value="">Select State</option>
 
-    <option value="andhra_pradesh">Andhra Pradesh</option>
-    <option value="arunachal_pradesh">Arunachal Pradesh</option>
-    <option value="assam">Assam</option>
-    <option value="bihar">Bihar</option>
-    <option value="chhattisgarh">Chhattisgarh</option>
-    <option value="goa">Goa</option>
-    <option value="gujarat">Gujarat</option>
-    <option value="haryana">Haryana</option>
-    <option value="himachal_pradesh">Himachal Pradesh</option>
-    <option value="jharkhand">Jharkhand</option>
-    <option value="karnataka">Karnataka</option>
-    <option value="kerala">Kerala</option>
-    <option value="madhya_pradesh">Madhya Pradesh</option>
-    <option value="maharashtra">Maharashtra</option>
-    <option value="manipur">Manipur</option>
-    <option value="meghalaya">Meghalaya</option>
-    <option value="mizoram">Mizoram</option>
-    <option value="nagaland">Nagaland</option>
-    <option value="odisha">Odisha</option>
-    <option value="punjab">Punjab</option>
-    <option value="rajasthan">Rajasthan</option>
-    <option value="sikkim">Sikkim</option>
-    <option value="tamil_nadu">Tamil Nadu</option>
-    <option value="telangana">Telangana</option>
-    <option value="tripura">Tripura</option>
-    <option value="uttar_pradesh">Uttar Pradesh</option>
-    <option value="uttarakhand">Uttarakhand</option>
-    <option value="west_bengal">West Bengal</option>
+                  <option value="andhra_pradesh">Andhra Pradesh</option>
+                  <option value="arunachal_pradesh">Arunachal Pradesh</option>
+                  <option value="assam">Assam</option>
+                  <option value="bihar">Bihar</option>
+                  <option value="chhattisgarh">Chhattisgarh</option>
+                  <option value="goa">Goa</option>
+                  <option value="gujarat">Gujarat</option>
+                  <option value="haryana">Haryana</option>
+                  <option value="himachal_pradesh">Himachal Pradesh</option>
+                  <option value="jharkhand">Jharkhand</option>
+                  <option value="karnataka">Karnataka</option>
+                  <option value="kerala">Kerala</option>
+                  <option value="madhya_pradesh">Madhya Pradesh</option>
+                  <option value="maharashtra">Maharashtra</option>
+                  <option value="manipur">Manipur</option>
+                  <option value="meghalaya">Meghalaya</option>
+                  <option value="mizoram">Mizoram</option>
+                  <option value="nagaland">Nagaland</option>
+                  <option value="odisha">Odisha</option>
+                  <option value="punjab">Punjab</option>
+                  <option value="rajasthan">Rajasthan</option>
+                  <option value="sikkim">Sikkim</option>
+                  <option value="tamil_nadu">Tamil Nadu</option>
+                  <option value="telangana">Telangana</option>
+                  <option value="tripura">Tripura</option>
+                  <option value="uttar_pradesh">Uttar Pradesh</option>
+                  <option value="uttarakhand">Uttarakhand</option>
+                  <option value="west_bengal">West Bengal</option>
 
-    {/* Union Territories */}
-    <option value="andaman_nicobar">Andaman and Nicobar Islands</option>
-    <option value="chandigarh">Chandigarh</option>
-    <option value="dadra_nagar_haveli_daman_diu">
-      Dadra and Nagar Haveli and Daman and Diu
-    </option>
-    <option value="delhi">Delhi (NCT)</option>
-    <option value="jammu_kashmir">Jammu & Kashmir</option>
-    <option value="ladakh">Ladakh</option>
-    <option value="lakshadweep">Lakshadweep</option>
-    <option value="puducherry">Puducherry</option>
+                  {/* Union Territories */}
+                  <option value="andaman_nicobar">Andaman and Nicobar Islands</option>
+                  <option value="chandigarh">Chandigarh</option>
+                  <option value="dadra_nagar_haveli_daman_diu">
+                    Dadra and Nagar Haveli and Daman and Diu
+                  </option>
+                  <option value="delhi">Delhi (NCT)</option>
+                  <option value="jammu_kashmir">Jammu & Kashmir</option>
+                  <option value="ladakh">Ladakh</option>
+                  <option value="lakshadweep">Lakshadweep</option>
+                  <option value="puducherry">Puducherry</option>
 
-  </Form.Select>
-</Col>
+                </Form.Select>
+              </Col>
 
               <Col lg={6} className="mb-3">
                 <Form.Label>City *</Form.Label>

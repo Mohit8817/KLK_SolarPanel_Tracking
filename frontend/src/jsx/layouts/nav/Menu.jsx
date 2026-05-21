@@ -40,6 +40,10 @@ export const MenuList = [
                 to: 'production/list',
             },
             {
+                title: 'Vendor Production List',
+                to: 'production/vendor-list',
+            },
+            {
                 title: 'Add Damage',
                 to: 'production-damage/add',
             },
@@ -87,7 +91,7 @@ export const MenuList = [
                 title: 'View Safe Panels',
                 to: 'receiver/safe/list',
             },
-           {
+            {
                 title: 'Add Damage Panel',
                 to: 'receiver/damage/create',
             },
@@ -112,6 +116,25 @@ export const MenuList = [
                 title: 'View Users',
                 to: '/user/list',
             },
+        ],
+    },
+
+
+    {
+        title: 'Settings',
+        classsChange: 'mm-collapse',
+        iconStyle: <i className="fa-solid fa-gear fw-bold" />,
+        content: [
+            {
+                title: 'Role Permission',
+                to: 'role/list',
+            },
+  
+             {
+                title: 'Permission',
+                to: 'permission/list',
+            },
+
         ],
     },
 

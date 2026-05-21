@@ -76,6 +76,13 @@ const PanelNumberSchema = new mongoose.Schema(
       default: 0,
     },
 
+
+    manufacturing_status: {
+      type: Number,
+      enum: [0, 1],
+      default: 0,
+    },
+    
     // 🚚 Dispatch
     dispatch_id: {
       type: mongoose.Schema.Types.ObjectId,
@@ -114,6 +121,15 @@ const PanelNumberSchema = new mongoose.Schema(
       ref: "DamagePanel",
     },
 
+    vendor_id: {
+      type: String, default: 0,
+      trim: true,
+    },
+    vendor_status: {
+      type: Number, default: 0, // 0 = not assigned, 1 = assigned
+      required: true,
+      trim: true,
+    },
     collect_damage_status: {
       type: Number,
       enum: [0, 1],

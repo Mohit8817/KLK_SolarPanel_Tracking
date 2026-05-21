@@ -3,6 +3,10 @@ import ExcelJS from "exceljs";
 import ProductionPanel from "../models/ProductionPanel.model.js"
 import PanelNumber from "../models/PanelNumber.model.js";
 
+import ManufacturingPanel from "../models/ManufacturingPanel.model.js";
+import User from "../models/users.model.js";
+
+
 
 export const createProductionPanel = async (req, res) => {
   try {
@@ -15,6 +19,7 @@ export const createProductionPanel = async (req, res) => {
       state,
       date,
       created_by,
+      vendor_id,
     } = req.body;
 
     const count = Number(panel_count);
@@ -32,7 +37,7 @@ export const createProductionPanel = async (req, res) => {
        - Must be unassigned (production_status = 0)
     =============================== */
 
-      console.log(panel_capacity, panel_type);
+    console.log(panel_capacity, panel_type);
 
     const panels = await PanelNumber.find({
       production_status: 0,
@@ -61,6 +66,8 @@ export const createProductionPanel = async (req, res) => {
       state,
       date,
       created_by,
+      vendor_id,
+      vendor_status: vendor_id == 0 ? 0 : 1,
     });
 
     /* ===============================
@@ -75,6 +82,8 @@ export const createProductionPanel = async (req, res) => {
           production_id: productionPanel._id,
           production_lot_size: count,
           production_status: 1,
+          vendor_id: productionPanel.vendor_id,
+          vendor_status: productionPanel.vendor_id == 0 ? 0 : 1, // if vendor assigned to production, mark panel as assigned
         },
       }
     );
@@ -104,7 +113,9 @@ export const createProductionPanel = async (req, res) => {
 
 export const fetchAllProductionPanels = async (req, res) => {
   try {
-    const productionPanels = await ProductionPanel.find()
+    const productionPanels = await ProductionPanel.find(
+      { vendor_status: 0 }
+    )
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -118,6 +129,101 @@ export const fetchAllProductionPanels = async (req, res) => {
     });
   }
 };
+
+
+// export const viewVendorProductionPanels = async (req, res) => {
+
+//   try {
+
+//     const productionPanels = await ProductionPanel.find({
+//       vendor_status: 1
+//     }).sort({ createdAt: -1 });
+//     const users = await User.find({
+//       role: "vendor"
+//     });
+//     const finalData = productionPanels.map((panel) => {
+//       const vendor = users.find(
+//         (u) => u._id.toString() === panel.vendor_id?.toString()
+//       );
+//       return {
+//         ...panel._doc,
+//         vendor_details: vendor
+//           ? {
+//               _id: vendor._id,
+//               first_name: vendor.first_name,
+//               last_name: vendor.last_name,
+//               email: vendor.email,
+//               whatsapp_no: vendor.whatsapp_no,
+//             }
+//           : null,
+
+//       };
+
+//     });
+
+//     res.status(200).json({
+//       success: true,
+//       data: finalData,
+//     });
+
+//   } catch (error) {
+
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+
+//   }
+
+// };
+
+
+
+
+export const viewVendorProductionPanels = async (req, res) => {
+  try {
+    const loginUser = req.user;
+    console.log("Login User:", loginUser);
+    const productionPanels = await ProductionPanel.find({
+      vendor_status: 1,
+      ...(loginUser.role === "vendor" && {
+        vendor_id: loginUser
+      })
+
+    }).sort({ createdAt: -1 });
+    const finalData = await Promise.all(
+      productionPanels.map(async (panel) => {
+        const vendor = await User.findById(panel.vendor_id);
+        return {
+          ...panel._doc,
+          vendor_details: vendor
+            ? {
+              _id: vendor._id,
+              first_name: vendor.first_name,
+              last_name: vendor.last_name,
+              email: vendor.email,
+              whatsapp_no: vendor.whatsapp_no,
+            }
+            : null,
+        };
+
+      })
+
+    );
+    return res.status(200).json({
+      success: true,
+      data: finalData,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
+
+
 
 export const fetchProductionPanelById = async (req, res) => {
   try {
@@ -268,7 +374,118 @@ export const exportProductionPanelNumbers = async (req, res) => {
 
 
 
+export const createManufacturingPanel = async (req, res) => {
+  try {
+    const {
+      production_id,
+      panel_count,
+      shift,
+      date,
+      remarks,
+      created_by,
+    } = req.body;
+
+    const count = Number(panel_count);
+
+    // Validation
+    if (!production_id || !shift || !date || isNaN(count) || count <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid required fields must be provided",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(production_id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid production_id"
+      });
+    }
+
+    const production = await ProductionPanel.findById(production_id);
+
+    if (!production) {
+      return res.status(404).json({
+        success: false,
+        message: "Production not found"
+      });
+    }
+
+    const panels = await PanelNumber.find({
+      production_status: 1,
+      manufacturing_status: { $ne: 1 }
+    }).limit(Number(count));
 
 
+    if (panels.length < count) {
+      return res.status(400).json({
+        success: false,
+        message: `Not enough panels available. Found: ${panels.length}`,
+      });
+    }
+
+    const manufacturingPanel = await ManufacturingPanel.create({
+      company_id: production.company_id,
+      production_id,
+      panel_capacity: production.panel_capacity,
+      panel_type: production.panel_type,
+      panel_count: count,
+      shift,
+      date,
+      remarks,
+      created_by,
+    });
+
+    const panelIds = panels.map(p => p._id);
+
+    await PanelNumber.updateMany(
+      { _id: { $in: panelIds }, manufacturing_status: { $ne: 1 } },
+      { $set: { manufacturing_status: 1 } }
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "Manufacturing panel created successfully",
+      data: manufacturingPanel
+    });
+
+  } catch (error) {
+    console.error("Error creating manufacturing panel:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 
 
+  
+
+export const getAllManufacturingPanels = async (req, res) => {
+  try {
+    // const { production_id } = req.query;
+    const { production_id } = req.params;
+
+    if (!production_id || !mongoose.Types.ObjectId.isValid(production_id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid production_id is required"
+      });
+    }
+
+    const panels = await ManufacturingPanel
+      .find({ production_id })
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      data: panels
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};

@@ -8,7 +8,7 @@ const ProductionDamagePanels = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const itemsPerPage = 5;
+  const itemsPerPage = 100;
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {

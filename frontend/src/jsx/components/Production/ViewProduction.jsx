@@ -1,6 +1,7 @@
-import { Card, Col, Table } from "react-bootstrap";
+import { Card, Col, Table, Modal, Button, Row } from "react-bootstrap";
 import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
+import Search, { useSearch } from "../Common/Search";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -8,35 +9,131 @@ import axios from "axios";
 const ViewProduction = () => {
   const [productionList, setProductionList] = useState([]);
 
-  // PAGINATION
-  const itemsPerPage = 10;
-  const [currentPage, setCurrentPage] = useState(1);
+  // ── Manufactured counts map: { production_id: total_manufactured } ──────
+  const [manufacturedCounts, setManufacturedCounts] = useState({});
 
-  const totalPages = Math.ceil(productionList.length / itemsPerPage);
+  // MODAL STATE
+  const [showModal, setShowModal] = useState(false);
+  const [selectedProductionId, setSelectedProductionId] = useState(null);
+  const [manufacturingList, setManufacturingList] = useState([]);
 
-  const startIndex = (currentPage - 1) * itemsPerPage;
+  const [modalForm, setModalForm] = useState({
+    date: "",
+    shift: "",
+    panel_count: "",
+    remarks: "",
+  });
 
-  const currentData = productionList.slice(
+  // ── SEARCH + PAGINATION ──────────────────────────────────────────────────
+  const SEARCH_KEYS = [
+    "date",
+    "panel_count",
+    "panel_capacity",
+    "panel_type",
+    "project",
+    "state",
+  ];
+
+  const {
+    currentData,
+    searchQuery,
+    setSearchQuery,
+    currentPage,
+    setCurrentPage,
+    totalPages,
     startIndex,
-    startIndex + itemsPerPage
-  );
+  } = useSearch(productionList, SEARCH_KEYS, 100);
+  // ─────────────────────────────────────────────────────────────────────────
 
+  // ── Fetch manufactured count for a single production id ─────────────────
+  const fetchManufacturedCount = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(
+        `${import.meta.env.VITE_BACKEND_API_URL}production/all-manufacturing-panels/${id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const entries = res.data.data || [];
+      // Sum up all panel_count values from manufacturing entries
+      const total = entries.reduce(
+        (sum, entry) => sum + (Number(entry.panel_count) || 0),
+        0
+      );
+      setManufacturedCounts((prev) => ({ ...prev, [id]: total }));
+    } catch {
+      setManufacturedCounts((prev) => ({ ...prev, [id]: 0 }));
+    }
+  };
 
-  // Fetch Production List
+  // ── Fetch counts for all productions after list loads ───────────────────
+  const fetchAllManufacturedCounts = async (list) => {
+    await Promise.all(list.map((item) => fetchManufacturedCount(item._id)));
+  };
+
+  const handleModalOpen = (id) => {
+    setSelectedProductionId(id);
+    setModalForm({ date: "", shift: "", panel_count: "", remarks: "" });
+    fetchManufacturingEntries(id);
+    setShowModal(true);
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+    setManufacturingList([]);
+    setSelectedProductionId(null);
+  };
+
+  const handleModalChange = (e) => {
+    setModalForm({ ...modalForm, [e.target.name]: e.target.value });
+  };
+
+  const fetchManufacturingEntries = async (id) => {
+    try {
+      if (!id) return;
+      const token = localStorage.getItem("token");
+      const res = await axios.get(
+        `${import.meta.env.VITE_BACKEND_API_URL}production/all-manufacturing-panels/${id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setManufacturingList(res.data.data || []);
+    } catch (err) {
+      console.log("Error:", err?.response?.data || err.message);
+      setManufacturingList([]);
+    }
+  };
+
+  const handleAddEntry = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const payload = { ...modalForm, production_id: selectedProductionId };
+      await axios.post(
+        `${import.meta.env.VITE_BACKEND_API_URL}production/create-manufacturing-panel`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setModalForm({ date: "", shift: "", panel_count: "", remarks: "" });
+      fetchManufacturingEntries(selectedProductionId);
+
+      // ── Re-fetch count for this production after adding entry ──────────
+      fetchManufacturedCount(selectedProductionId);
+    } catch (err) {
+      console.error("Add entry error:", err.response?.data);
+      alert(err.response?.data?.message || "Failed to add entry");
+    }
+  };
+
   const fetchProduction = async () => {
     try {
       const token = localStorage.getItem("token");
-
       const res = await axios.get(
         `${import.meta.env.VITE_BACKEND_API_URL}production/production-panel`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
+      const list = res.data.data || [];
+      setProductionList(list);
 
-      setProductionList(res.data.data);
+      // ── Fetch manufactured counts for all rows ─────────────────────────
+      fetchAllManufacturedCounts(list);
     } catch (err) {
       console.log("API ERROR:", err);
     }
@@ -46,12 +143,12 @@ const ViewProduction = () => {
     fetchProduction();
   }, []);
 
-
-  // Export Data
+  // EXPORT
   const exportData = productionList.map((item, index) => ({
     sno: index + 1,
     date: item.date,
     panel_count: item.panel_count,
+    manufactured: manufacturedCounts[item._id] ?? "—",
     panel_capacity: item.panel_capacity,
     panel_type: item.panel_type,
     project: item.project,
@@ -62,6 +159,7 @@ const ViewProduction = () => {
     { label: "S No", key: "sno" },
     { label: "Date", key: "date" },
     { label: "Panel Count", key: "panel_count" },
+    { label: "Manufactured", key: "manufactured" },
     { label: "Capacity", key: "panel_capacity" },
     { label: "Panel Type", key: "panel_type" },
     { label: "Project", key: "project" },
@@ -71,77 +169,75 @@ const ViewProduction = () => {
   const downloadExcel = async (id) => {
     try {
       const token = localStorage.getItem("token");
-
       const response = await axios.get(
         `${import.meta.env.VITE_BACKEND_API_URL}production/export-production-panel-numbers/${id}`,
-        {
-          responseType: "blob",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { responseType: "blob", headers: { Authorization: `Bearer ${token}` } }
       );
-
-      // Create blob with correct type
       const blob = new Blob([response.data], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-
       const url = window.URL.createObjectURL(blob);
-
       const link = document.createElement("a");
       link.href = url;
-      link.download = `production_${id}.xlsx`; // dynamic name
+      link.download = `production_${id}.xlsx`;
       document.body.appendChild(link);
       link.click();
-
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-
     } catch (error) {
       console.error("Download Error:", error.response || error);
       alert("File download failed");
     }
   };
 
-  // Delete Production
   const deleteProduction = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete?");
-    if (!confirmDelete) return;
-
+    if (!window.confirm("Are you sure you want to delete?")) return;
     try {
       const token = localStorage.getItem("token");
-
       await axios.delete(
         `${import.meta.env.VITE_BACKEND_API_URL}production/delete-production-panel/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
       alert("Deleted Successfully");
-      fetchProduction(); // Refresh list
+      fetchProduction();
     } catch (error) {
       console.error("Delete Error:", error);
       alert("Failed to delete");
     }
   };
 
+  // ── Helper: show only manufactured count ────────────────────────────────
+  const getManufacturedCount = (manufactured) => {
+    if (manufactured === undefined || manufactured === null)
+      return <span className="text-muted">Loading…</span>;
+
+    return <span>{manufactured}</span>;
+  };
+
   return (
     <Col lg={12}>
       <Card>
-      <Card.Header className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-          <Card.Title className="mb-0">
-            View Production Details
-          </Card.Title>
+        {/* HEADER */}
+        <Card.Header as={Row} className="align-items-center g-2">
+          <Col lg={4}>
+            <Card.Title className="mb-0">View Production Details</Card.Title>
+          </Col>
 
-          <TableExportActions
-            data={exportData}
-            columns={exportColumns}
-            fileName="Production_Report"
-          />
+          <Col
+            lg={8}
+            className="d-flex justify-content-end align-items-center gap-2"
+          >
+            <Search
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search by date, type, project..."
+            />
+            <TableExportActions
+              data={exportData}
+              columns={exportColumns}
+              fileName="Production_Report"
+            />
+          </Col>
         </Card.Header>
 
         <Card.Body>
@@ -151,6 +247,7 @@ const ViewProduction = () => {
                 <th>S No.</th>
                 <th>Date</th>
                 <th>Panel Count</th>
+                <th className="text-center">Manufactured</th>
                 <th>Capacity</th>
                 <th>Panel Type</th>
                 <th>Project</th>
@@ -162,44 +259,58 @@ const ViewProduction = () => {
               {currentData.length > 0 ? (
                 currentData.map((item, index) => (
                   <tr key={item._id}>
-                    <td><strong>{startIndex + index + 1}</strong></td>
+                    <td>
+                      <strong>{startIndex + index + 1}</strong>
+                    </td>
                     <td>{item.date}</td>
                     <td>{item.panel_count}</td>
+
+                    {/* ── Manufactured count cell ── */}
+                    <td className="text-center">
+                      {getManufacturedCount(manufacturedCounts[item._id])}
+                    </td>
+
                     <td>{item.panel_capacity}</td>
                     <td>{item.panel_type}</td>
                     <td>{item.project}</td>
                     <td>{item.state}</td>
+                    <td className="text-center">
+                      <div className="d-flex gap-1 justify-content-center">
+                        <Link
+                          to={`/view-production-panels/${item._id}`}
+                          className="btn btn-info btn-xs sharp me-2"
+                        >
+                          <i className="fa fa-eye" />
+                        </Link>
 
-                <td className="text-center">
-                          <div className="d-flex gap-1 justify-content-center">
-                             
-                      <Link
-                        to={`/view-production-panels/${item._id}`}
-                        className="btn btn-info btn-xs sharp me-2"
-                      >
-                        <i className="fa fa-eye" />
-                      </Link>
+                        <button
+                          className="btn btn-primary btn-xs sharp me-2"
+                          onClick={() => handleModalOpen(item._id)}
+                          title="Add Entry"
+                        >
+                          <i className="fa fa-plus" />
+                        </button>
 
-                      <button
-                        className="btn btn-success btn-xs sharp me-2"
-                        onClick={() => downloadExcel(item._id)}
-                      >
-                        <i className="fa fa-file-excel" />
-                      </button>
+                        <button
+                          className="btn btn-success btn-xs sharp me-2"
+                          onClick={() => downloadExcel(item._id)}
+                        >
+                          <i className="fa fa-file-excel" />
+                        </button>
 
-                      <button
-                        className="btn btn-danger btn-xs sharp"
-                        onClick={() => deleteProduction(item._id)}
-                      >
-                        <i className="fa fa-trash" />
-                      </button>
+                        <button
+                          className="btn btn-danger btn-xs sharp"
+                          onClick={() => deleteProduction(item._id)}
+                        >
+                          <i className="fa fa-trash" />
+                        </button>
                       </div>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="text-center text-muted">
+                  <td colSpan="9" className="text-center text-muted">
                     No production records found
                   </td>
                 </tr>
@@ -207,7 +318,6 @@ const ViewProduction = () => {
             </tbody>
           </Table>
 
-          {/* PAGINATION */}
           <CommonPagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -215,6 +325,163 @@ const ViewProduction = () => {
           />
         </Card.Body>
       </Card>
+
+      {/* MODAL */}
+      <Modal show={showModal} onHide={handleModalClose} centered size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Add Production Entry</Modal.Title>
+        </Modal.Header>
+        <Modal.Body
+          style={{
+            maxHeight: "85vh",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {/* FORM */}
+          <div className="row flex-shrink-0">
+            <div className="col-md-4">
+              <div className="form-group mb-3">
+                <label className="form-label">
+                  Date <span className="text-danger">*</span>
+                </label>
+                <input
+                  type="date"
+                  className="form-control"
+                  name="date"
+                  value={modalForm.date}
+                  onChange={handleModalChange}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="col-md-4">
+              <div className="form-group mb-3">
+                <label className="form-label">
+                  Shift <span className="text-danger">*</span>
+                </label>
+                <select
+                  className="form-control"
+                  name="shift"
+                  value={modalForm.shift}
+                  onChange={handleModalChange}
+                  required
+                >
+                  <option value="">Select Shift</option>
+                  <option value="day">Day</option>
+                  <option value="night">Night</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="col-md-4">
+              <div className="form-group mb-3">
+                <label className="form-label">
+                  Panel Count <span className="text-danger">*</span>
+                </label>
+                <input
+                  type="number"
+                  className="form-control"
+                  name="panel_count"
+                  placeholder="Enter number of panels"
+                  value={modalForm.panel_count}
+                  onChange={handleModalChange}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="col-md-12">
+              <div className="form-group mb-3">
+                <label className="form-label">Remark</label>
+                <textarea
+                  className="form-control"
+                  name="remarks"
+                  placeholder="Enter any remarks..."
+                  value={modalForm.remarks}
+                  onChange={handleModalChange}
+                />
+              </div>
+            </div>
+
+            <div className="col-md-12 text-end mb-1">
+              <Button
+                variant="success"
+                onClick={handleAddEntry}
+                disabled={
+                  !modalForm.date || !modalForm.shift || !modalForm.panel_count
+                }
+              >
+                <i className="fa fa-plus me-1" /> Add
+              </Button>
+            </div>
+          </div>
+
+          {/* TABLE */}
+          <div
+            className="table-responsive"
+            style={{ overflowY: "auto", maxHeight: "450px" }}
+          >
+            <table className="table table-hover align-middle">
+              <thead
+                style={{
+                  position: "sticky",
+                  top: 0,
+                  backgroundColor: "#fff",
+                  zIndex: 1,
+                }}
+              >
+                <tr>
+                  <th>S No.</th>
+                  <th>Date</th>
+                  <th>Shift</th>
+                  <th>Panel Count</th>
+                  <th>Remark</th>
+                </tr>
+              </thead>
+              <tbody>
+                {manufacturingList.length > 0 ? (
+                  manufacturingList.map((entry, index) => (
+                    <tr key={entry._id}>
+                      <td>{index + 1}</td>
+                      <td>{entry.date}</td>
+                      <td>{entry.shift}</td>
+                      <td>{entry.panel_count}</td>
+                      <td>{entry.remarks || "—"}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="text-center text-muted">
+                      No entries yet
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+
+              {/* ── Modal footer: show total of this production's entries ── */}
+              {manufacturingList.length > 0 && (
+                <tfoot>
+                  <tr className="table fw-bold">
+                    <td colSpan="3" className="text-end">
+                      Total Manufactured:
+                    </td>
+                    <td>
+                      {manufacturingList.reduce(
+                        (sum, e) => sum + (Number(e.panel_count) || 0),
+                        0
+                      )}
+                    </td>
+                    <td />
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </div>
+        </Modal.Body>
+      </Modal>
     </Col>
   );
 };
