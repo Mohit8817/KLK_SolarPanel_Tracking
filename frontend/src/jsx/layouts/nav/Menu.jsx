@@ -1,83 +1,55 @@
+import React from "react";
+import { getUser, getPermissions, hasPermission } from "../../../utils/auth.js";
+
+
+console.log("RAW permissions:", localStorage.getItem("permissions"));
+console.log("PARSED permissions:", getPermissions());
+
+// ================= MENU =================
 export const MenuList = [
-    // Dashboard
-    {
-        title: 'Dashboard',
-        classsChange: '',
-        iconStyle: <i className="flaticon-025-dashboard"></i>,
-        to: 'dashboard',
-    },
+  {
+    title: "Dashboard",
+    iconStyle: <i className="flaticon-025-dashboard"></i>,
+    to: "dashboard",
+    permission: "dashboard",
+  },
 
+  {
+    title: "Panel Generation",
+    classsChange: "mm-collapse",
+    iconStyle: <i className="fa-solid fa-solar-panel fw-bold"></i>,
+    content: [
+      { title: "Generate Panel", to: "panel/generate", permission: "generate_panel" },
+      { title: "View Panel List", to: "generate/panel/list", permission: "view_panel_list" },
+    ],
+  },
 
-    // Panel Generation
-    {
-        title: 'Panel Generation',
-        classsChange: 'mm-collapse',
-        iconStyle: <i className="fa-solid fa-solar-panel fw-bold" />,
-        content: [
-            {
-                title: 'Generate Panel',
-                to: 'panel/generate',
-            },
-            {
-                title: 'View Panel List',
-                to: 'generate/panel/list',
-            },
-        ],
-    },
+  {
+    title: "Production",
+    classsChange: "mm-collapse",
+    iconStyle: <i className="fa-solid fa-industry fw-bold"></i>,
+    content: [
+      { title: "Add Production", to: "production/add", permission: "add_production" },
+      { title: "View Production List", to: "production/list", permission: "view_production" },
+      { title: "Add Damage", to: "production-damage/add", permission: "add_production_damage" },
+      { title: "Damage List", to: "production-damage/list", permission: "view_production_damage_list" },
+      { title: 'Vendor Production List', to: 'production/vendor-list', permission: "view_vendor_production_list" },
+    ],
+  },
 
-    // Production
-    {
-        title: 'Production',
-        classsChange: 'mm-collapse',
-        iconStyle: <i className="fa-solid fa-industry fw-bold" />,
-        content: [
-            {
-                title: 'Add Production',
-                to: 'production/add',
-            },
-            {
-                title: 'View Production List',
-                to: 'production/list',
-            },
-            {
-                title: 'Add Damage',
-                to: 'production-damage/add',
-            },
-            {
-                title: 'Damage List',
-                to: 'production-damage/list',
-            },
-        ],
-    },
+  {
+    title: "Dispatch Panel",
+    classsChange: "mm-collapse",
+    iconStyle: <i className="fa-solid fa-truck-fast fw-bold"></i>,
+    content: [
+      { title: "Dispatch Panel", to: "/dispatch/create", permission: "add_dispatch" },
+      { title: "View Dispatch List", to: "/dispatch/list", permission: "view_dispatch" },
+      { title: "Add Damage", to: "sender/damage/create", permission: "add_sender_damage" },
+      { title: "View Damage List", to: "/damage/list", permission: "view_sender_damage" },
+    ],
+  },
 
-
-    // Dispatch Panel
-    {
-        title: "Dispatch Panel",
-        classsChange: 'mm-collapse',
-        iconStyle: <i className="fa-solid fa-truck-fast fw-bold" />,
-        content: [
-            {
-                title: 'Dispatch Panel',
-                to: '/dispatch/create',
-            },
-            {
-                title: 'View Dispatch List',
-                to: '/dispatch/list',
-            },
-            {
-                title: 'Add Damage',
-                to: 'sender/damage/create',
-            },
-
-            {
-                title: 'View Damage List',
-                to: '/damage/list',
-            },
-        ],
-    },
-
-    // Receive Panel
+  // Receive Panel
     {
         title: "Receive Panel",
         classsChange: 'mm-collapse',
@@ -86,36 +58,61 @@ export const MenuList = [
             {
                 title: 'View Safe Panels',
                 to: 'receiver/safe/list',
+                permission: "recieve_panels"
             },
-           {
-                title: 'Add Damage Panel',
+            {
+                title: 'Add Reicieving Damage Panel',
                 to: 'receiver/damage/create',
+                permission: "add_recieving_damage"
             },
             {
-                title: 'View Damage List',
+                title: 'View Reicieving Damage List',
                 to: 'receiver/damage/list',
+                permission: "view_recieving_damage"
             },
         ],
     },
 
-    // User Management
+  {
+    title: "User Management",
+    classsChange: "mm-collapse",
+    iconStyle: <i className="fa-solid fa-users fw-bold"></i>,
+    content: [
+      { title: "Add User", to: "/user/add", permission: "add_user" },
+      { title: "View Users", to: "/user/list", permission: "view_user" },
+    ],
+  },
+
     {
-        title: "User Management",
-        classsChange: 'mm-collapse',
-        iconStyle: <i className="fa-solid fa-users fw-bold" />,
-        content: [
-            {
-                title: 'Add User',
-                to: '/user/add',
-            },
-            {
-                title: 'View Users',
-                to: '/user/list',
-            },
-        ],
-    },
+    title: "Settings",
+    classsChange: "mm-collapse",
+    iconStyle: <i className="fa-solid fa-gear fw-bold"></i>,
+    content: [
+      { title: "Role Permission", to: "role/list", permission: "manage_role" },
+      { title: "Permission", to: "permission/list", permission: "manage_permission" },
+    ],
+  },
+];
 
+// ================= STRICT FILTER =================
+export const FilteredMenuList = MenuList
+  .map(menu => {
 
+    // SUB MENU
+    if (menu.content) {
+      const filtered = menu.content.filter(item =>
+        hasPermission(item.permission)
+      );
 
+      return filtered.length > 0
+        ? { ...menu, content: filtered }
+        : null;
+    }
 
-]
+    // SINGLE MENU
+    return hasPermission(menu.permission) ? menu : null;
+
+  })
+  .filter(Boolean);
+
+export default FilteredMenuList;

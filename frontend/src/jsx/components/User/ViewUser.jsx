@@ -14,15 +14,24 @@ const ViewUser = () => {
 
   // Fetch users
   const fetchUsers = async () => {
-    try {
-      const res = await getUsers();
-      setUsers(res.data || []);
-    } catch (err) {
-      console.error("Fetch users error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+
+    const res = await getUsers();
+
+    setUsers(res?.data?.data || []);
+
+  } catch (err) {
+
+    console.error("Fetch users error:", err);
+
+    setUsers([]);
+
+  } finally {
+
+    setLoading(false);
+
+  }
+};
 
   // Delete user
   const handleDelete = async (id) => {
@@ -93,19 +102,19 @@ const ViewUser = () => {
                           </strong>
                         </td>
 
-                        <td>
-                          <img
-                            src={
-                              user.emp_image
-                                ? `${import.meta.env.VITE_BACKEND_URL}/uploads/${user.emp_image}`
-                                : "https://via.placeholder.com/45"
-                            }
-                            alt="User"
-                            width="45"
-                            height="45"
-                            className="rounded-circle border"
-                          />
-                        </td>
+                   <td>
+                    {user.emp_image ? (
+                      <img
+                        src={`${import.meta.env.VITE_BACKEND_URL}/uploads/${user.emp_image}`}
+                        alt="User"
+                        width="45"
+                        height="45"
+                        className="rounded-circle border"
+                      />
+                    ) : (
+                      <span>No Image</span>
+                    )}
+                  </td>
 
                         <td>
                           <strong>
@@ -116,7 +125,7 @@ const ViewUser = () => {
                         <td>{user.email}</td>
                         <td>{user.whatsapp_no}</td>
                         <td>{user.gender}</td>
-                        <td>{user.role}</td>
+                       <td>{user.role?.name || "N/A"}</td>
                         <td>{user.city}</td>
                         <td>{user.project}</td>
 

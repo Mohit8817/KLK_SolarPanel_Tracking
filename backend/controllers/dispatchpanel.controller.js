@@ -128,12 +128,19 @@ export const updateDispatch = async (req, res) => {
 export const deleteDispatch = async (req, res) => {
   try {
     const dispatch = await DispatchPanel.findByIdAndDelete(req.params.id);
-
     if (!dispatch) {
       return res.status(404).json({
         success: false,
-        message: "Dispatch not found",
+        message: "Dispatch id not found",
       });
+    }
+    // ✅ Unlink panels from this dispatch
+    const panels = await PanelNumber.find({ dispatch_id: dispatch._id });
+    for (const panel of panels) {
+      panel.dispatch_id = null;
+      panel.dispatch_status = 0;
+      panel.dispatch_panel_type = null;
+      await panel.save();
     }
 
     res.status(200).json({
@@ -153,11 +160,26 @@ export const scanPanel = async (req, res) => {
   try {
     const { panel_no, dispatch_id, panel_type } = req.body;
 
-    const panel = await PanelNumber.findOne({ panel_unique_no: panel_no });
+    const panel = await PanelNumber.findOne({ 
+      panel_unique_no: panel_no 
+    });
 
     if (!panel) {
       return res.status(404).json({ message: "Panel not found" });
     }
+
+    if (panel.production_status !== 1) {
+      return res.status(400).json({
+        message: "Panel not ready for dispatch (not in production)",
+      });
+    }
+
+    if (panel.vendor_status !== 0) {
+      return res.status(400).json({
+        message: "Panel already assigned to a vendor",
+      });
+    }
+
 
     if (panel.dispatch_status === 1) {
       return res.status(400).json({
@@ -374,6 +396,43 @@ export const getRecievepanelsByDispatchId = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to fetch Recieving panels",
+    });
+  }
+};
+
+
+
+
+
+export const scanPanelDelete = async (req, res) => {
+  try {
+    const { panel_no } = req.body;
+    const panel = await PanelNumber.findOne({
+      panel_unique_no: panel_no,
+    });
+    if (!panel) {
+      return res.status(404).json({
+        message: "Panel not found",
+      });
+    }
+  
+      if (panel.dispatch_status === 0) {
+        return res.status(400).json({
+          message: "Panel already removed",
+        });
+      }
+      panel.dispatch_id = null;
+      panel.dispatch_status = 0;
+      panel.dispatch_panel_type = null;
+      await panel.save();
+      return res.json({
+        message: "Panel removed successfully",
+        panel_no,
+      });
+    } catch (error) {
+
+    res.status(500).json({
+      message: error.message,
     });
   }
 };

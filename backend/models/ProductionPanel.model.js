@@ -35,6 +35,15 @@ const ProductionPanelSchema = new mongoose.Schema({
       required: true,
       trim: true,
     },
+    vendor_id: {
+      type: String, default: 0,
+      trim: true,
+    },
+    vendor_status: {
+      type: Number, default: 0, // 0 = not assigned, 1 = assigned
+      required: true,
+      trim: true,
+    },
     accepted_by: {
       type: String,
       trim: true,

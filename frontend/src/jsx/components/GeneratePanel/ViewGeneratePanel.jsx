@@ -1,30 +1,21 @@
 import { useEffect, useState } from "react";
-import { Card, Col, Table } from "react-bootstrap";
+import { Card, Col, Row, Table } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import {
-  getAllPanelLots,
-  deletePanelLot,
-} from "./GeneratepanelApis";
+import { getAllPanelLots, deletePanelLot } from "./GeneratepanelApis";
 import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
+import Search, { useSearch } from "../Common/Search";
 
 const ViewGeneratePanel = () => {
   const [panelList, setPanelList] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // PAGINATION
-  const itemsPerPage = 10;
-  const [currentPage, setCurrentPage] = useState(1);
-
-  useEffect(() => {
-    fetchLots();
-  }, []);
+  useEffect(() => { fetchLots(); }, []);
 
   const fetchLots = async () => {
     try {
       const res = await getAllPanelLots();
-      const data = res?.data?.data || [];
-      setPanelList(data);
+      setPanelList(res?.data?.data || []);
     } catch (error) {
       console.log(error);
     } finally {
@@ -32,10 +23,8 @@ const ViewGeneratePanel = () => {
     }
   };
 
-  // DELETE
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete?")) return;
-
     try {
       await deletePanelLot(id);
       fetchLots();
@@ -44,15 +33,26 @@ const ViewGeneratePanel = () => {
     }
   };
 
-  // PAGINATION LOGIC
-  const totalPages = Math.ceil(panelList.length / itemsPerPage);
+  // ── SEARCH + PAGINATION ──────────────────────────────────────────────────
+  const SEARCH_KEYS = [
+    "date",
+    "total_panels",
+    "panel_capacity",
+    "panel_type",
+    "panel_alot_state",
+    "panel_alot_project",
+  ];
 
-  const startIndex = (currentPage - 1) * itemsPerPage;
-
-  const currentData = panelList.slice(
+  const {
+    currentData,
+    searchQuery,
+    setSearchQuery,
+    currentPage,
+    setCurrentPage,
+    totalPages,
     startIndex,
-    startIndex + itemsPerPage
-  );
+  } = useSearch(panelList, SEARCH_KEYS, 100);
+  // ─────────────────────────────────────────────────────────────────────────
 
   // EXPORT
   const exportData = panelList.map((item, index) => ({
@@ -71,25 +71,36 @@ const ViewGeneratePanel = () => {
     { label: "Total Panels", key: "totalPanels" },
     { label: "Capacity", key: "capacity" },
     { label: "Panel Type", key: "panelType" },
+    { label: "Panel State", key: "panelState" },
+    { label: "Panel Project", key: "panelProject" },
   ];
 
   return (
     <Col lg={12}>
       <Card>
 
+
+
         {/* HEADER */}
-        <Card.Header className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <Card.Title className="mb-0">
-            View Generate Panel Serial Number
-          </Card.Title>
+        <Card.Header as={Row} className="align-items-center g-2">
+          <Col lg={4}>
+            <Card.Title className="mb-0"> View Generate Panel Serial Number
+            </Card.Title>
+          </Col>
 
-          <TableExportActions
-            data={exportData}
-            columns={exportColumns}
-            fileName="Generated_Panel_Report"
-          />
+          <Col lg={8} className="d-flex justify-content-end align-items-center gap-2">
+            <Search
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search by date, type, project..."
+            />
+            <TableExportActions
+              data={exportData}
+              columns={exportColumns}
+              fileName="Generated_Panel_Report"
+            />
+          </Col>
         </Card.Header>
-
         <Card.Body>
           {loading ? (
             <p>Loading...</p>
@@ -113,12 +124,7 @@ const ViewGeneratePanel = () => {
                   {currentData.length > 0 ? (
                     currentData.map((item, index) => (
                       <tr key={item._id}>
-                        <td>
-                          <strong>
-                            {startIndex + index + 1}
-                          </strong>
-                        </td>
-
+                        <td><strong>{startIndex + index + 1}</strong></td>
                         <td>{item.date}</td>
                         <td>{item.total_panels}</td>
                         <td>{item.panel_capacity}</td>
@@ -127,20 +133,12 @@ const ViewGeneratePanel = () => {
                         <td>{item.panel_alot_project}</td>
                         <td className="text-center">
                           <div className="d-flex gap-1 justify-content-center">
-
-
-
-                            {/* VIEW */}
                             <Link
                               to={`/view-panel-details/${item._id}`}
                               className="btn btn-primary btn-xs sharp me-2"
                             >
                               <i className="fa fa-eye" />
                             </Link>
-
-
-
-                            {/* DELETE */}
                             <button
                               className="btn btn-danger btn-xs sharp"
                               onClick={() => handleDelete(item._id)}
@@ -153,24 +151,23 @@ const ViewGeneratePanel = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="6" className="text-center text-muted">
-                        No records found
+                      <td colSpan="8" className="text-center text-muted">
+                        {searchQuery
+                          ? `No results for "${searchQuery}"`
+                          : "No records found"}
                       </td>
                     </tr>
                   )}
                 </tbody>
               </Table>
 
-              {/* PAGINATION */}
               <CommonPagination
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
               />
-
             </>
           )}
-
         </Card.Body>
       </Card>
     </Col>

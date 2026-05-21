@@ -12,6 +12,7 @@ import productionopanelroures from './routes/productionpanel.routes.js'
 import dispatchpanelroures from './routes/dispatchpanel.routes.js'
 import damagepanelroures from './routes/damagepanel.routes.js'
 import dashboardroutes from './routes/dashboard.routes.js'
+import roleroutes from './routes/role.routes.js'
 
 
 const app = express()
@@ -21,6 +22,8 @@ app.use(
   cors({
     origin: ["http://localhost:5173", "http://klkventures.cloud"],
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
@@ -54,6 +57,7 @@ app.use("/api/panels", panelseriallotroutes)
 app.use("/api/production", productionopanelroures)
 app.use("/api/dispatch", dispatchpanelroures)
 app.use("/api/damage", damagepanelroures)
+app.use("/api/role", roleroutes)
 
 
 app.listen(3000, () => {

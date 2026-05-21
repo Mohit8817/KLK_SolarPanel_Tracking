@@ -1,5 +1,5 @@
 import express from "express"
-import {createDispatch , getAllDispatches, getDispatchById, updateDispatch, deleteDispatch, scanPanel, getPanelsByDispatchId , fetchrecieve , scanReceivedPanel, completeReceive , getRecievedispatchById , getRecievepanelsByDispatchId } from "../controllers/dispatchpanel.controller.js"
+import {createDispatch , getAllDispatches, getDispatchById, updateDispatch, deleteDispatch, scanPanel, getPanelsByDispatchId , fetchrecieve , scanReceivedPanel, completeReceive , getRecievedispatchById , getRecievepanelsByDispatchId, scanPanelDelete } from "../controllers/dispatchpanel.controller.js"
 
 const router = express.Router();
 
@@ -17,6 +17,7 @@ router.get("/fetch-recieve-dispatched-panel/:id", getRecievedispatchById);
 router.post("/receive-panel-scan", scanReceivedPanel);
 router.put("/complete-receive/:id", completeReceive);
 router.get("/recieve-panel/:id", getRecievepanelsByDispatchId);
+router.post("/scan-panel-delete", scanPanelDelete);
 
 
 export default router;

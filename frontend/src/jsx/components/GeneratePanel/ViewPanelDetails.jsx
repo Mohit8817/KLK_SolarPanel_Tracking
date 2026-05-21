@@ -4,16 +4,13 @@ import { useParams } from "react-router-dom";
 import { getPanelDetailsByLot } from "./GeneratepanelApis";
 import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
+import Search, { useSearch } from "../Common/Search";
 
 const ViewPanelDetails = () => {
   const { id } = useParams();
 
   const [panelList, setPanelList] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // PAGINATION
-  const itemsPerPage = 10;
-  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetchPanels();
@@ -30,14 +27,19 @@ const ViewPanelDetails = () => {
     }
   };
 
-  // PAGINATION LOGIC
-  const totalPages = Math.ceil(panelList.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
+  // ── REPLACE old pagination block with useSearch ──────────────────────────
+  const SEARCH_KEYS = ["panel_unique_no", "panel_capacity"];
 
-  const currentData = panelList.slice(
+  const {
+    currentData,
+    searchQuery,
+    setSearchQuery,
+    currentPage,
+    setCurrentPage,
+    totalPages,
     startIndex,
-    startIndex + itemsPerPage
-  );
+  } = useSearch(panelList, SEARCH_KEYS, 100);
+  // ─────────────────────────────────────────────────────────────────────────
 
   /* ================= EXPORT ================= */
   const exportData = panelList.map((item, index) => ({
@@ -45,23 +47,15 @@ const ViewPanelDetails = () => {
     uniqueNo: item.panel_unique_no,
     capacity: item.panel_capacity,
     category:
-      item.dispatch_panel_type === 1
-        ? "DCR"
-        : item.dispatch_panel_type === 2
-        ? "NON DCR"
-        : "-",
-    production:
-      item.production_status === 1 ? "Assigned" : "Pending",
-    production_damage:
-      item.production_damage_status === 1 ? "Damaged" : "Safe",
-    dispatch:
-      item.dispatch_status === 1 ? "Dispatched" : "Pending",
-    damage:
-      item.damage_status === 1 ? "Damaged" : "Safe",
-    receive:
-      item.recieve_status === 1 ? "Received" : "Pending",
-    receive_damage:
-      item.recieve_damage_status === 1 ? "Damaged" : "Safe",
+      item.dispatch_panel_type === 1 ? "DCR"
+        : item.dispatch_panel_type === 2 ? "NON DCR"
+          : "-",
+    production: item.production_status === 1 ? "Assigned" : "Pending",
+    production_damage: item.production_damage_status === 1 ? "Damaged" : "Safe",
+    dispatch: item.dispatch_status === 1 ? "Dispatched" : "Pending",
+    damage: item.damage_status === 1 ? "Damaged" : "Safe",
+    receive: item.recieve_status === 1 ? "Received" : "Pending",
+    receive_damage: item.recieve_damage_status === 1 ? "Damaged" : "Safe",
   }));
 
   const exportColumns = [
@@ -82,32 +76,33 @@ const ViewPanelDetails = () => {
       <Card>
 
         {/* HEADER */}
-        <Card.Header className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <div>
-            <Card.Title className="mb-0">
-              Panel Details
-            </Card.Title>
-            <div>
-              <strong>Lot ID:</strong> {id}
-            </div>
-          </div>
+        <Card.Header>
+          <Col lg={4}>
+            <Card.Title className="mb-0">Panel Details</Card.Title>
+            <div><strong>Lot ID:</strong> {id}</div>
+          </Col>
 
-          <TableExportActions
-            data={exportData}
-            columns={exportColumns}
-            fileName="Panel_Details_Report"
-          />
+          <Col lg={8} className="d-flex  justify-content-end align-items-center gap-2">
+            <Search
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search by panel no"
+            />  
+            <TableExportActions
+              data={exportData}
+              columns={exportColumns}
+              fileName="Panel_Details_Report"
+            />
+          </Col>
         </Card.Header>
-
+        
         <Card.Body>
-
           {loading ? (
             <div className="text-center py-4">
               <Spinner animation="border" />
             </div>
           ) : (
             <>
-              {/* RESPONSIVE TABLE */}
               <Table responsive hover className="align-middle">
                 <thead>
                   <tr>
@@ -128,91 +123,74 @@ const ViewPanelDetails = () => {
                   {currentData.length > 0 ? (
                     currentData.map((item, index) => (
                       <tr key={item._id}>
-                        <td>
-                          <strong>{startIndex + index + 1}</strong>
-                        </td>
-
+                        <td><strong>{startIndex + index + 1}</strong></td>
                         <td>{item.panel_unique_no}</td>
                         <td>{item.panel_capacity}</td>
 
                         {/* Category */}
                         <td>
-                          {item.dispatch_panel_type === 1 ? (
+                          {item.panel_category === 1 ? (
                             <Badge bg="success">DCR</Badge>
                           ) : item.panel_category === 2 ? (
                             <Badge bg="secondary">NON DCR</Badge>
-                          ) : (
-                            "-"
-                          )}
+                          ) : "-"}
                         </td>
 
                         {/* Production */}
                         <td>
-                          {item.production_status === 1 ? (
-                            <Badge bg="success">Assigned</Badge>
-                          ) : (
-                            <Badge bg="warning">Pending</Badge>
-                          )}
+                          {item.production_status === 1
+                            ? <Badge bg="success">Assigned</Badge>
+                            : <Badge bg="warning">Pending</Badge>}
                         </td>
 
                         {/* Production Damage */}
                         <td>
-                          {item.production_damage_status === 1 ? (
-                            <Badge bg="danger">Damaged</Badge>
-                          ) : (
-                            <Badge bg="success">Safe</Badge>
-                          )}
+                          {item.production_damage_status === 1
+                            ? <Badge bg="danger">Damaged</Badge>
+                            : <Badge bg="success">Safe</Badge>}
                         </td>
 
                         {/* Dispatch */}
                         <td>
-                          {item.dispatch_status === 1 ? (
-                            <Badge bg="success">Dispatched</Badge>
-                          ) : (
-                            <Badge bg="warning">Pending</Badge>
-                          )}
+                          {item.dispatch_status === 1
+                            ? <Badge bg="success">Dispatched</Badge>
+                            : <Badge bg="warning">Pending</Badge>}
                         </td>
 
                         {/* Damage */}
                         <td>
-                          {item.damage_status === 1 ? (
-                            <Badge bg="danger">Damaged</Badge>
-                          ) : (
-                            <Badge bg="success">Safe</Badge>
-                          )}
+                          {item.damage_status === 1
+                            ? <Badge bg="danger">Damaged</Badge>
+                            : <Badge bg="success">Safe</Badge>}
                         </td>
 
                         {/* Receive */}
                         <td>
-                          {item.recieve_status === 1 ? (
-                            <Badge bg="success">Received</Badge>
-                          ) : (
-                            <Badge bg="warning">Pending</Badge>
-                          )}
+                          {item.recieve_status === 1
+                            ? <Badge bg="success">Received</Badge>
+                            : <Badge bg="warning">Pending</Badge>}
                         </td>
 
                         {/* Receive Damage */}
                         <td>
-                          {item.recieve_damage_status === 1 ? (
-                            <Badge bg="danger">Damaged</Badge>
-                          ) : (
-                            <Badge bg="success">Safe</Badge>
-                          )}
+                          {item.recieve_damage_status === 1
+                            ? <Badge bg="danger">Damaged</Badge>
+                            : <Badge bg="success">Safe</Badge>}
                         </td>
-
                       </tr>
                     ))
                   ) : (
                     <tr>
                       <td colSpan="10" className="text-center text-muted">
-                        No records found
+                        {searchQuery
+                          ? `No results for "${searchQuery}"`
+                          : "No records found"}
                       </td>
                     </tr>
                   )}
                 </tbody>
               </Table>
 
-              {/* PAGINATION */}
               {totalPages > 1 && (
                 <CommonPagination
                   currentPage={currentPage}
@@ -222,7 +200,6 @@ const ViewPanelDetails = () => {
               )}
             </>
           )}
-
         </Card.Body>
       </Card>
     </Col>

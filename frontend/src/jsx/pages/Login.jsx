@@ -21,7 +21,7 @@ function Login() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      navigate("/dashboard"); // only redirect if token exists
+      navigate("/dashboard");
     }
   }, [navigate]);
 
@@ -44,18 +44,17 @@ function Login() {
         { email, password }
       );
 
-      if (response.data?.token) {
-        // Save token in localStorage
-        localStorage.setItem("token", response.data.token);
+    if (response.data?.token) {
 
-        // Save user info for later use
-        localStorage.setItem("user", JSON.stringify(response.data.user));
+  localStorage.setItem("token", response.data.token);
+  localStorage.setItem("user", JSON.stringify(response.data.user));
+  localStorage.setItem("permissions", JSON.stringify(response.data.permissions || []));
 
-        alert("Login Successful!");
+  // FORCE RELOAD so menu recalculates
+window.location.reload();
 
-        // Redirect to dashboard
-        navigate("/dashboard");
-      } else {
+   navigate("/dashboard");
+} else {
         alert(response.data?.message || "Login failed");
       }
     } catch (err) {

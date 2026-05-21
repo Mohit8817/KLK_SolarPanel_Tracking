@@ -1,5 +1,5 @@
 import express from "express"
-import {createProductionPanel, fetchAllProductionPanels, fetchProductionPanelById, deleteProductionPanel, getPanelsByProductionId, exportProductionPanelNumbers} from '../controllers/productionpanel.controller.js'
+import {createProductionPanel, fetchAllProductionPanels, fetchProductionPanelById, deleteProductionPanel, getPanelsByProductionId, exportProductionPanelNumbers, viewVendorProductionPanels, createManufacturingPanel, getAllManufacturingPanels} from '../controllers/productionpanel.controller.js'
 const router = express.Router()
 
 router.post("/create-production-panel", createProductionPanel);
@@ -11,6 +11,10 @@ router.get(
   "/export-production-panel-numbers/:id",
   exportProductionPanelNumbers
 );
+
+router.get("/vendor-production-panel", viewVendorProductionPanels);
+router.post("/create-manufacturing-panel", createManufacturingPanel);
+router.get("/all-manufacturing-panels/:production_id", getAllManufacturingPanels);
 
 
 export default router

@@ -1,15 +1,28 @@
 import User from '../models/users.model.js'
+import Role from '../models/Role.model.js'
 import fs from 'fs';
 import path from "path";
 
-export const getAllUser = async(req,res) => {
-    try {
-        const users = await User.find();
-        res.status(200).json(users);
-    } catch (error) {
-        res.status(500).json({message : error.message})
-    }
-}
+export const getAllUser = async (req, res) => {
+  try {
+
+    const users = await User.find()
+      .populate("role", "name");
+
+    res.status(200).json({
+      success: true,
+      data: users,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
 
 
 export const fetchUser = async(req, res) => {
@@ -25,8 +38,10 @@ export const fetchUser = async(req, res) => {
 
 export const createUser = async (req, res) => {
   try {
+    const company_id = req.user?.company_id;
     const user = new User({
       ...req.body,
+      company_id
     });
 
     /* ===============================
@@ -94,4 +109,30 @@ export const deleteUser = async(req,res) => {
          res.status(400).json({message : message.error})
     }
 }
+
+export const getAllVendor = async (req, res) => {
+  try {
+
+    // FIND VENDOR ROLE
+    const vendorRole = await Role.findOne({
+      rolecode: "vendor"
+    });
+
+    if (!vendorRole) {
+      return res.status(404).json({
+        message: "Vendor role not found"
+      });
+    }
+    const vendors = await User.find({
+      role: vendorRole._id
+    });
+
+    res.status(200).json(vendors);
+
+  } catch (error) {
+    res.status(500).json({
+      message: error.message
+    });
+  }
+};
 

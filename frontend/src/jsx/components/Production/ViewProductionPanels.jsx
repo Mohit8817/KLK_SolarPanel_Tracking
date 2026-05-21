@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
+import Search, { useSearch } from "../Common/Search";
 
 const ViewProductionPanels = () => {
   const { id } = useParams();
@@ -13,18 +14,19 @@ const ViewProductionPanels = () => {
 
   const token = localStorage.getItem("token");
 
-  // PAGINATION
-  const itemsPerPage = 10;
-  const [currentPage, setCurrentPage] = useState(1);
+  // ── useSearch replaces manual pagination ─────────────────────────────────
+  const SEARCH_KEYS = ["panel_unique_no", "panel_no", "panel_capacity"];
 
-  const totalPages = Math.ceil(panelList.length / itemsPerPage);
-
-  const startIndex = (currentPage - 1) * itemsPerPage;
-
-  const currentData = panelList.slice(
+  const {
+    currentData,
+    searchQuery,
+    setSearchQuery,
+    currentPage,
+    setCurrentPage,
+    totalPages,
     startIndex,
-    startIndex + itemsPerPage
-  );
+  } = useSearch(panelList, SEARCH_KEYS, 100);
+  // ─────────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (id) fetchPanels();
@@ -33,16 +35,10 @@ const ViewProductionPanels = () => {
   const fetchPanels = async () => {
     try {
       setLoading(true);
-
       const res = await axios.get(
         `${import.meta.env.VITE_BACKEND_API_URL}production/productionlot/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
       setPanelList(res?.data?.data || []);
     } catch (err) {
       console.log("Production Fetch Error:", err);
@@ -76,37 +72,39 @@ const ViewProductionPanels = () => {
   return (
     <Col lg={12}>
       <Card>
-        <Card.Header className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
 
-          <Card.Title className="mb-0">
-            Production Panel Details
-          </Card.Title>
-          <div>
-            <strong>Production ID:</strong> {id}
+        {/* HEADER */}
+        <Card.Header>
+          <Col lg={4}>
+            <Card.Title className="mb-0">Production Panel Details</Card.Title>
+            <div><strong>Production ID:</strong> {id}</div>
+          </Col>
 
-          </div>
-
-
-
-          {/* EXPORT BUTTON */}
-          <div>
+          <Col lg={8} className="d-flex justify-content-end align-items-center gap-2">
+            <Search
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search by panel no"
+            />
             <TableExportActions
               data={exportData}
               columns={exportColumns}
               fileName="Production_Panels"
             />
-          </div>
-
+          </Col>
         </Card.Header>
 
         <Card.Body>
           {loading ? (
-            <p>Loading...</p>
+            <div className="text-center py-4">
+              {/* <Spinner animation="border" /> */}
+              <p>Loading...</p>
+            </div>
           ) : error ? (
             <p className="text-danger">{error}</p>
           ) : (
             <>
-              <Table responsive className="table-hover align-middle">
+              <Table responsive hover className="align-middle">
                 <thead>
                   <tr>
                     <th>S No.</th>
@@ -123,49 +121,52 @@ const ViewProductionPanels = () => {
                   {currentData.length > 0 ? (
                     currentData.map((item, index) => (
                       <tr key={item._id}>
-                        <td>{startIndex + index + 1}</td>
+                        <td><strong>{startIndex + index + 1}</strong></td>
                         <td>{item.panel_unique_no}</td>
                         <td>{item.panel_no}</td>
                         <td>{item.panel_capacity}</td>
+
+                        {/* Production Status */}
                         <td>
-                          {item.production_status === 1 ? (
-                            <Badge bg="success">Assigned</Badge>
-                          ) : (
-                            <Badge bg="warning">Pending</Badge>
-                          )}
+                          {item.production_status === 1
+                            ? <Badge bg="success">Assigned</Badge>
+                            : <Badge bg="warning">Pending</Badge>}
                         </td>
+
+                        {/* Dispatch Status */}
                         <td>
-                          {item.dispatch_status === 1 ? (
-                            <Badge bg="success">Dispatch</Badge>
-                          ) : (
-                            <Badge bg="warning">Pending</Badge>
-                          )}
+                          {item.dispatch_status === 1
+                            ? <Badge bg="success">Dispatch</Badge>
+                            : <Badge bg="warning">Pending</Badge>}
                         </td>
+
+                        {/* Damage Status */}
                         <td>
-                          {item.production_damage_status === 1 ? (
-                            <Badge bg="warning">Damage</Badge>
-                          ) : (
-                            <Badge bg="success">Safe</Badge>
-                          )}
+                          {item.production_damage_status === 1
+                            ? <Badge bg="warning">Damage</Badge>
+                            : <Badge bg="success">Safe</Badge>}
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="7" className="text-center">
-                        No panels found
+                      <td colSpan="7" className="text-center text-muted">
+                        {searchQuery
+                          ? `No results for "${searchQuery}"`
+                          : "No panels found"}
                       </td>
                     </tr>
                   )}
                 </tbody>
               </Table>
 
-              {/* PAGINATION */}
-              <CommonPagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
+              {totalPages > 1 && (
+                <CommonPagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              )}
             </>
           )}
         </Card.Body>
