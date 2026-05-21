@@ -173,7 +173,6 @@ export const scanPanel = async (req, res) => {
         message: "Panel not ready for dispatch (not in production)",
       });
     }
-
     if (panel.vendor_status !== 0) {
       return res.status(400).json({
         message: "Panel already assigned to a vendor",
@@ -186,6 +185,20 @@ export const scanPanel = async (req, res) => {
         message: "Panel already dispatched",
       });
     }
+    const dispatch = await DispatchPanel.findById(dispatch_id);
+    if (!dispatch) {
+      return res.status(404).json({
+        message: "Dispatch not found",
+      });
+    }
+    const dispatchPanelCount = await PanelNumber.countDocuments({ dispatch_id: dispatch_id, dispatch_status: 1 });
+    if(dispatch.dispatch_panel_count <= dispatchPanelCount) {
+      return res.status(400).json({
+        message: "Dispatch panel limit reached",
+      });
+    }
+
+    
 
     panel.dispatch_id = dispatch_id;
     panel.dispatch_status = 1;
