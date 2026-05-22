@@ -76,7 +76,7 @@ const ViewProductionPanels = () => {
         {/* HEADER */}
         <Card.Header>
           <Col lg={4}>
-            <Card.Title className="mb-0">Production Panel Details</Card.Title>
+            <Card.Title className="mb-0">Production Panel Details </Card.Title>
             <div><strong>Production ID:</strong> {id}</div>
           </Col>
 

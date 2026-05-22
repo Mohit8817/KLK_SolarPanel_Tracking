@@ -189,7 +189,7 @@ const DispatchPanel = () => {
   const handleEndDispatch = async (e) => {
     e.preventDefault();
     await stopScan();
-
+1
     const totalPanels =
       dispatchData.dcrPanels.length +
       dispatchData.nonDcrPanels.length;
@@ -424,8 +424,8 @@ const DispatchPanel = () => {
                       <label
                         key={type}
                         className={`btn ${isActive
-                            ? "btn-outline-success"
-                            : "btn-outline-danger"
+                          ? "btn-outline-success"
+                          : "btn-outline-danger"
                           }`}
                         style={{ width: "150px" }}
                       >
@@ -547,9 +547,8 @@ const DispatchPanel = () => {
                   className="btn btn-success px-5"
                   onClick={handleEndDispatch}
                   disabled={
-                    dispatchData.dcrPanels.length +
-                    dispatchData.nonDcrPanels.length !==
-                    Number(dispatchData.dispatch_panel_count)
+                    (dispatchData.dcrPanels.length +
+                      dispatchData.nonDcrPanels.length) === 0
                   }
                 >
                   End Dispatch
