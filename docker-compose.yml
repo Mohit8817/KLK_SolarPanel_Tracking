@@ -1,0 +1,54 @@
+version: '3.9'
+
+services:
+  frontend:
+    build: ./frontend
+    container_name: mern_frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - mern_network
+
+  backend:
+    build: ./backend
+    container_name: mern_backend
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGO_URL=mongodb://host.docker.internal:27017/klkserial
+      - JWT_SECRET=KLKERP@1234@
+    depends_on:
+      - mongo
+    networks:
+      - mern_network
+
+  mongo:
+    image: mongo:7
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - mern_network
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo_express_ui
+    restart: always
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mongo
+    networks:
+      - mern_network
+
+volumes:
+  mongo_data:
+
+networks:
+  mern_network:
+    driver: bridge

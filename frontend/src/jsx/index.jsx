@@ -48,6 +48,8 @@ import PermissionList from "./components/RolePermission/PermissionList";
 
 
 
+
+
 const ProtectedRoute = () => {
   const token = localStorage.getItem("token");
   if (!token) {
@@ -75,6 +77,7 @@ const Markup = () => {
     { url: "view-production-panels/:id", component: <ViewProductionPanels /> },
     { url: "production-damage/add", component: <ProductionDamage /> },
     { url: "production-damage/list", component: <ViewProductionDamage /> },
+    { url: "production/vendor-list", component: <VendorProduction /> },
 
     { url: "dispatch/create", component: <DispatchPanel /> },
     { url: "dispatch/list", component: <ViewDispatchPanel /> },
@@ -94,7 +97,6 @@ const Markup = () => {
     { url: "user/list", component: <ViewUser /> },
     { url: "user/edit/:id", component: <EditUser /> },
     { url: "user/view/:id", component: <ViewSingleUser /> },
-
 
     { url: "role/list", component: <RoleList /> },
     { url: "permission/list", component: <PermissionList /> },

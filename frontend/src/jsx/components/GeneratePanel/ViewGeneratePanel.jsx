@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, Col, Row, Table } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { getAllPanelLots, deletePanelLot } from "./GeneratepanelApis";
+import { getAllPanelLots } from "./GeneratepanelApis";
 import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
 import Search, { useSearch } from "../Common/Search";
@@ -23,15 +23,15 @@ const ViewGeneratePanel = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete?")) return;
-    try {
-      await deletePanelLot(id);
-      fetchLots();
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  // const handleDelete = async (id) => {
+  //   if (!window.confirm("Are you sure you want to delete?")) return;
+  //   try {
+  //     await deletePanelLot(id);
+  //     fetchLots();
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
 
   // ── SEARCH + PAGINATION ──────────────────────────────────────────────────
   const SEARCH_KEYS = [

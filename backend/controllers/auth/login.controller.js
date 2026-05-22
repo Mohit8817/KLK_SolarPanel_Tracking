@@ -1,60 +1,143 @@
 import User from "../../models/users.model.js";
+import RolePermission from "../../models/RolePermission.model.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-export const loginUser = async (req, res) => {
+export const loginUser = async (
+  req,
+  res
+) => {
+
   try {
-    const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const { email, password } =
+      req.body;
 
-    if (!user)
-      return res.status(404).json({ message: "User not found" });
+    // =====================================
+    // FIND USER
+    // =====================================
+    const user = await User.findOne({
+      email,
+    }).populate("role");
 
-    if (password !== user.password)
-      return res.status(400).json({ message: "Invalid Credentials" });
+    if (!user) {
 
-    // 🔑 Generate JWT token
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // =====================================
+    // CHECK PASSWORD
+    // =====================================
+    if (password !== user.password) {
+
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid Credentials",
+      });
+    }
+
+    // =====================================
+    // FETCH ROLE PERMISSIONS
+    // =====================================
+    const rolePermissions =
+      await RolePermission.find({
+        role_id: user.role._id,
+      }).populate("permission_id");
+
+    const permissions =
+      rolePermissions.map(
+        (item) =>
+          item.permission_id?.label
+      );
+
+    // =====================================
+    // GENERATE TOKEN
+    // =====================================
     const token = jwt.sign(
       {
         id: user._id,
         email: user.email,
-        role: user.role,
-        company_id : user.company_id,
-        state_access: user.state_access 
+        role: user.role._id,
+        company_id:
+          user.company_id,
+        state_access:
+          user.state_access,
       },
-      process.env.JWT_SECRET || "secretkey", // use your secret from .env
-      { expiresIn: "10h" } // token valid for 2 hours
+      process.env.JWT_SECRET ||
+        "secretkey",
+      {
+        expiresIn: "7d",
+      }
     );
 
     res.json({
-      message: "Login successful",
+
+      success: true,
+
+      message:
+        "Login successful",
+
       token,
+
       user: {
+
         id: user._id,
-        first_name: user.first_name,
-        unique_id: user.unique_id,
-        last_name: user.last_name,
+
+        first_name:
+          user.first_name,
+
+        unique_id:
+          user.unique_id,
+
+        last_name:
+          user.last_name,
+
         email: user.email,
+
         role: user.role,
-        company_id: user.company_id,
-        whatsapp_no: user.whatsapp_no,
+
+        company_id:
+          user.company_id,
+
+        whatsapp_no:
+          user.whatsapp_no,
+
         gender: user.gender,
-        emp_image: user.emp_image,
-        manager: user.manager,
-        state_access: user.state_access,
+
+        emp_image:
+          user.emp_image,
+
+        manager:
+          user.manager,
+
+        state_access:
+          user.state_access,
+
         city: user.city,
-        project: user.project,
+
+        project:
+          user.project,
       },
+
+      permissions,
     });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+
+    res.status(500).json({
+
+      success: false,
+
+      message: error.message,
+    });
   }
 };
-
 export const logoutUser = async (req, res) => {
   try {
     // Destroy session (if using session)
@@ -66,4 +149,5 @@ export const logoutUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 

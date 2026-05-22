@@ -1,242 +1,931 @@
-/* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
-import { useState, useEffect } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
-const modules = [
-  { name: "Solar Panel", icon: "fa-solar-panel" },
-  { name: "Tracking System", icon: "fa-crosshairs" },
-  { name: "Battery", icon: "fa-battery-full" },
-  { name: "Dispatch", icon: "fa-paper-plane" },
-  { name: "Users", icon: "fa-users" },
-  { name: "Reciver", icon: "fa-truck" },
-];
+import axios from "axios";
 
-const PERMS = ["view", "add", "edit", "delete"];
+const PermissionPopup = ({
+  show,
+  onClose,
+  role,
+}) => {
 
-const buildInitial = () => {
-  const initial = {};
-  modules.forEach(({ name }) => {
-    initial[name] = { view: false, add: false, edit: false, delete: false };
+  // =========================================
+  // STATES
+  // =========================================
+  const [permissions, setPermissions] =
+    useState([]);
+
+  const [
+    selectedPermissions,
+    setSelectedPermissions,
+  ] = useState([]);
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [saving, setSaving] =
+    useState(false);
+
+  const [saved, setSaved] =
+    useState(false);
+
+  const [search, setSearch] =
+    useState("");
+
+  // =========================================
+  // AUTH HEADER
+  // =========================================
+  const authHeader = () => ({
+    Authorization: `Bearer ${localStorage.getItem(
+      "token"
+    )}`,
   });
-  return initial;
-};
 
-const PermissionPopup = ({ show, onClose, role }) => {
-  const [permissions, setPermissions] = useState(buildInitial);
-  const [saved, setSaved] = useState(false);
+  // =========================================
+  // FETCH PERMISSIONS
+  // =========================================
+  const fetchPermissions =
+    async () => {
 
+      try {
+
+        setLoading(true);
+
+        const response =
+          await axios.get(
+            `${import.meta.env.VITE_BACKEND_API_URL}role/permissions`,
+            {
+              headers: authHeader(),
+            }
+          );
+
+        setPermissions(
+          response?.data?.data || []
+        );
+
+      } catch (error) {
+
+        console.log(
+          "Fetch Permission Error:",
+          error
+        );
+
+      } finally {
+
+        setLoading(false);
+
+      }
+    };
+
+  // =========================================
+  // FETCH ASSIGNED PERMISSIONS
+  // =========================================
+  const fetchRolePermissions =
+    async () => {
+
+      try {
+
+        if (!role?._id) return;
+
+        const response =
+          await axios.get(
+            `${import.meta.env.VITE_BACKEND_API_URL}role/role-permission/role/${role._id}`,
+            {
+              headers: authHeader(),
+            }
+          );
+
+        const assigned =
+          response?.data?.data || [];
+
+        const ids = assigned.map(
+          (item) =>
+            item.permission_id?._id ||
+            item.permission_id
+        );
+
+        setSelectedPermissions(ids);
+
+      } catch (error) {
+
+        console.log(
+          "Fetch Role Permission Error:",
+          error
+        );
+      }
+    };
+
+  // =========================================
+  // USE EFFECT
+  // =========================================
   useEffect(() => {
-    setPermissions(buildInitial());
-    setSaved(false);
-  }, [role]);
 
-  if (!show) return null;
+    if (show) {
 
-  const toggle = (module, perm) => {
-    setSaved(false);
-    setPermissions((prev) => ({
-      ...prev,
-      [module]: { ...prev[module], [perm]: !prev[module][perm] },
-    }));
-  };
+      fetchPermissions();
 
-  const toggleRow = (module) => {
-    setSaved(false);
-    const allChecked = Object.values(permissions[module]).every(Boolean);
-    const updated = {};
-    PERMS.forEach((k) => { updated[k] = !allChecked; });
-    setPermissions((prev) => ({ ...prev, [module]: updated }));
-  };
+      fetchRolePermissions();
 
-  const toggleColumn = (perm) => {
-    setSaved(false);
-    const allChecked = modules.every(({ name }) => permissions[name]?.[perm]);
-    setPermissions((prev) => {
-      const next = { ...prev };
-      modules.forEach(({ name }) => {
-        next[name] = { ...next[name], [perm]: !allChecked };
-      });
-      return next;
-    });
-  };
+      setSaved(false);
+    }
 
-  const toggleAll = () => {
-    setSaved(false);
-    const allChecked = modules.every(({ name }) =>
-      PERMS.every((p) => permissions[name]?.[p])
+  }, [show, role]);
+
+  // =========================================
+  // FILTER + GROUP MODULE
+  // =========================================
+  const groupedPermissions =
+    useMemo(() => {
+
+      const filtered =
+        permissions.filter(
+          (permission) => {
+
+            const text = `
+              ${permission.name}
+              ${permission.label}
+              ${permission.permission_module}
+            `.toLowerCase();
+
+            return text.includes(
+              search.toLowerCase()
+            );
+          }
+        );
+
+      return filtered.reduce(
+        (acc, permission) => {
+
+          const module =
+            permission.permission_module;
+
+          if (!acc[module]) {
+            acc[module] = [];
+          }
+
+          acc[module].push(permission);
+
+          return acc;
+
+        },
+        {}
+      );
+    }, [permissions, search]);
+
+  // =========================================
+  // ALL IDS
+  // =========================================
+  const allPermissionIds =
+    permissions.map((p) => p._id);
+
+  const allSelected =
+    allPermissionIds.length > 0 &&
+    allPermissionIds.every((id) =>
+      selectedPermissions.includes(id)
     );
-    setPermissions((prev) => {
-      const next = { ...prev };
-      modules.forEach(({ name }) => {
-        next[name] = { view: !allChecked, add: !allChecked, edit: !allChecked, delete: !allChecked };
-      });
-      return next;
+
+  // =========================================
+  // TOGGLE SINGLE
+  // =========================================
+  const togglePermission = (
+    permissionId
+  ) => {
+
+    setSaved(false);
+
+    setSelectedPermissions((prev) => {
+
+      if (
+        prev.includes(permissionId)
+      ) {
+
+        return prev.filter(
+          (id) =>
+            id !== permissionId
+        );
+      }
+
+      return [
+        ...prev,
+        permissionId,
+      ];
     });
   };
 
-  const isAllChecked = modules.every(({ name }) =>
-    PERMS.every((p) => permissions[name]?.[p])
-  );
+  // =========================================
+  // TOGGLE MODULE
+  // =========================================
+  const toggleModule = (
+    modulePermissions
+  ) => {
 
-  const isColumnChecked = (perm) =>
-    modules.every(({ name }) => permissions[name]?.[perm]);
+    setSaved(false);
 
-  const handleSave = () => {
-    console.log("Saved Permissions for:", role?.name, permissions);
-    setSaved(true);
+    const ids =
+      modulePermissions.map(
+        (p) => p._id
+      );
+
+    const isAllSelected =
+      ids.every((id) =>
+        selectedPermissions.includes(id)
+      );
+
+    if (isAllSelected) {
+
+      setSelectedPermissions(
+        (prev) =>
+          prev.filter(
+            (id) =>
+              !ids.includes(id)
+          )
+      );
+
+    } else {
+
+      setSelectedPermissions(
+        (prev) => [
+          ...new Set([
+            ...prev,
+            ...ids,
+          ]),
+        ]
+      );
+    }
   };
+
+  // =========================================
+  // TOGGLE ALL
+  // =========================================
+  const toggleAllPermissions =
+    () => {
+
+      setSaved(false);
+
+      if (allSelected) {
+
+        setSelectedPermissions([]);
+
+      } else {
+
+        setSelectedPermissions(
+          allPermissionIds
+        );
+      }
+    };
+
+  // =========================================
+  // SAVE
+  // =========================================
+  const handleSave =
+    async () => {
+
+      try {
+
+        setSaving(true);
+
+        await axios.post(
+          `${import.meta.env.VITE_BACKEND_API_URL}role/role-permission/create`,
+          {
+            role_id: role._id,
+            permission_ids: selectedPermissions
+          },
+          {
+            headers: authHeader(),
+          }
+        );
+
+        setSaved(true);
+
+      } catch (error) {
+
+        console.log(
+          "Save Permission Error:",
+          error
+        );
+
+      } finally {
+
+        setSaving(false);
+
+      }
+    };
+
+  // =========================================
+  // CLOSE
+  // =========================================
+  if (!show) return null;
 
   return (
     <>
+
+      {/* ========================================= */}
+      {/* CUSTOM CSS */}
+      {/* ========================================= */}
+      <style>
+        {`
+
+          .permission-modal .modal-content{
+            border-radius:24px;
+            overflow:hidden;
+            border:none;
+          }
+
+          .permission-bg{
+            background:#f4f7fb;
+          }
+
+          .permission-module-card{
+            border:none;
+            border-radius:20px;
+            overflow:hidden;
+            transition:0.3s;
+          }
+
+          .permission-module-card:hover{
+            transform:translateY(-2px);
+          }
+
+          .permission-card{
+            border-radius:18px;
+            transition:0.3s ease;
+            cursor:pointer;
+            border:1px solid #edf0f5;
+            background:#fff;
+          }
+
+          .permission-card:hover{
+            transform:translateY(-4px);
+            box-shadow:0 12px 24px rgba(0,0,0,0.08);
+          }
+
+          .permission-card.active{
+            background:linear-gradient(
+              135deg,
+              rgba(25,135,84,0.12),
+              rgba(25,135,84,0.05)
+            );
+            border:1px solid #198754;
+          }
+
+          .permission-icon{
+            width:52px;
+            height:52px;
+            border-radius:16px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:#f1f3f7;
+            font-size:20px;
+          }
+
+          .permission-card.active .permission-icon{
+            background:#198754;
+            color:#fff;
+          }
+
+          .module-badge{
+            background:#eef3ff;
+            color:#3766ff;
+            padding:6px 14px;
+            border-radius:50px;
+            font-size:12px;
+            font-weight:600;
+          }
+
+          .custom-search{
+            border-radius:16px;
+            height:52px;
+            border:1px solid #e2e8f0;
+            padding-left:50px;
+          }
+
+          .custom-search:focus{
+            box-shadow:none;
+            border-color:#198754;
+          }
+
+          .custom-scroll::-webkit-scrollbar{
+            width:7px;
+          }
+
+          .custom-scroll::-webkit-scrollbar-thumb{
+            background:#d0d7de;
+            border-radius:50px;
+          }
+
+        `}
+      </style>
+
+      {/* BACKDROP */}
       <div className="modal-backdrop show"></div>
 
-      <div className="modal d-block" >
+      {/* MODAL */}
+      <div className="modal d-block permission-modal">
+
         <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+
           <div className="modal-content">
 
-            {/* Header */}
-            <div className="modal-header">
-              <div className="d-flex align-items-center gap-2">
-               <div>
-                  <i className="fa fa-lock text-info fs-5"></i>
+            {/* ========================================= */}
+            {/* HEADER */}
+            {/* ========================================= */}
+            <div className="modal-header border-0 px-4 pt-4 pb-3">
+
+              <div className="d-flex align-items-center gap-3">
+
+                <div
+                  className="d-flex align-items-center justify-content-center"
+                  style={{
+                    width: 65,
+                    height: 65,
+                    borderRadius: 20,
+                    background:
+                      "linear-gradient(135deg,#198754,#20c997)",
+                    color: "#fff",
+                    fontSize: 24,
+                  }}
+                >
+
+                  <i className="fa fa-user-shield"></i>
+
                 </div>
+
                 <div>
-                  <h5 className="modal-title mb-0">Role Permissions</h5>
-                  <small className="text-muted">
-                    Assign permissions for{" "}
-                    <strong className="text-dark">{role?.name}</strong>
-                  </small>
+
+                  <h3 className="fw-bold mb-1">
+
+                    Role Permissions
+
+                  </h3>
+
+                  <div className="text-muted">
+
+                    Manage permissions for
+
+                    <strong className="text-dark ms-1">
+
+                      {role?.name}
+
+                    </strong>
+
+                  </div>
+
                 </div>
+
               </div>
-              <button className="btn-close" onClick={onClose}></button>
+
+              <button
+                className="btn-close"
+                onClick={onClose}
+              ></button>
+
             </div>
 
-            {/* Body */}
-            <div className="modal-body">
+            {/* ========================================= */}
+            {/* SEARCH + SELECT ALL */}
+            {/* ========================================= */}
+            <div className="px-4 pb-3">
 
-              {saved && (
-                <div className="alert alert-success alert-dismissible py-2 mb-3" role="alert">
-                  <i className="fa fa-check-circle me-2"></i>
-                  Permissions saved successfully for <strong>{role?.name}</strong>!
-                  <button type="button" className="btn-close py-2" onClick={() => setSaved(false)}></button>
+              <div className="row g-3 align-items-center">
+
+                {/* SEARCH */}
+                <div className="col-md-8">
+
+                  <div className="position-relative">
+
+                    <i
+                      className="fa fa-search position-absolute text-muted"
+                      style={{
+                        left: 18,
+                        top: 18,
+                      }}
+                    ></i>
+
+                    <input
+                      type="text"
+                      className="form-control custom-search"
+                      placeholder="Search permissions..."
+                      value={search}
+                      onChange={(e) =>
+                        setSearch(
+                          e.target.value
+                        )
+                      }
+                    />
+
+                  </div>
+
                 </div>
-              )}
 
-              <div className="table-responsive">
-                <table className="table table-hover  align-middle text-center">
+                {/* SELECT ALL */}
+                <div className="col-md-4">
 
-                  <thead className="">
-                    <tr>
-                      <th className="text-start" style={{ width: "30%" }}>Module</th>
+                  <div
+                    className="bg-light rounded-4 px-4 py-3 d-flex justify-content-between align-items-center"
+                  >
 
-                      {/* Master select all */}
-                      <th style={{ width: "14%" }}>
-                        <div className="d-flex flex-column align-items-center gap-1">
-                          <input
-                            type="checkbox"
-                            className="form-check-input mt-0"
-                            checked={isAllChecked}
-                            onChange={toggleAll}
-                            title="Select All"
-                          />
-                          <span style={{ fontSize: 11, fontWeight: 400 }}>All</span>
-                        </div>
-                      </th>
+                    <div>
 
-                      {/* Column headers */}
-                      {PERMS.map((perm) => (
-                        <th key={perm} style={{ width: "14%" }}>
-                          <div className="d-flex flex-column align-items-center gap-1">
-                            <input
-                              type="checkbox"
-                              className="form-check-input mt-0"
-                              checked={isColumnChecked(perm)}
-                              onChange={() => toggleColumn(perm)}
-                              title={`Select all ${perm}`}
-                            />
-                            <span style={{ fontSize: 11, fontWeight: 400 }}>
-                              {perm.charAt(0).toUpperCase() + perm.slice(1)}
-                            </span>
-                          </div>
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
+                      <h6 className="mb-0 fw-bold">
 
-                  <tbody>
-                    {modules.map(({ name, icon }) => {
-                      const rowPerms = permissions[name] || {};
-                      const allRow = PERMS.every((p) => rowPerms[p]);
-                      const someRow = PERMS.some((p) => rowPerms[p]);
+                        Select All
+
+                      </h6>
+
+                      <small className="text-muted">
+
+                        Grant all permissions
+
+                      </small>
+
+                    </div>
+
+                    <div className="form-check form-switch">
+
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        checked={
+                          allSelected
+                        }
+                        onChange={
+                          toggleAllPermissions
+                        }
+                        style={{
+                          width: 55,
+                          height: 26,
+                          cursor: "pointer",
+                        }}
+                      />
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* ========================================= */}
+            {/* BODY */}
+            {/* ========================================= */}
+            <div
+              className="modal-body permission-bg custom-scroll"
+              style={{
+                maxHeight: "70vh",
+                overflowY: "auto",
+              }}
+            >
+
+              {/* SUCCESS */}
+              {
+                saved && (
+                  <div className="alert alert-success border-0 shadow-sm">
+
+                    <i className="fa fa-check-circle me-2"></i>
+
+                    Permissions saved successfully.
+
+                  </div>
+                )
+              }
+
+              {/* LOADING */}
+              {
+                loading ? (
+
+                  <div className="text-center py-5">
+
+                    <div
+                      className="spinner-border text-success"
+                      style={{
+                        width: 60,
+                        height: 60,
+                      }}
+                    ></div>
+
+                  </div>
+
+                ) : Object.keys(
+                  groupedPermissions
+                ).length === 0 ? (
+
+                  <div className="text-center py-5">
+
+                    <div
+                      className="mx-auto mb-4 d-flex align-items-center justify-content-center"
+                      style={{
+                        width: 90,
+                        height: 90,
+                        borderRadius: "50%",
+                        background:
+                          "#edf2f7",
+                      }}
+                    >
+
+                      <i className="fa fa-lock fa-2x text-muted"></i>
+
+                    </div>
+
+                    <h4 className="fw-bold">
+
+                      No Permissions Found
+
+                    </h4>
+
+                    <p className="text-muted">
+
+                      Permission list is empty.
+
+                    </p>
+
+                  </div>
+
+                ) : (
+
+                  Object.entries(
+                    groupedPermissions
+                  ).map(
+                    ([
+                      module,
+                      modulePermissions,
+                    ]) => {
+
+                      const moduleSelected =
+                        modulePermissions.every(
+                          (
+                            permission
+                          ) =>
+                            selectedPermissions.includes(
+                              permission._id
+                            )
+                        );
 
                       return (
-                        <tr key={name}>
-                          {/* Module name */}
-                          <td className="text-start">
-                            <div className="d-flex align-items-center gap-2">
-                              <div
-                                className="rounded bg-light d-flex align-items-center justify-content-center"
-                                style={{ width: 32, height: 32, minWidth: 32 }}
-                              >
-                                <i className={`fa ${icon} text-secondary`}></i>
-                              </div>
-                              <strong>{name}</strong>
-                            </div>
-                          </td>
 
-                          {/* Row ALL checkbox */}
-                          <td>
-                            <input
-                              type="checkbox"
-                              className="form-check-input"
-                              checked={allRow}
-                              ref={(el) => {
-                                if (el) el.indeterminate = someRow && !allRow;
-                              }}
-                              onChange={() => toggleRow(name)}
-                            />
-                          </td>
+                        <div
+                          key={module}
+                          className="card permission-module-card shadow-sm mb-4"
+                        >
 
-                          {/* Toggle switches */}
-                          {PERMS.map((perm) => (
-                            <td key={perm}>
-                              <div className="d-flex justify-content-center">
-                                <div className="form-check form-switch mb-0">
-                                  <input
-                                    type="checkbox"
-                                    className="form-check-input"
-                                    role="switch"
-                                    checked={rowPerms[perm] || false}
-                                    onChange={() => toggle(name, perm)}
-                                    style={{ cursor: "pointer" }}
-                                  />
+                          {/* MODULE HEADER */}
+                          <div className="card-header bg-white border-0 px-4 py-3">
+
+                            <div className="d-flex justify-content-between align-items-center">
+
+                              <div className="d-flex align-items-center gap-3">
+
+                                <div
+                                  className="d-flex align-items-center justify-content-center"
+                                  style={{
+                                    width: 50,
+                                    height: 50,
+                                    borderRadius: 16,
+                                    background:
+                                      "rgba(13,110,253,0.1)",
+                                  }}
+                                >
+
+                                  <i className="fa fa-folder text-primary"></i>
+
                                 </div>
-                              </div>
-                            </td>
-                          ))}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
 
-                </table>
-              </div>
+                                <div>
+
+                                  <h5 className="fw-bold mb-1">
+
+                                    {module}
+
+                                  </h5>
+
+                                  <span className="module-badge">
+
+                                    {
+                                      modulePermissions.length
+                                    } Permissions
+
+                                  </span>
+
+                                </div>
+
+                              </div>
+
+                              {/* MODULE SELECT */}
+                              <div className="form-check form-switch">
+
+                                <input
+                                  type="checkbox"
+                                  className="form-check-input"
+                                  checked={
+                                    moduleSelected
+                                  }
+                                  onChange={() =>
+                                    toggleModule(
+                                      modulePermissions
+                                    )
+                                  }
+                                  style={{
+                                    width: 50,
+                                    height: 24,
+                                    cursor: "pointer",
+                                  }}
+                                />
+
+                              </div>
+
+                            </div>
+
+                          </div>
+
+                          {/* MODULE BODY */}
+                          <div className="card-body p-4">
+
+                            <div className="row">
+
+                              {
+                                modulePermissions.map(
+                                  (
+                                    permission
+                                  ) => {
+
+                                    const checked =
+                                      selectedPermissions.includes(
+                                        permission._id
+                                      );
+
+                                    return (
+
+                                      <div
+                                        className="col-md-6 col-lg-4 col-xl-3 mb-4"
+                                        key={
+                                          permission._id
+                                        }
+                                      >
+
+                                        <div
+                                          className={`permission-card h-100 p-3 ${
+                                            checked
+                                              ? "active"
+                                              : ""
+                                          }`}
+                                          onClick={() =>
+                                            togglePermission(
+                                              permission._id
+                                            )
+                                          }
+                                        >
+
+                                          {/* TOP */}
+                                          <div className="d-flex justify-content-between align-items-start mb-3">
+
+                                            <div
+                                              className="permission-icon"
+                                            >
+
+                                              <i className="fa fa-lock"></i>
+
+                                            </div>
+
+                                            <input
+                                              type="checkbox"
+                                              checked={
+                                                checked
+                                              }
+                                              onChange={() =>
+                                                togglePermission(
+                                                  permission._id
+                                                )
+                                              }
+                                              className="form-check-input"
+                                            />
+
+                                          </div>
+
+                                          {/* LABEL */}
+                                          <h6 className="fw-bold mb-1">
+
+                                            {
+                                              permission.label
+                                            }
+
+                                          </h6>
+
+                                          {/* NAME */}
+                                          <div className="text-muted small mb-2">
+
+                                            {
+                                              permission.name
+                                            }
+
+                                          </div>
+
+                                          {/* MODULE */}
+                                          <span className="badge bg-light text-dark">
+
+                                            {
+                                              permission.permission_module
+                                            }
+
+                                          </span>
+
+                                        </div>
+
+                                      </div>
+                                    );
+                                  }
+                                )
+                              }
+
+                            </div>
+
+                          </div>
+
+                        </div>
+                      );
+                    }
+                  )
+                )
+              }
 
             </div>
 
-            {/* Footer */}
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={onClose}>
-                <i className="fa fa-times me-1"></i> Close
+            {/* ========================================= */}
+            {/* FOOTER */}
+            {/* ========================================= */}
+            <div className="modal-footer border-0 bg-white px-4 py-3">
+
+              <div className="me-auto">
+
+                <div className="fw-bold">
+
+                  Selected Permissions:
+
+                  <span className="text-success ms-2">
+
+                    {
+                      selectedPermissions.length
+                    }
+
+                  </span>
+
+                </div>
+
+              </div>
+
+              <button
+                className="btn btn-light px-4"
+                onClick={onClose}
+              >
+
+                <i className="fa fa-times me-2"></i>
+
+                Close
+
               </button>
-              <button className="btn btn-success" onClick={handleSave}>
-                <i className="fa fa-save me-1"></i> Save Permissions
+
+              <button
+                className="btn btn-success px-4"
+                onClick={handleSave}
+                disabled={saving}
+              >
+
+                {
+                  saving ? (
+                    <>
+
+                      <span className="spinner-border spinner-border-sm me-2"></span>
+
+                      Saving...
+
+                    </>
+                  ) : (
+                    <>
+
+                      <i className="fa fa-save me-2"></i>
+
+                      Save Permissions
+
+                    </>
+                  )
+                }
+
               </button>
+
             </div>
 
           </div>
+
         </div>
+
       </div>
+
     </>
   );
 };

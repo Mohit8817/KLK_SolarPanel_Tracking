@@ -1,197 +1,410 @@
-    import { Card, Col, Table, Badge, Button } from "react-bootstrap";
-    import { useState } from "react";
-    import AddPermission from "./AddPermission";
-    import CommonPagination from "../Common/Pagination";
+import {
+  Card,
+  Col,
+  Table,
+  Badge,
+  Button,
+  Spinner,
+} from "react-bootstrap";
 
-    const PermissionList = () => {
-    const [permissions, setPermissions] = useState([
-        {
-        key: "generate_panel",
-        label: "Generate Panel",
-        module: "Generate Panel",
-        action: "Active",
-        },
-        {
-        key: "view_dispatch",
-        label: "View Dispatch",
-        module: "Dispatch",
-        action: "Active",
-        },
-        {
-        key: "delete_panel",
-        label: "Delete Panel",
-        module: "Panel",
-        action: "Inactive",
-        },
-    ]);
+import {
+  useState,
+  useEffect,
+} from "react";
 
-    // Add Popup
-    const [showAddPopup, setShowAddPopup] = useState(false);
+import AddPermission from "./AddPermission";
 
-    // Pagination
-    const itemsPerPage = 30;
+import CommonPagination from "../Common/Pagination";
 
-    const [currentPage, setCurrentPage] = useState(1);
+import {
+  getPermissions,
+  deletePermission,
+} from "./permissionapi";
 
-    const totalPages = Math.ceil(permissions.length / itemsPerPage);
+const PermissionList = () => {
 
-    const startIndex = (currentPage - 1) * itemsPerPage;
+  // =========================================
+  // STATES
+  // =========================================
+  const [permissions, setPermissions] = useState([]);
 
-    const currentData = permissions.slice(
-        startIndex,
-        startIndex + itemsPerPage
-    );
+  const [loading, setLoading] = useState(false);
 
-    // Add Permission
-    const handleAddPermission = (newPermission) => {
-        setPermissions((prev) => [...prev, newPermission]);
-    };
+  // Add/Edit Popup
+  const [showAddPopup, setShowAddPopup] =
+    useState(false);
 
-    // Delete Permission
-    const handleDelete = (index) => {
-        const actualIndex = startIndex + index;
+  const [selectedPermission, setSelectedPermission] =
+    useState(null);
 
-        if (
-        !window.confirm(
-            "Are you sure you want to delete this permission?"
-        )
-        )
-        return;
+  // =========================================
+  // PAGINATION
+  // =========================================
+  const itemsPerPage = 100;
 
-        setPermissions((prev) =>
-        prev.filter((_, i) => i !== actualIndex)
-        );
+  const [currentPage, setCurrentPage] =
+    useState(1);
 
-        if (currentData.length === 1 && currentPage > 1) {
-        setCurrentPage((p) => p - 1);
-        }
-    };
+  // =========================================
+  // FETCH PERMISSIONS
+  // =========================================
+  const fetchPermissions = async () => {
 
-    return (
-        <Col lg={12}>
-        <Card>
-            <Card.Header className="d-flex justify-content-between align-items-center">
-            <Card.Title className="mb-0">
-                <i className="fa fa-lock me-2 text-success"></i>
-                Permission List
-            </Card.Title>
+    try {
 
-            <Button
-                variant="success"
-                size="sm"
-                onClick={() => setShowAddPopup(true)}
-            >
-                <i className="fa fa-plus me-1"></i>
-                Add Permission
-            </Button>
-            </Card.Header>
+      setLoading(true);
 
-            <Card.Body>
-            <Table responsive hover className="align-middle">
-                <thead>
-                <tr>
-                    <th>S.No</th>
-                    <th>Key</th>
-                    <th>Label</th>
-                    <th>Module</th>
-                    <th>Action</th>
-                    <th className="text-center">Action</th>
-                </tr>
-                </thead>
+      const response =
+        await getPermissions();
 
-                <tbody>
-                {currentData.length === 0 ? (
-                    <tr>
+      console.log(
+        "Permission API Response:",
+        response.data
+      );
+
+      setPermissions(
+        response?.data?.data || []
+      );
+
+    } catch (error) {
+
+      console.log(
+        "Fetch Permission Error:",
+        error
+      );
+
+      setPermissions([]);
+
+    } finally {
+
+      setLoading(false);
+
+    }
+  };
+
+  // =========================================
+  // USE EFFECT
+  // =========================================
+  useEffect(() => {
+
+    fetchPermissions();
+
+  }, []);
+
+  // =========================================
+  // PAGINATION DATA
+  // =========================================
+  const totalPages = Math.ceil(
+    permissions.length / itemsPerPage
+  );
+
+  const startIndex =
+    (currentPage - 1) * itemsPerPage;
+
+  const currentData = permissions.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
+  // =========================================
+  // DELETE PERMISSION
+  // =========================================
+  const handleDelete = async (id) => {
+
+    try {
+
+      const confirmDelete = window.confirm(
+        "Are you sure you want to delete this permission?"
+      );
+
+      if (!confirmDelete) return;
+
+      await deletePermission(id);
+
+      fetchPermissions();
+
+    } catch (error) {
+
+      console.log(
+        "Delete Permission Error:",
+        error
+      );
+    }
+  };
+
+  // =========================================
+  // EDIT PERMISSION
+  // =========================================
+  const handleEdit = (permission) => {
+
+    setSelectedPermission(permission);
+
+    setShowAddPopup(true);
+  };
+
+  // =========================================
+  // ADD PERMISSION
+  // =========================================
+  const handleAddPermission = () => {
+
+    setSelectedPermission(null);
+
+    setShowAddPopup(true);
+  };
+
+  return (
+    <Col lg={12}>
+
+      <Card>
+
+        {/* HEADER */}
+        <Card.Header className="d-flex justify-content-between align-items-center">
+
+          <Card.Title className="mb-0">
+
+            <i className="fa fa-lock me-2 text-success"></i>
+
+            Permission List
+
+          </Card.Title>
+
+          <Button
+            variant="success"
+            size="sm"
+            onClick={handleAddPermission}
+          >
+
+            <i className="fa fa-plus me-1"></i>
+
+            Add Permission
+
+          </Button>
+
+        </Card.Header>
+
+        {/* BODY */}
+        <Card.Body>
+
+          <Table
+            responsive
+            hover
+            className="align-middle"
+          >
+
+            <thead>
+              <tr>
+                <th>S.No</th>
+                <th>Name</th>
+                <th>Label</th>
+                <th>Module</th>
+                <th>Status</th>
+                <th className="text-center">
+                  Action
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              {/* LOADING */}
+              {
+                loading ? (
+                  <tr>
                     <td
-                        colSpan="6"
-                        className="text-center py-5 text-muted"
+                      colSpan="6"
+                      className="text-center py-5"
                     >
-                        <i className="fa fa-inbox fa-2x mb-2 d-block"></i>
-                        No Permissions Found
+
+                      <Spinner
+                        animation="border"
+                        variant="success"
+                      />
+
                     </td>
-                    </tr>
+                  </tr>
+                ) : currentData.length === 0 ? (
+
+                  /* NO DATA */
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="text-center py-5 text-muted"
+                    >
+
+                      <i className="fa fa-inbox fa-2x mb-2 d-block"></i>
+
+                      No Permissions Found
+
+                    </td>
+                  </tr>
+
                 ) : (
-                    currentData.map((permission, index) => (
-                    <tr key={index}>
+
+                  /* TABLE DATA */
+                  currentData.map(
+                    (permission, index) => (
+
+                      <tr
+                        key={permission._id}
+                      >
+
+                        {/* SERIAL */}
                         <td>
-                        <strong>
-                            {startIndex + index + 1}
-                        </strong>
+
+                          <strong>
+                            {
+                              startIndex +
+                              index +
+                              1
+                            }
+                          </strong>
+
                         </td>
 
+                        {/* NAME */}
                         <td>
-                        {permission.key}
+                          {permission.name}
                         </td>
 
-                        <td>{permission.label}</td>
-
-                        <td>{permission.module}</td>
-
+                        {/* LABEL */}
                         <td>
-                        <Badge
+                          {permission.label}
+                        </td>
+
+                        {/* MODULE */}
+                        <td>
+                          {
+                            permission.permission_module
+                          }
+                        </td>
+
+                        {/* STATUS */}
+                        <td>
+
+                          <Badge
                             bg={
-                            permission.action === "Active"
+                              permission.status
                                 ? "success"
                                 : "danger"
                             }
                             className="px-3 py-2"
-                        >
+                          >
+
                             <i
-                            className="fa fa-circle me-1"
-                            style={{ fontSize: 8 }}
+                              className="fa fa-circle me-1"
+                              style={{
+                                fontSize: 8,
+                              }}
                             ></i>
 
-                            {permission.action}
-                        </Badge>
+                            {
+                              permission.status
+                                ? "Active"
+                                : "Inactive"
+                            }
+
+                          </Badge>
+
                         </td>
 
+                        {/* ACTION */}
                         <td className="text-center">
-                        <div className="d-flex gap-2 justify-content-center">
+
+                          <div className="d-flex gap-2 justify-content-center">
+
+                            {/* VIEW */}
                             <button
-                            className="btn btn-primary btn-xs sharp"
-                            title="View"
+                              className="btn btn-primary btn-xs sharp"
+                              title="View"
                             >
-                            <i className="fa fa-eye"></i>
+
+                              <i className="fa fa-eye"></i>
+
                             </button>
 
+                            {/* EDIT */}
                             <button
-                            className="btn btn-warning btn-xs sharp"
-                            title="Edit"
+                              className="btn btn-warning btn-xs sharp"
+                              title="Edit"
+                              onClick={() =>
+                                handleEdit(
+                                  permission
+                                )
+                              }
                             >
-                            <i className="fa fa-edit"></i>
+
+                              <i className="fa fa-edit"></i>
+
                             </button>
 
+                            {/* DELETE */}
                             <button
-                            className="btn btn-danger btn-xs sharp"
-                            title="Delete"
-                            onClick={() => handleDelete(index)}
+                              className="btn btn-danger btn-xs sharp"
+                              title="Delete"
+                              onClick={() =>
+                                handleDelete(
+                                  permission._id
+                                )
+                              }
                             >
-                            <i className="fa fa-trash"></i>
+
+                              <i className="fa fa-trash"></i>
+
                             </button>
-                        </div>
+
+                          </div>
+
                         </td>
-                    </tr>
-                    ))
-                )}
-                </tbody>
-            </Table>
 
-            <CommonPagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-            />
-            </Card.Body>
-        </Card>
+                      </tr>
+                    )
+                  )
+                )
+              }
 
-        {/* Add Permission Popup */}
-        <AddPermission
-            show={showAddPopup}
-            onClose={() => setShowAddPopup(false)}
-            onAdd={handleAddPermission}
-        />
-        </Col>
-    );
-    };
+            </tbody>
 
-    export default PermissionList;
+          </Table>
+
+          {/* PAGINATION */}
+          {
+            permissions.length >
+              itemsPerPage && (
+              <CommonPagination
+                currentPage={
+                  currentPage
+                }
+                totalPages={
+                  totalPages
+                }
+                onPageChange={
+                  setCurrentPage
+                }
+              />
+            )
+          }
+
+        </Card.Body>
+
+      </Card>
+
+      {/* ADD / EDIT POPUP */}
+      <AddPermission
+        show={showAddPopup}
+        onClose={() => {
+          setShowAddPopup(false);
+          setSelectedPermission(null);
+        }}
+        selectedPermission={
+          selectedPermission
+        }
+        refreshPermissions={
+          fetchPermissions
+        }
+      />
+
+    </Col>
+  );
+};
+
+export default PermissionList;

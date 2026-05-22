@@ -10,5 +10,6 @@ router.post('/create-user',upload.single('emp_image'), createUser);
 router.get('/fetch-user/:id', fetchUser);
 router.put('/update-user/:id',upload.single('emp_image'), updateUser);
 router.get('/delete-user/:id', deleteUser);
+router.get('/vendor-list', getAllVendor);
 
 export default router;

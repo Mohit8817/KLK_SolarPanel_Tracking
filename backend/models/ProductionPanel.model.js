@@ -44,7 +44,6 @@ const ProductionPanelSchema = new mongoose.Schema({
       required: true,
       trim: true,
     },
-
     accepted_by: {
       type: String,
       trim: true,
