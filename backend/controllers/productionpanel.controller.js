@@ -38,13 +38,13 @@ export const createProductionPanel = async (req, res) => {
     =============================== */
 
 
-    const panels = await PanelNumber.find({
-      production_status: 0,
-      panel_capacity: panel_capacity,
-      panel_type: panel_type,
-    })
-      .sort({ panel_no: 1 })
-      .limit(count);
+        const panels = await PanelNumber.find({
+          production_status: 0,
+          panel_capacity: panel_capacity,
+          panel_type: panel_type,
+        })
+          .sort({ panel_no: 1 })
+          .limit(count);
 
     if (panels.length < count) {
       return res.status(400).json({
@@ -106,7 +106,6 @@ export const createProductionPanel = async (req, res) => {
     });
   }
 };
-
 
 
 
