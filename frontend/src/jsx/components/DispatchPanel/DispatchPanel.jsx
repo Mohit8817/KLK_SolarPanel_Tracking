@@ -199,13 +199,6 @@ const handleEndDispatch = async (e) => {
     return;
   }
 
-  if (Number(dispatchData.dispatch_panel_count) !== totalPanels) {
-    alert(
-      `Expected ${dispatchData.dispatch_panel_count} panels but scanned ${totalPanels}`
-    );
-    return;
-  }
-
   alert(`Dispatch completed with ${totalPanels} panels`);
 
   /* ===== FULL RESET ===== */
@@ -544,11 +537,7 @@ const handleEndDispatch = async (e) => {
             <button
   className="btn btn-success px-5"
   onClick={handleEndDispatch}
-  disabled={
-    dispatchData.dcrPanels.length +
-      dispatchData.nonDcrPanels.length !==
-    Number(dispatchData.dispatch_panel_count)
-  }
+  disabled={ dispatchData.dcrPanels.length + dispatchData.nonDcrPanels.length === 0 }
 >
   End Dispatch
 </button>

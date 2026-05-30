@@ -9,7 +9,7 @@ const PanelCounterSchema = new mongoose.Schema({
   last_lot_id: { type: mongoose.Schema.Types.ObjectId },
 }, { timestamps: true });
 
-// Unique per combination of prefix + capacity + type + MMYY
+// Unique per combination of prefix + capacity + type + year
 PanelCounterSchema.index(
   { prefix: 1, panel_capacity: 1, panel_type: 1, year: 1 },
   { unique: true }

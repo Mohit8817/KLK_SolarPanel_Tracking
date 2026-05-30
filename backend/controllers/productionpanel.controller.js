@@ -12,16 +12,28 @@ export const createProductionPanel = async (req, res) => {
       company_id,
       panel_capacity,
       panel_count,
-      panel_type, // production panel type
+      panel_type,
       project,
       state,
       date,
       created_by,
     } = req.body;
 
+    /* ===============================
+       1️⃣ Validation
+    =============================== */
+
     const count = Number(panel_count);
 
-    if (!company_id || !panel_capacity || !panel_type || !project || !state || !date) {
+    if (
+      !company_id ||
+      !panel_capacity ||
+      !panel_type ||
+      !project ||
+      !state ||
+      !date ||
+      !count
+    ) {
       return res.status(400).json({
         success: false,
         message: "All required fields must be provided",
@@ -29,79 +41,119 @@ export const createProductionPanel = async (req, res) => {
     }
 
     /* ===============================
-       1️⃣ Fetch available panels for production
-       - Must match capacity & type
-       - Must be unassigned (production_status = 0)
+       2️⃣ Get Available Panels
     =============================== */
 
-      console.log(panel_capacity, panel_type);
+    const availablePanels = await PanelNumber.find({
+      production_status: 0,
+      production_id: null,
 
-        const panels = await PanelNumber.find({
-          production_status: 0,
-          panel_capacity: panel_capacity,
-          panel_type: panel_type,
-        })
-          .sort({ panel_no: 1 })
-          .limit(count);
+      panel_capacity: String(panel_capacity).trim(),
 
-    if (panels.length < count) {
+      panel_type: String(panel_type).trim(),
+    })
+      .sort({ panel_no: 1 })
+      .limit(count);
+
+    /* ===============================
+       3️⃣ Check Availability
+    =============================== */
+
+    if (availablePanels.length < count) {
       return res.status(400).json({
         success: false,
-        message: `Not enough available panels. Requested: ${count}, Found: ${panels.length}`,
+        message: `Not enough panels available. Only ${availablePanels.length} panels found`,
       });
     }
 
     /* ===============================
-       2️⃣ Create production record
+       4️⃣ Create Production Record
     =============================== */
-    const productionPanel = await ProductionPanel.create({
-      company_id,
-      panel_capacity,
-      panel_count: count,
-      panel_type,
-      project,
-      state,
-      date,
-      created_by,
-    });
+
+    const productionPanel =
+      await ProductionPanel.create({
+        company_id,
+
+        panel_capacity,
+
+        panel_count: count,
+
+        panel_type,
+
+        project,
+
+        state,
+
+        date,
+
+        created_by,
+      });
+
+    const productionId = productionPanel._id;
 
     /* ===============================
-       3️⃣ Assign panels to production
+       5️⃣ Bulk Update Panels
     =============================== */
-    const panelIds = panels.map((p) => p._id);
 
-    const result = await PanelNumber.updateMany(
-      { _id: { $in: panelIds } },
+    const panelIds = availablePanels.map(
+      (p) => p._id
+    );
+
+    await PanelNumber.updateMany(
+      {
+        _id: { $in: panelIds },
+      },
       {
         $set: {
-          production_id: productionPanel._id,
+          production_id: productionId,
+
           production_lot_size: count,
+
           production_status: 1,
         },
       }
     );
 
     /* ===============================
-       4️⃣ Response
+       6️⃣ Response
     =============================== */
-    res.status(201).json({
+
+    return res.status(201).json({
       success: true,
-      message: "Production panel created successfully",
+
+      message:
+        "Production panel created successfully",
+
       data: {
-        production_id: productionPanel._id,
-        assigned_panels: result.modifiedCount,
+        production_id: productionId,
+
+        assigned_panels:
+          availablePanels.length,
+
+        panel_numbers:
+          availablePanels.map(
+            (p) => p.panel_no
+          ),
+
+        panel_unique_numbers:
+          availablePanels.map(
+            (p) => p.panel_unique_no
+          ),
       },
     });
   } catch (error) {
-    console.error("Production Panel Error:", error);
-    res.status(500).json({
+    console.error(
+      "Production Panel Error:",
+      error
+    );
+
+    return res.status(500).json({
       success: false,
+
       message: error.message,
     });
   }
 };
-
-
 
 export const fetchAllProductionPanels = async (req, res) => {
   try {
