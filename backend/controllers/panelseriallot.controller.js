@@ -33,7 +33,6 @@ export const getNextPanelNumber = async (req, res) => {
       success: true,
       next_starting_no: nextNumber,
     });
-
   } catch (error) {
     return res.status(400).json({
       success: false,
@@ -41,7 +40,6 @@ export const getNextPanelNumber = async (req, res) => {
     });
   }
 };
-
 export const createPanelSerialLot = async (req, res) => {
   try {
     const {
@@ -53,7 +51,6 @@ export const createPanelSerialLot = async (req, res) => {
       date,
       panel_alot_state,
       panel_alot_project,
-      starting_no,
       company_id,
       created_by,
       updated_by,
@@ -62,6 +59,7 @@ export const createPanelSerialLot = async (req, res) => {
     /* ==========================
        1️⃣ Validation
     ========================== */
+
     if (
       !total_panels ||
       !prefix ||
@@ -79,57 +77,71 @@ export const createPanelSerialLot = async (req, res) => {
 
     const totalPanelsNum = Number(total_panels);
 
-    /* ==========================
-       2️⃣ Date Handling
-    ========================== */
-    const d = new Date(date);
-
-    const yearFull = d.getFullYear().toString();      // ✅ for counter
-    const yearShort = yearFull.slice(-2);             // ✅ for display
-    const month = (d.getMonth() + 1).toString().padStart(2, "0");
-
-    const monthYear = month + yearShort;              // ✅ ONLY for unique_no
-
-    const formattedPanelType = String(panel_type);
-
-    /* ==========================
-       3️⃣ Counter Logic (YEAR BASED)
-    ========================== */
-    let counter = await PanelCounter.findOne({
-      prefix: String(prefix).trim(),
-      panel_capacity: String(panel_capacity).trim(),
-      panel_type: String(panel_type).trim(),
-      year: String(yearFull).trim(), // ✅ ONLY year
-    });
-
-    let actualStartingNo;
-
-    if (counter) {
-      // Continue sequence (even if month changes)
-      actualStartingNo = counter.seq + 1;
-    } else {
-      // First entry of the year
-      actualStartingNo = starting_no ? Number(starting_no) : 1;
-
-      counter = await PanelCounter.create({
-        prefix: String(prefix).trim(),
-        panel_capacity: String(panel_capacity).trim(),
-        panel_type: String(panel_type).trim(),
-        year: String(yearFull).trim(), // ✅ store year
-        seq: 0,
+    if (totalPanelsNum <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid total panels",
       });
     }
 
     /* ==========================
+       2️⃣ Date Handling
+    ========================== */
+
+    const d = new Date(date);
+
+    const yearFull = d.getFullYear().toString();
+    const yearShort = yearFull.slice(-2);
+
+    const month = (d.getMonth() + 1)
+      .toString()
+      .padStart(2, "0");
+
+    const monthYear = `${month}${yearShort}`;
+
+    const formattedPanelType = String(panel_type).trim();
+
+    /* ==========================
+       3️⃣ Atomic Counter Update
+    ========================== */
+
+    const counter = await PanelCounter.findOneAndUpdate(
+      {
+        prefix: String(prefix).trim(),
+        panel_capacity: String(panel_capacity).trim(),
+        panel_type: formattedPanelType,
+        year: yearFull,
+      },
+      {
+        $inc: {
+          seq: totalPanelsNum,
+        },
+        $setOnInsert: {
+          last_lot_id: null,
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+      }
+    );
+
+    const endingNo = counter.seq;
+
+    const actualStartingNo =
+      endingNo - totalPanelsNum + 1;
+
+    /* ==========================
        4️⃣ Create LOT
     ========================== */
+
     const lot = await PanelSerialLot.create({
       company_id,
       prefix,
       starting_no: actualStartingNo,
       date,
       panel_capacity,
-      panel_type,
+      panel_type: formattedPanelType,
       panel_category,
       panel_alot_state,
       panel_alot_project,
@@ -138,57 +150,66 @@ export const createPanelSerialLot = async (req, res) => {
       updated_by,
     });
 
-    /* ==========================
-       5️⃣ Update Counter
-    ========================== */
-    const endingNo = actualStartingNo + totalPanelsNum - 1;
-
-    counter.seq = endingNo;
-    counter.last_lot_id = lot._id;
-    await counter.save();
+    const lotId = lot._id;
 
     /* ==========================
-       6️⃣ Create PANELS
+       5️⃣ Create Panels
     ========================== */
+
     const panels = [];
 
     for (let i = 0; i < totalPanelsNum; i++) {
       const serial = actualStartingNo + i;
 
-      if (serial <= 0) {
-        throw new Error("Invalid serial generated");
-      }
-
       const padded = String(serial).padStart(6, "0");
 
       panels.push({
         company_id,
-        panel_lot_id: lot._id,
-        panel_capacity,
-        panel_type,
-        panel_category,
-        panel_lot_count: totalPanelsNum,
-        panel_no: padded,
 
-        // ✅ MonthYear for display, but sequence is YEAR-based
-        panel_unique_no: `${prefix}${panel_capacity}${formattedPanelType}${monthYear}${padded}`,
+        panel_lot_id: lotId,
+
+        panel_capacity,
+        panel_type: formattedPanelType,
+        panel_category,
+
+        panel_lot_count: totalPanelsNum,
+
+        // Numeric sequence
+        panel_no: serial,
+
+        // Display serial
+        panel_unique_no:
+          `${prefix}${panel_capacity}` +
+          `${formattedPanelType}${monthYear}${padded}`,
       });
     }
 
     await PanelNumber.insertMany(panels);
 
     /* ==========================
+       6️⃣ Update Counter
+    ========================== */
+
+    counter.last_lot_id = lotId;
+
+    await counter.save();
+
+    /* ==========================
        7️⃣ Response
     ========================== */
+
     return res.status(201).json({
       success: true,
       message: "Panel lot created successfully",
+
       starting_number: actualStartingNo,
       ending_number: endingNo,
-    });
 
+      total_created: totalPanelsNum,
+    });
   } catch (error) {
     console.error("Create Error:", error);
+
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -236,7 +257,10 @@ export const deletePanelSerialLot = async (req, res) => {
     const usedPanel = await PanelNumber.exists({
       panel_lot_id: lot_id,
       company_id,
-      $or: [{ production_status: { $ne: 0 } }, { dispatch_status: { $ne: 0 } }],
+      $or: [
+        { production_status: 1 },
+        { dispatch_status: 1 }
+      ],
     });
     if (usedPanel) return res.status(400).json({ success: false, message: "Cannot delete. Panels already used." });
 

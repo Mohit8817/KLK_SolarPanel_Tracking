@@ -19,7 +19,7 @@ const PanelNumberSchema = new mongoose.Schema(
       unique: true, // only unique field now
     },
     panel_no: {
-      type: String,
+      type: Number,
       required: true,
     },
     panel_lot_count: {
