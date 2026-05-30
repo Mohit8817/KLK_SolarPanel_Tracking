@@ -402,7 +402,8 @@ const ViewDispatchPanels = () => {
 
                         <td>
                           <i
-                            className=" fa fa-remove btn fw-bold text-danger"
+                            className=" fa fa-remove  fw-bold text-danger"
+                             style={{ cursor: "pointer" }}
                             disabled={deletingId === item._id}
                             onClick={() => handleDeletePanel(item._id, item.panel_unique_no)}
                           >

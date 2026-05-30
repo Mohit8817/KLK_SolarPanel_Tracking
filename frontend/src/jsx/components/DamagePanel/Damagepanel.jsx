@@ -7,126 +7,116 @@ const DamagePanel = () => {
 
   const [scannerInput, setScannerInput] = useState("");
   const [manualCode, setManualCode] = useState("");
-  const [panels, setPanels] = useState([]);
-  const [remarks, setRemarks] = useState("");
-  const [image, setImage] = useState(null);
+  const [currentImage, setCurrentImage] = useState(null);
+  const [currentRemarks, setCurrentRemarks] = useState("");
   const [scanning, setScanning] = useState(false);
+  const [entries, setEntries] = useState([]);
 
   const scannerRef = useRef(null);
+  const imageRef = useRef(null);
 
-  /* ========= CLEANUP ========= */
+  // derived: which code is currently typed (scanner input takes priority)
+  const activeCode = scannerInput.trim() || manualCode.trim();
+
+  // Add button enabled only when all three are filled
+  const canAdd = activeCode && currentImage && currentRemarks.trim();
+
+  /* cleanup on unmount */
   useEffect(() => {
     return () => {
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(() => {});
-      }
+      scannerRef.current?.clear().catch(() => { });
+      entries.forEach((e) => URL.revokeObjectURL(e.previewUrl));
     };
   }, []);
 
-  /* ========= START QR SCANNER ========= */
+  /* ===== QR SCANNER ===== */
   const startScan = () => {
     if (scanning) return;
-
     setScanning(true);
 
     const scanner = new Html5QrcodeScanner(
       qrRegionId,
-      {
-        fps: 10,
-        qrbox: 250,
-        rememberLastUsedCamera: true,
-      },
+      { fps: 10, qrbox: 250, rememberLastUsedCamera: true },
       false
     );
 
     scanner.render(
       (decodedText) => {
-        addPanel(decodedText);
+        // QR sets the manual code field so it's visible to the user
+        setManualCode(decodedText.trim());
         scanner.clear();
         setScanning(false);
       },
-      (error) => {}
+      () => { }
     );
 
     scannerRef.current = scanner;
   };
 
-  /* ========= ADD PANEL ========= */
-  const addPanel = (panelCode) => {
-    if (!panelCode) return;
+  /* ===== ADD ENTRY ===== */
+  const addEntry = () => {
+    const code = activeCode;
+    if (!code || !currentImage || !currentRemarks.trim()) return;
 
-    if (panels.includes(panelCode)) {
-      alert("Panel already added");
+    if (entries.find((e) => e.panelCode === code)) {
+      alert(`Panel "${code}" is already added.`);
       return;
     }
 
-    setPanels((prev) => [...prev, panelCode]);
-  };
+    const previewUrl = URL.createObjectURL(currentImage);
 
-  /* ========= MACHINE SCANNER ========= */
-  const handleScannerInput = (code) => {
-    if (!code.trim()) return;
-    addPanel(code.trim());
+    setEntries((prev) => [
+      ...prev,
+      { panelCode: code, image: currentImage, previewUrl, remarks: currentRemarks },
+    ]);
+
+    // reset all fields for next entry
     setScannerInput("");
-  };
-
-  /* ========= MANUAL ENTRY ========= */
-  const addManualPanel = () => {
-    if (!manualCode.trim()) {
-      alert("Enter panel code");
-      return;
-    }
-
-    addPanel(manualCode.trim());
     setManualCode("");
+    setCurrentImage(null);
+    setCurrentRemarks("");
+    if (imageRef.current) imageRef.current.value = "";
   };
 
-  /* ========= SUBMIT DAMAGE ========= */
+  /* ===== REMOVE ENTRY ===== */
+  const removeEntry = (panelCode) => {
+    setEntries((prev) => {
+      const entry = prev.find((e) => e.panelCode === panelCode);
+      if (entry) URL.revokeObjectURL(entry.previewUrl);
+      return prev.filter((e) => e.panelCode !== panelCode);
+    });
+  };
+
+  /* ===== SUBMIT ===== */
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (panels.length === 0) {
-      return alert("No panels added");
-    }
-
-    if (!image) {
-      return alert("Please upload damage image");
-    }
+    if (entries.length === 0) return alert("No panels added.");
 
     try {
       const token = localStorage.getItem("token");
 
-      for (let panel of panels) {
+      for (const entry of entries) {
         const formData = new FormData();
-        formData.append("panel_no", panel);
+        formData.append("panel_no", entry.panelCode);
         formData.append("damage_location_type", 2);
-        formData.append("remarks", remarks);
-        formData.append("image", image);
+        formData.append("remarks", entry.remarks);
+        formData.append("image", entry.image);
 
         const res = await fetch(
           `${import.meta.env.VITE_BACKEND_API_URL}damage/create-damage-panel`,
           {
             method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
             body: formData,
           }
         );
 
         const result = await res.json();
-
-        if (!res.ok) {
-          throw new Error(result.message || "Submission failed");
-        }
+        if (!res.ok) throw new Error(result.message || "Submission failed");
       }
 
       alert("Damage Report Submitted Successfully");
-
-      setPanels([]);
-      setRemarks("");
-      setImage(null);
-
+      setEntries([]);
     } catch (error) {
       console.error("Submit Error:", error);
       alert(error.message);
@@ -149,106 +139,167 @@ const DamagePanel = () => {
         <div className="card-body">
           <form onSubmit={handleSubmit}>
 
-            {/* ===== INPUT ROW ===== */}
+            {/* ===== ROW 1: SCAN INPUTS ===== */}
             <div className="row mb-3">
 
-              {/* Machine Scanner */}
+              {/* Barcode / HID Scanner */}
               <div className="col-md-4">
+                <label className="form-label">Barcode Scanner</label>
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Scan with Scanner"
+                  placeholder="Scan with scanner device"
                   value={scannerInput}
                   onChange={(e) => setScannerInput(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleScannerInput(scannerInput);
-                    }
+                    if (e.key === "Enter") e.preventDefault(); // prevent accidental submit
                   }}
                 />
               </div>
 
-              {/* QR Scan Button */}
+              {/* QR Button */}
               <div className="col-md-4">
+                <label className="form-label">QR Code</label>
                 <button
                   type="button"
                   className="btn btn-primary w-100"
                   onClick={startScan}
+                  disabled={scanning}
                 >
-                  Scan QR
+                  {scanning ? "Scanning…" : "Scan QR"}
                 </button>
               </div>
 
               {/* Manual Entry */}
-              <div className="col-md-4 d-flex gap-2">
+              <div className="col-md-4">
+                <label className="form-label">Manual Entry</label>
                 <input
                   className="form-control"
-                  placeholder="Manual Panel Code"
+                  placeholder="Enter panel code"
                   value={manualCode}
                   onChange={(e) => setManualCode(e.target.value)}
                 />
-                <button
-                  type="button"
-                  className="btn btn-success"
-                  onClick={addManualPanel}
-                >
-                  Add
-                </button>
               </div>
 
             </div>
 
-            {/* ===== CAMERA SECTION ===== */}
+            {/* ===== QR CAMERA ===== */}
             {scanning && (
               <div className="text-center mb-3">
-                <div
-                  id="qr-reader"
-                  style={{ width: "300px", margin: "0 auto" }}
-                ></div>
+                <div id={qrRegionId} style={{ width: "300px", margin: "0 auto" }} />
               </div>
             )}
 
-            {/* ===== IMAGE ===== */}
-            <div className="mb-3">
-              <label>Damage Image *</label>
-              <input
-                type="file"
-                className="form-control"
-                onChange={(e) => setImage(e.target.files[0])}
-                required
-              />
+            {/* ===== ROW 2: IMAGE + REMARKS + ADD BUTTON ===== */}
+            <div className="row mb-3 align-items-end">
+
+              {/* Image */}
+              <div className="col-md-12">
+                <label className="form-label">Damage Image *</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="form-control"
+                  ref={imageRef}
+                  onChange={(e) => setCurrentImage(e.target.files[0] || null)}
+                />
+              </div>
+
             </div>
 
-            {/* ===== REMARKS ===== */}
-            <div className="mb-3">
-              <label>Remarks *</label>
-              <textarea
-                className="form-control"
-                rows="3"
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-                required
-              />
+            <div className="row">
+
+              {/* Remarks */}
+              <div className="col-md-12">
+                <label className="form-label">Remarks *</label>
+                <textarea
+                  className="form-control"
+                  rows="1"
+                  value={currentRemarks}
+                  onChange={(e) => setCurrentRemarks(e.target.value)}
+                  placeholder="Enter remarks for this panel"
+                />
+              </div>
+
+              {/* ADD Button */}
+              <div className=" text-center mt-3">
+                <button
+                  type="button"
+                  className="btn btn-success w-25"
+                  onClick={addEntry}
+                  disabled={!canAdd}
+                >
+                  + Add
+                </button>
+              </div>
             </div>
 
-            {/* ===== PANEL LIST ===== */}
+
+            {/* ===== ADDED PANELS TABLE ===== */}
             <div className="mb-3">
               <h6>Added Panels</h6>
-              {panels.length === 0 ? (
-                <p className="text-muted">No panels added</p>
+
+              {entries.length === 0 ? (
+                <p className="text-muted">No panels added yet.</p>
               ) : (
-                panels.map((p, i) => (
-                  <span key={i} className="badge bg-danger m-1">
-                    {p}
-                  </span>
-                ))
+                <div className="table-responsive">
+                  <table className="table table-hover align-middle">
+                    <thead>
+                      <tr>
+                        <th>S.No</th>
+                        <th>Panel Code</th>
+                        <th>Image</th>
+                        <th>Remarks</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {entries.map((entry, i) => (
+                        <tr key={entry.panelCode}>
+                          <td>{i + 1}</td>
+                          <td>
+                            <span className="badge bg-danger">{entry.panelCode}</span>
+                          </td>
+                          <td>
+                            <img
+                              src={entry.previewUrl}
+                              alt="damage"
+                              style={{
+                                height: 60,
+                                width: 90,
+                                objectFit: "cover",
+                                borderRadius: 4,
+                                cursor: "pointer",
+                              }}
+                              onClick={() => window.open(entry.previewUrl, "_blank")}
+                              title="Click to enlarge"
+                            />
+                          </td>
+                          <td>{entry.remarks}</td>
+                          <td>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => removeEntry(entry.panelCode)}
+                            >
+                              Remove
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
 
             {/* ===== SUBMIT ===== */}
             <div className="text-center">
-              <button className="btn btn-danger">
+              <button
+                type="submit"
+                className="btn btn-danger"
+                disabled={entries.length === 0}
+              >
                 Submit Damage Report
               </button>
             </div>

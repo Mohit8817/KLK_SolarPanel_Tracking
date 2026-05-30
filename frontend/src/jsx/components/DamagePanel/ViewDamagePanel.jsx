@@ -13,7 +13,7 @@ const ViewDamagePanel = () => {
   const [loading, setLoading] = useState(true);
 
   // PAGINATION CONFIG
-  const itemsPerPage = 10;
+  const itemsPerPage = 100;
 
   const [senderPage, setSenderPage] = useState(1);
   const [receiverPage, setReceiverPage] = useState(1);

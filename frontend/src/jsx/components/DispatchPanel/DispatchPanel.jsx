@@ -165,7 +165,7 @@ const DispatchPanel = () => {
 
       const payload = {
         ...dispatchData,
-        company_id: sessionUser?.company_id,
+        company_id: sessionUser?.company_id,  
       };
 
       const res = await axios.post(
