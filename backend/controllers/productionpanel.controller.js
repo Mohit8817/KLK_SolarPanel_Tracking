@@ -162,10 +162,8 @@ export const createProductionPanel = async (req, res) => {
 
 export const fetchAllProductionPanels = async (req, res) => {
   try {
-    const productionPanels = await ProductionPanel.find(
-      { vendor_status: 0 }
-    )
-      .sort({ createdAt: -1 });
+    const productionPanels = await ProductionPanel.find()
+      .sort({ date: -1 });
 
     res.status(200).json({
       success: true,

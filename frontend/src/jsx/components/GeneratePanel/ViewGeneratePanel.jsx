@@ -127,7 +127,9 @@ const ViewGeneratePanel = () => {
                         <td><strong>{startIndex + index + 1}</strong></td>
                         <td>{item.date}</td>
                         <td>{item.total_panels}</td>
-                        <td>{item.panel_capacity}</td>
+                        <td style={{ color: "#5bcfc5" , fontWeight : "700" }}>
+                          {item.panel_capacity} WP
+                        </td>
                         <td>{item.panel_type == "1" ? "DCR" : "NON DCR"}</td>
                         <td>{item.panel_alot_state}</td>
                         <td>{item.panel_alot_project}</td>

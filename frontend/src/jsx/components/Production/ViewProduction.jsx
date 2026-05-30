@@ -270,8 +270,16 @@ const ViewProduction = () => {
                       {getManufacturedCount(manufacturedCounts[item._id])}
                     </td>
 
-                    <td>{item.panel_capacity}</td>
-                    <td>{item.panel_type}</td>
+                    <td style={{ color: "#5bcfc5" , fontWeight : "700" }}>
+                      {item.panel_capacity} WP
+                    </td>
+                    <td>
+                      {{
+                        "1": "Polly",
+                        "2": "Mono",
+                        "3": "Bifacial",
+                      }[item.panel_type] || "NA"}
+                    </td>
                     <td>{item.project}</td>
                     <td>{item.state}</td>
                     <td className="text-center">
