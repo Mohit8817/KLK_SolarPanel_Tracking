@@ -17,6 +17,7 @@ export const createProductionPanel = async (req, res) => {
       state,
       date,
       created_by,
+      vendor_id,
     } = req.body;
 
     /* ===============================
@@ -73,20 +74,15 @@ export const createProductionPanel = async (req, res) => {
     const productionPanel =
       await ProductionPanel.create({
         company_id,
-
         panel_capacity,
-
         panel_count: count,
-
         panel_type,
-
         project,
-
         state,
-
         date,
-
         created_by,
+        vendor_id,
+        vendor_status: vendor_id == 0 ? 0 : 1,
       });
 
     const productionId = productionPanel._id;
@@ -106,10 +102,10 @@ export const createProductionPanel = async (req, res) => {
       {
         $set: {
           production_id: productionId,
-
           production_lot_size: count,
-
           production_status: 1,
+          vendor_id: productionPanel.vendor_id,
+          vendor_status: productionPanel.vendor_id == 0 ? 0 : 1, // if vendor assigned to production, mark panel as assigned
         },
       }
     );
@@ -155,9 +151,12 @@ export const createProductionPanel = async (req, res) => {
   }
 };
 
+
 export const fetchAllProductionPanels = async (req, res) => {
   try {
-    const productionPanels = await ProductionPanel.find()
+    const productionPanels = await ProductionPanel.find(
+      { vendor_status: 0 }
+    )
       .sort({ date: -1 });
 
     res.status(200).json({
