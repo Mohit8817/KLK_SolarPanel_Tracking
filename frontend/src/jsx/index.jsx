@@ -44,6 +44,9 @@ import VendorProduction from "./components/Production/VendorProduction";
 
 import RoleList from "./components/RolePermission/RoleList";
 import PermissionList from "./components/RolePermission/PermissionList";
+import HoldProductionform from "./components/HoldProduction/HoldProductionform";
+import ViewHoldProd from "./components/HoldProduction/ViewHoldProd";
+import ViewHoldPanels from "./components/HoldProduction/ViewHoldpanels";
 
 
 
@@ -78,6 +81,17 @@ const Markup = () => {
     { url: "production-damage/add", component: <ProductionDamage /> },
     { url: "production-damage/list", component: <ViewProductionDamage /> },
     { url: "production/vendor-list", component: <VendorProduction /> },
+
+
+
+    { url: "hold-production/add", component: <HoldProductionform /> },
+    { url: "hold-production/list", component: < ViewHoldProd/> },
+    { url: "hold-production-panels", component: < ViewHoldPanels/> },
+
+
+
+
+
 
     { url: "dispatch/create", component: <DispatchPanel /> },
     { url: "dispatch/list", component: <ViewDispatchPanel /> },

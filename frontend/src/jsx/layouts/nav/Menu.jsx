@@ -1,4 +1,4 @@
-import {getPermissions, hasPermission } from "../../../utils/auth.js";
+import { getPermissions, hasPermission } from "../../../utils/auth.js";
 
 
 console.log("RAW permissions:", localStorage.getItem("permissions"));
@@ -12,6 +12,8 @@ export const MenuList = [
     to: "dashboard",
     permission: "dashboard",
   },
+
+  
 
   {
     title: "Panel Generation",
@@ -36,6 +38,19 @@ export const MenuList = [
     ],
   },
 
+
+    {
+    title: "Hold Production",
+    classsChange: "mm-collapse",
+   iconStyle: <i className="fa-solid fa-pause-circle fw-bold"></i>,
+    content: [
+      { title: "Add Hold Production", to: "hold-production/add",  permission: "add_production"  },
+      { title: "View Hold Production", to: "hold-production/list", permission: "add_production"   },
+    
+    ],
+  },
+
+
   {
     title: "Dispatch Panel",
     classsChange: "mm-collapse",
@@ -49,28 +64,28 @@ export const MenuList = [
   },
 
   // Receive Panel
-    {
-        title: "Receive Panel",
-        classsChange: 'mm-collapse',
-        iconStyle: <i className="fa-solid fa-truck-ramp-box fw-bold" />,
-        content: [
-            {
-                title: 'View Safe Panels',
-                to: 'receiver/safe/list',
-                permission: "recieve_panels"
-            },
-            {
-                title: 'Add Reicieving Damage Panel',
-                to: 'receiver/damage/create',
-                permission: "add_recieving_damage"
-            },
-            {
-                title: 'View Reicieving Damage List',
-                to: 'receiver/damage/list',
-                permission: "view_recieving_damage"
-            },
-        ],
-    },
+  {
+    title: "Receive Panel",
+    classsChange: 'mm-collapse',
+    iconStyle: <i className="fa-solid fa-truck-ramp-box fw-bold" />,
+    content: [
+      {
+        title: 'View Safe Panels',
+        to: 'receiver/safe/list',
+        permission: "recieve_panels"
+      },
+      {
+        title: 'Add Reicieving Damage Panel',
+        to: 'receiver/damage/create',
+        permission: "add_recieving_damage"
+      },
+      {
+        title: 'View Reicieving Damage List',
+        to: 'receiver/damage/list',
+        permission: "view_recieving_damage"
+      },
+    ],
+  },
 
   {
     title: "User Management",
@@ -82,7 +97,7 @@ export const MenuList = [
     ],
   },
 
-    {
+  {
     title: "Settings",
     classsChange: "mm-collapse",
     iconStyle: <i className="fa-solid fa-gear fw-bold"></i>,
