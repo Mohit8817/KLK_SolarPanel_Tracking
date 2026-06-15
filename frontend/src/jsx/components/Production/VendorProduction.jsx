@@ -1,12 +1,17 @@
-import { Card, Col, Table } from "react-bootstrap";
+import { Card, Col, Table, Modal } from "react-bootstrap";
 import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import ReleaseProduction from "./ReleaseProduction";
 
 const VendorProduction = () => {
   const [productionList, setProductionList] = useState([]);
+
+  // Modal state
+  const [showReleaseModal, setShowReleaseModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   // PAGINATION
   const itemsPerPage = 100;
@@ -33,6 +38,18 @@ const VendorProduction = () => {
     fetchVendorProduction();
   }, []);
 
+  // Open Release Modal
+  const handleOpenReleaseModal = (item) => {
+    setSelectedItem(item);
+    setShowReleaseModal(true);
+  };
+
+  // Close Release Modal
+  const handleCloseReleaseModal = () => {
+    setShowReleaseModal(false);
+    setSelectedItem(null);
+  };
+
   const downloadExcel = async (id) => {
     try {
       const token = localStorage.getItem("token");
@@ -54,23 +71,6 @@ const VendorProduction = () => {
     } catch (error) {
       console.error("Download Error:", error.response || error);
       alert("File download failed");
-    }
-  };
-
-  const deleteProduction = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete?");
-    if (!confirmDelete) return;
-    try {
-      const token = localStorage.getItem("token");
-      await axios.delete(
-        `${import.meta.env.VITE_BACKEND_API_URL}production/delete-production-panel/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      alert("Deleted Successfully");
-      fetchVendorProduction();
-    } catch (error) {
-      console.error("Delete Error:", error);
-      alert("Failed to delete");
     }
   };
 
@@ -116,7 +116,7 @@ const VendorProduction = () => {
         </Card.Header>
 
         <Card.Body>
-          <Table responsive className="table-hover align-middle">
+          <Table responsive className="table-hover">
             <thead>
               <tr>
                 <th>S No.</th>
@@ -129,6 +129,7 @@ const VendorProduction = () => {
                 <th>Vendor Name</th>
                 <th>Email</th>
                 <th>WhatsApp</th>
+                <th className="text-center">Release Panel</th>
                 <th className="text-center">Action</th>
               </tr>
             </thead>
@@ -152,6 +153,20 @@ const VendorProduction = () => {
                     </td>
                     <td>{item.vendor_details?.email || "—"}</td>
                     <td>{item.vendor_details?.whatsapp_no || "—"}</td>
+
+
+                      {/* Release Panel Column */}
+                    <td className="text-center">
+                      <button
+                        className="btn btn-warning btn-xs sharp"
+                        title="Release Panel"
+                        onClick={() => handleOpenReleaseModal(item)}
+                      >
+                        <i className="fa fa-paper-plane" />
+                      </button>
+                    </td>
+
+
                     <td className="text-center">
                       <div className="d-flex gap-1 justify-content-center">
                         <Link
@@ -167,20 +182,15 @@ const VendorProduction = () => {
                         >
                           <i className="fa fa-file-excel" />
                         </button>
-
-                        <button
-                          className="btn btn-danger btn-xs sharp"
-                          onClick={() => deleteProduction(item._id)}
-                        >
-                          <i className="fa fa-trash" />
-                        </button>
                       </div>
                     </td>
+
+  
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="11" className="text-center text-muted">
+                  <td colSpan="12" className="text-center text-muted">
                     No vendor production records found
                   </td>
                 </tr>
@@ -195,6 +205,32 @@ const VendorProduction = () => {
           />
         </Card.Body>
       </Card>
+
+      {/*  Release Production Modal */}
+      <Modal
+        show={showReleaseModal}
+        onHide={handleCloseReleaseModal}
+        size="xl"
+        centered
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Release Panel</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedItem && (
+            <ReleaseProduction
+              item={selectedItem}
+              onClose={handleCloseReleaseModal}
+              onSuccess={() => {
+                handleCloseReleaseModal();
+                fetchVendorProduction();  
+              }}
+            />
+          )}
+        </Modal.Body>
+      </Modal>
     </Col>
   );
 };

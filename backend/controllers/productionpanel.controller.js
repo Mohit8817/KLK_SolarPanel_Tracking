@@ -5,6 +5,7 @@ import PanelNumber from "../models/PanelNumber.model.js";
 
 import ManufacturingPanel from "../models/ManufacturingPanel.model.js";
 import User from "../models/users.model.js";
+import ProductionReleaseHistory from '../models/ProductionReleaseHistory.js';
 
 
 
@@ -76,20 +77,15 @@ export const createProductionPanel = async (req, res) => {
     const productionPanel =
       await ProductionPanel.create({
         company_id,
-
         panel_capacity,
-
         panel_count: count,
-
         panel_type,
-
         project,
-
         state,
-
         date,
-
         created_by,
+        vendor_id,
+        vendor_status: vendor_id == 0 ? 0 : 1,
       });
 
     const productionId = productionPanel._id;
@@ -109,9 +105,7 @@ export const createProductionPanel = async (req, res) => {
       {
         $set: {
           production_id: productionId,
-
           production_lot_size: count,
-
           production_status: 1,
           vendor_id: productionPanel.vendor_id,
           vendor_status: productionPanel.vendor_id == 0 ? 0 : 1, // if vendor assigned to production, mark panel as assigned
@@ -160,28 +154,14 @@ export const createProductionPanel = async (req, res) => {
   }
 };
 
-// export const fetchAllProductionPanels = async (req, res) => {
-//   try {
-//     const productionPanels = await ProductionPanel.find()
-//       .sort({ date: -1 });
 
-//     res.status(200).json({
-//       success: true,
-//       data: productionPanels,
-//     });
-//   } catch (error) {
-//     res.status(500).json({
-//       success: false,
-//       message: error.message,
-//     });
-//   }
-// };
 
-// fetchAllProductionPanels API
 
 export const fetchAllProductionPanels = async (req, res) => {
   try {
-    const productionPanels = await ProductionPanel.find()
+    const productionPanels = await ProductionPanel.find(
+      { vendor_status: 0 }
+    )
       .sort({ date: -1 });
 
     // check dispatch status for each production
@@ -194,7 +174,7 @@ export const fetchAllProductionPanels = async (req, res) => {
         });
 
         return {
-          ...item._doc,          
+          ...item._doc,
           is_dispatch_locked: !!dispatchedPanel,
         };
       })
@@ -262,21 +242,22 @@ export const fetchAllProductionPanels = async (req, res) => {
 
 
 
-
 export const viewVendorProductionPanels = async (req, res) => {
   try {
     const loginUser = req.user;
-    console.log("Login User:", loginUser);
     const productionPanels = await ProductionPanel.find({
-      vendor_status: 1,
-      ...(loginUser.role === "vendor" && {
-        vendor_id: loginUser
-      })
-
+      vendor_status: 1
     }).sort({ createdAt: -1 });
     const finalData = await Promise.all(
       productionPanels.map(async (panel) => {
-        const vendor = await User.findById(panel.vendor_id);
+        let vendor = null;
+        if (
+          panel.vendor_id &&
+          mongoose.Types.ObjectId.isValid(panel.vendor_id)
+        ) {
+          vendor = await User.findById(panel.vendor_id);
+        }
+
         return {
           ...panel._doc,
           vendor_details: vendor
@@ -289,9 +270,7 @@ export const viewVendorProductionPanels = async (req, res) => {
             }
             : null,
         };
-
       })
-
     );
     return res.status(200).json({
       success: true,
@@ -305,6 +284,7 @@ export const viewVendorProductionPanels = async (req, res) => {
 
   }
 };
+
 
 
 
@@ -334,55 +314,13 @@ export const fetchProductionPanelById = async (req, res) => {
 };
 
 
-// export const deleteProductionPanel = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-
-//     // 1️⃣ Check production panel exists
-//     const productionPanel = await ProductionPanel.findById(id);
-
-//     if (!productionPanel) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Production panel not found",
-//       });
-//     }
-
-//     // 2️⃣ Reset assigned panels
-//     await PanelNumber.updateMany(
-//       { production_id: productionPanel._id },
-//       {
-//         $set: {
-//           production_id: null,
-//           production_lot_size: null,
-//           production_status: 0,
-//         },
-//       }
-//     );
-
-//     // 3️⃣ Delete production panel
-//     await ProductionPanel.findByIdAndDelete(id);
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Production panel deleted and panels released",
-//     });
-
-//   } catch (error) {
-//     res.status(500).json({
-//       success: false,
-//       message: error.message,
-//     });
-//   }
-// };
-
 
 
 
 export const deleteProductionPanel = async (req, res) => {
   try {
     const { id } = req.params;
-   
+
     const productionPanel = await ProductionPanel.findById(id);
 
     if (!productionPanel) {
@@ -395,11 +333,11 @@ export const deleteProductionPanel = async (req, res) => {
     const dispatchedPanel = await PanelNumber.findOne({
       production_id: productionPanel._id,
 
-      
+
       dispatch_status: 1,
     });
 
-    
+
     if (dispatchedPanel) {
       return res.status(400).json({
         success: false,
@@ -408,7 +346,7 @@ export const deleteProductionPanel = async (req, res) => {
       });
     }
 
-    
+
     await PanelNumber.updateMany(
       {
         production_id: productionPanel._id,
@@ -421,13 +359,13 @@ export const deleteProductionPanel = async (req, res) => {
         },
       }
     );
-    
+
     await ProductionPanel.findByIdAndDelete(id);
 
     res.status(200).json({
       success: true,
       message:
-        "Production panel deleted and panels released",
+        "Production panel deleted ",
     });
 
   } catch (error) {
@@ -632,6 +570,155 @@ export const getAllManufacturingPanels = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message
+    });
+  }
+};
+
+
+
+
+
+export const releaseProductionPanel = async (req, res) => {
+  try {
+    const {
+      production_id,
+      new_vendor_id,
+      release_count,
+      created_by,
+      remark,
+    } = req.body;
+    const count = Number(release_count);
+
+    if (!production_id || !count) {
+      return res.status(400).json({
+        success: false,
+        message: "production_id and release_count are required",
+      });
+    }
+
+    const oldProduction = await ProductionPanel.findById(production_id);
+    if (!oldProduction) {
+      return res.status(404).json({
+        success: false,
+        message: "Production panel not found",
+      });
+    }
+    if (count > oldProduction.panel_count) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot release ${count} panels. Total panels: ${oldProduction.panel_count}.`,
+      });
+    }
+
+    const panelsToRelease = await PanelNumber.find({
+      production_id: oldProduction._id,
+      production_status: 1,
+    })
+      .sort({ panel_no: -1 })
+      .limit(count);
+    if (panelsToRelease.length < count) {
+      return res.status(400).json({
+        success: false,
+        message: `Only ${panelsToRelease.length} panels available to release`,
+      });
+    }
+
+    const newProduction = await ProductionPanel.create({
+      company_id: oldProduction.company_id,
+      panel_capacity: oldProduction.panel_capacity,
+      panel_count: count,
+      panel_type: oldProduction.panel_type,
+      project: oldProduction.project,
+      state: oldProduction.state,
+      date: oldProduction.date,
+      created_by: created_by || oldProduction.created_by,
+      vendor_id: new_vendor_id || 0,
+      vendor_status: new_vendor_id ? 1 : 0,
+    });
+
+    const oldPanelCountBefore = oldProduction.panel_count;
+    const oldPanelCountAfter = oldProduction.panel_count - count;
+    await ProductionPanel.findByIdAndUpdate(production_id, {
+      $inc: { panel_count: -count },
+      updated_by: created_by,
+    });
+
+    const panelIds = panelsToRelease.map((p) => p._id);
+    await PanelNumber.updateMany(
+      { _id: { $in: panelIds } },
+      {
+        $set: {
+          production_id: newProduction._id,
+          production_lot_size: count,
+          vendor_id: new_vendor_id || 0,
+          vendor_status: new_vendor_id ? 1 : 0,
+        },
+      }
+    );
+
+    const today = new Date().toISOString().split("T")[0];
+    await ProductionReleaseHistory.create({
+      old_production_id: oldProduction._id,
+      new_production_id: newProduction._id,
+      company_id: oldProduction.company_id,
+      old_panel_count_before: oldPanelCountBefore,
+      old_panel_count_after: oldPanelCountAfter,
+      released_count: count,
+      new_vendor_id: new_vendor_id || 0,
+      released_panel_numbers: panelsToRelease.map((p) => p.panel_no),
+      released_panel_unique_numbers: panelsToRelease.map((p) => p.panel_unique_no),
+      released_by: created_by,
+      released_date: today,
+      remark: remark || null,
+    });
+    return res.status(201).json({
+      success: true,
+      message: "Panels released and new production record created successfully",
+      data: {
+        old_production: {
+          production_id: oldProduction._id,
+          panel_count_before: oldPanelCountBefore,
+          panel_count_after: oldPanelCountAfter,
+        },
+        new_production: {
+          production_id: newProduction._id,
+          panel_count: count,
+          vendor_id: new_vendor_id || 0,
+          vendor_status: new_vendor_id ? 1 : 0,
+          panel_numbers: panelsToRelease.map((p) => p.panel_no),
+          panel_unique_numbers: panelsToRelease.map((p) => p.panel_unique_no),
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Release Production Panel Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getProductionReleaseHistory = async (req, res) => {
+  try {
+    const { production_id } = req.params;
+    const history = await ProductionReleaseHistory.find({
+      $or: [
+        { old_production_id: production_id },
+        { new_production_id: production_id },
+      ],
+    }).sort({ createdAt: -1 });
+    return res.status(200).json({
+      success: true,
+      data: {
+        history,
+        total_release_events: history.length,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
     });
   }
 };

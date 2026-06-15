@@ -14,7 +14,7 @@ export const getNextPanelNumber = async (req, res) => {
       });
     }
 
-    const year = new Date(date).getFullYear().toString();
+    const year = new Date(date).getFullYear().toString();ujh 
 
     const counter = await PanelCounter.findOne({
       prefix: String(prefix).trim(),
