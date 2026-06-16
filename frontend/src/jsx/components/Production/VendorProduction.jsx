@@ -143,7 +143,13 @@ const VendorProduction = () => {
                     <td>{item.date}</td>
                     <td>{item.panel_count}</td>
                     <td>{item.panel_capacity}</td>
-                    <td>{item.panel_type}</td>
+                    <td>
+                      {{
+                        "1": "Polly",
+                        "2": "Mono",
+                        "3": "Bifacial",
+                      }[item.panel_type] || "NA"}
+                    </td>
                     <td>{item.project}</td>
                     <td>{item.state}</td>
                     <td>
@@ -155,7 +161,7 @@ const VendorProduction = () => {
                     <td>{item.vendor_details?.whatsapp_no || "—"}</td>
 
 
-                      {/* Release Panel Column */}
+                    {/* Release Panel Column */}
                     <td className="text-center">
                       <button
                         className="btn btn-warning btn-xs sharp"
@@ -185,7 +191,7 @@ const VendorProduction = () => {
                       </div>
                     </td>
 
-  
+
                   </tr>
                 ))
               ) : (
@@ -225,7 +231,7 @@ const VendorProduction = () => {
               onClose={handleCloseReleaseModal}
               onSuccess={() => {
                 handleCloseReleaseModal();
-                fetchVendorProduction();  
+                fetchVendorProduction();
               }}
             />
           )}

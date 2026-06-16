@@ -584,6 +584,8 @@ export const releaseProductionPanel = async (req, res) => {
       production_id,
       new_vendor_id,
       release_count,
+      start_panel_no,
+      end_panel_no,
       created_by,
       remark,
     } = req.body;
@@ -593,6 +595,19 @@ export const releaseProductionPanel = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "production_id and release_count are required",
+      });
+    }
+    if (
+      !start_panel_no ||
+      !end_panel_no ||
+      Number(start_panel_no) > Number(end_panel_no)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          !start_panel_no || !end_panel_no
+            ? "Start Panel No and End Panel No are required."
+            : "Start Panel No cannot be greater than End Panel No.",
       });
     }
 
@@ -609,19 +624,52 @@ export const releaseProductionPanel = async (req, res) => {
         message: `Cannot release ${count} panels. Total panels: ${oldProduction.panel_count}.`,
       });
     }
-
     const panelsToRelease = await PanelNumber.find({
       production_id: oldProduction._id,
       production_status: 1,
-    })
-      .sort({ panel_no: -1 })
-      .limit(count);
-    if (panelsToRelease.length < count) {
+      panel_unique_no: {
+        $gte: start_panel_no,
+        $lte: end_panel_no,
+      },
+    }).sort({ panel_unique_no: 1 });
+
+    if (!panelsToRelease.length) {
       return res.status(400).json({
         success: false,
-        message: `Only ${panelsToRelease.length} panels available to release`,
+        message: "No panels found in the selected range.",
       });
     }
+
+    //     const panelsToRelease = await PanelNumber.find({
+    //   production_id: oldProduction._id,
+    //   production_status: 1,
+    //   panel_unique_no: {
+    //     $gte: Number(start_panel_no), 
+    //     $lte: Number(end_panel_no),  
+    //   },
+    // }).sort({ panel_unique_no: 1 });
+
+    // if (panelsToRelease.length === 0) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "No panels found in the selected range.",
+    //   });
+    // }
+
+    // const panelsToRelease = await PanelNumber.find({
+    //   production_id: oldProduction._id,
+    //   production_status: 1,
+    //   panel_unique_no:start_panel_no,
+    //   panel_unique_no:end_panel_no
+    // })
+    //   .sort({ panel_no: -1 })
+    //   .limit(count);
+    // if (panelsToRelease.length < count) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: `Only ${panelsToRelease.length} panels available to release`,
+    //   });
+    // }
 
     const newProduction = await ProductionPanel.create({
       company_id: oldProduction.company_id,
@@ -704,8 +752,7 @@ export const getProductionReleaseHistory = async (req, res) => {
     const { production_id } = req.params;
     const history = await ProductionReleaseHistory.find({
       $or: [
-        { old_production_id: production_id },
-        { new_production_id: production_id },
+        { old_production_id: production_id }
       ],
     }).sort({ createdAt: -1 });
     return res.status(200).json({

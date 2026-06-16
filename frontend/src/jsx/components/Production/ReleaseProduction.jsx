@@ -1,10 +1,9 @@
-import { Fragment, useState, useEffect } from "react";
+import { Fragment, useState, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
 
 const ReleaseProduction = ({ item, onClose }) => {
   const [formData, setFormData] = useState({
-    release_count: "",
     new_vendor_id: "",
     remark: "",
   });
@@ -15,18 +14,22 @@ const ReleaseProduction = ({ item, onClose }) => {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [popup, setPopup] = useState({ show: false, title: "", items: [] });
 
+
+  const [panelList, setPanelList] = useState([]);
+  const [panelListLoading, setPanelListLoading] = useState(false);
+  const [startPanelId, setStartPanelId] = useState("");
+  const [endPanelId, setEndPanelId] = useState("");
+
   const token = localStorage.getItem("token");
   const created_by = localStorage.getItem("user_id") || "";
 
-  // item.panel_count = current remaining panels (already updated by backend after each release)
   const currentPanels = item?.panel_count || 0;
-  const enteredCount = Number(formData.release_count) || 0;
-  const remainingAfterRelease = currentPanels - enteredCount;
 
   useEffect(() => {
     if (item?._id) {
       fetchHistory();
       fetchVendors();
+      fetchPanelList();
     }
   }, [item]);
 
@@ -65,16 +68,73 @@ const ReleaseProduction = ({ item, onClose }) => {
     }
   };
 
+
+  const fetchPanelList = async () => {
+    setPanelListLoading(true);
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_BACKEND_API_URL}production/productionlot/${item._id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const list = res?.data?.data || [];
+      // sorting 
+      const sorted = [...list].sort(
+        (a, b) => (a.panel_no || 0) - (b.panel_no || 0)
+      );
+      setPanelList(sorted);
+    } catch (err) {
+      console.log("Panel List Fetch Error:", err);
+      setPanelList([]);
+    } finally {
+      setPanelListLoading(false);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const startIndex = useMemo(
+    () => panelList.findIndex((p) => p._id === startPanelId),
+    [panelList, startPanelId]
+  );
+
+
+  const endOptions = useMemo(() => {
+    if (startIndex === -1) return [];
+    return panelList.slice(startIndex);
+  }, [panelList, startIndex]);
+
+  const endIndex = useMemo(
+    () => panelList.findIndex((p) => p._id === endPanelId),
+    [panelList, endPanelId]
+  );
+
+  const enteredCount =
+    startIndex !== -1 && endIndex !== -1 ? endIndex - startIndex + 1 : 0;
+
+  const remainingAfterRelease = currentPanels - enteredCount;
+
+  const handleStartChange = (e) => {
+    setStartPanelId(e.target.value);
+    setEndPanelId("");
+  };
+
+  const handleEndChange = (e) => {
+    setEndPanelId(e.target.value);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.release_count || enteredCount < 1) {
-      alert("Release Count must be at least 1");
+    if (!startPanelId || !endPanelId) {
+      alert("Please select both Starting No and Ending No");
+      return;
+    }
+
+    if (enteredCount < 1) {
+      alert("Selected range is invalid");
       return;
     }
 
@@ -85,9 +145,15 @@ const ReleaseProduction = ({ item, onClose }) => {
 
     setSubmitLoading(true);
     try {
+      const releasedPanels = panelList.slice(startIndex, endIndex + 1);
+
       const payload = {
         production_id: item._id,
         release_count: enteredCount,
+        start_panel_no: releasedPanels[0]?.panel_unique_no,
+        end_panel_no: releasedPanels[releasedPanels.length - 1]?.panel_unique_no,
+        panel_ids: releasedPanels.map((p) => p._id),
+        panel_unique_numbers: releasedPanels.map((p) => p.panel_unique_no),
         new_vendor_id: formData.new_vendor_id || undefined,
         created_by,
         remark: formData.remark || undefined,
@@ -101,8 +167,11 @@ const ReleaseProduction = ({ item, onClose }) => {
 
       if (res.data?.success) {
         alert("Panels Released Successfully!");
-        setFormData({ release_count: "", new_vendor_id: "", remark: "" });
+        setFormData({ new_vendor_id: "", remark: "" });
+        setStartPanelId("");
+        setEndPanelId("");
         fetchHistory();
+        fetchPanelList();
       }
     } catch (err) {
       const msg = err.response?.data?.message || "Failed to release panels";
@@ -130,7 +199,13 @@ const ReleaseProduction = ({ item, onClose }) => {
             <strong className="text-primary">Total Panels:</strong> <b>{item?.panel_count}</b>
           </span>
           <span>
-            <strong className="text-primary">Type:</strong> <b>{item?.panel_type}</b>
+            <strong className="text-primary">Type:</strong>  <b>
+              {{
+                "1": "Polly",
+                "2": "Mono",
+                "3": "Bifacial",
+              }[item.panel_type] || "NA"}
+            </b>
           </span>
           <span>
             <strong className="text-primary">Capacity:</strong> <b>{item?.panel_capacity}W</b>
@@ -141,6 +216,13 @@ const ReleaseProduction = ({ item, onClose }) => {
           <span>
             <strong className="text-primary">State:</strong> <b>{item?.state}</b>
           </span>
+          <span>
+            <strong className="text-primary">Vendor name:</strong> <b>{item.vendor_details.first_name} {item.vendor_details.last_name}</b>
+          </span>
+          <span>
+            <strong className="text-primary">vendor Email:</strong> <b>{item?.vendor_details?.email || "—"} </b>
+          </span>
+
         </div>
       </div>
 
@@ -149,44 +231,78 @@ const ReleaseProduction = ({ item, onClose }) => {
         <div className="card-body">
           <form onSubmit={handleSubmit}>
             <div className="row g-3">
-
-              {/* Release Count */}
-              <div className="col-md-4">
+              <div className="col-md-3">
                 <label className="form-label fw-semibold">
-                  Release Count <span className="text-danger">*</span>
+                  Starting No <span className="text-danger">*</span>
                 </label>
-                <input
-                  type="number"
+                <select
                   className="form-control"
-                  name="release_count"
-                  placeholder="Enter panels to release"
-                  value={formData.release_count}
-                  onChange={handleChange}
-                  min={1}
-                  max={currentPanels}
+                  value={startPanelId}
+                  onChange={handleStartChange}
+                  disabled={panelListLoading || panelList.length === 0}
                   required
-                />
-                {/* Current available panels */}
-                <small className="text-muted d-block mt-1">
-                  Available to release: <strong>{currentPanels}</strong> panels
-                </small>
+                >
+                  <option value="">
+                    {panelListLoading ? "Loading panels..." : "— Select Starting Panel —"}
+                  </option>
+                  {panelList.map((p) => (
+                    <option key={p._id} value={p._id}>
+                      {p.panel_unique_no}
+                    </option>
+                  ))}
+                </select>
+                {!panelListLoading && panelList.length === 0 && (
+                  <small className="text-danger d-block mt-1">
+                    No panels found for this production
+                  </small>
+                )}
+              </div>
 
-                {/* Real-time remaining preview — only show when user has typed something */}
+              <div className="col-md-3">
+                <label className="form-label fw-semibold">
+                  Ending No <span className="text-danger">*</span>
+                </label>
+                <select
+                  className="form-control"
+                  value={endPanelId}
+                  onChange={handleEndChange}
+                  disabled={!startPanelId}
+                  required
+                >
+                  <option value="">— Select Ending Panel —</option>
+                  {endOptions.map((p) => (
+                    <option key={p._id} value={p._id}>
+                      {p.panel_unique_no}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-md-2">
+                <label className="form-label fw-semibold">Panel Count</label>
+                <input
+                  type="text"
+                  className="form-control bg-light"
+                  value={enteredCount > 0 ? enteredCount : ""}
+                  placeholder="0"
+                  readOnly
+                  disabled
+                />
                 {enteredCount > 0 && (
                   enteredCount > currentPanels ? (
-                    <small className="text-danger fw-semibold d-block">
-                      ✗ Exceeds available panels by {enteredCount - currentPanels}
+                    <small className="text-danger fw-semibold d-block mt-1">
+                      ✗ Exceeds by {enteredCount - currentPanels}
                     </small>
                   ) : (
-                    <small className="text-success fw-semibold d-block">
-                      ✓ After release: <strong>{remainingAfterRelease}</strong> panels will remain
+                    <small className="text-success fw-semibold d-block mt-1">
+                      ✓ {remainingAfterRelease} will remain
                     </small>
                   )
                 )}
               </div>
 
-              {/* New Vendor Dropdown */}
-              <div className="col-md-4">
+
+              <div className="col-md-2">
                 <label className="form-label fw-semibold">Assign New Vendor</label>
                 <select
                   className="form-control"
@@ -204,8 +320,8 @@ const ReleaseProduction = ({ item, onClose }) => {
                 <small className="text-muted">Leave blank to release without vendor</small>
               </div>
 
-              {/* Remark */}
-              <div className="col-md-4">
+
+              <div className="col-md-2">
                 <label className="form-label fw-semibold">Remark</label>
                 <input
                   type="text"
@@ -214,43 +330,6 @@ const ReleaseProduction = ({ item, onClose }) => {
                   placeholder="Optional remark"
                   value={formData.remark}
                   onChange={handleChange}
-                />
-              </div>
-
-              {/* Current Vendor (readonly) */}
-              <div className="col-md-4">
-                <label className="form-label fw-semibold">Current Vendor</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={
-                    item?.vendor_details
-                      ? `${item.vendor_details.first_name} ${item.vendor_details.last_name}`
-                      : "—"
-                  }
-                  readOnly
-                />
-              </div>
-
-              {/* Vendor Email (readonly) */}
-              <div className="col-md-4">
-                <label className="form-label fw-semibold">Vendor Email</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={item?.vendor_details?.email || "—"}
-                  readOnly
-                />
-              </div>
-
-              {/* Vendor WhatsApp (readonly) */}
-              <div className="col-md-4">
-                <label className="form-label fw-semibold">Vendor WhatsApp</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={item?.vendor_details?.whatsapp_no || "—"}
-                  readOnly
                 />
               </div>
 
@@ -268,7 +347,13 @@ const ReleaseProduction = ({ item, onClose }) => {
               <button
                 type="submit"
                 className="btn btn-primary"
-                disabled={submitLoading || enteredCount > currentPanels}
+                disabled={
+                  submitLoading ||
+                  !startPanelId ||
+                  !endPanelId ||
+                  enteredCount < 1 ||
+                  enteredCount > currentPanels
+                }
               >
                 {submitLoading ? (
                   <>
@@ -290,7 +375,7 @@ const ReleaseProduction = ({ item, onClose }) => {
       {/* ── Release History Table ── */}
       <div className="card">
         <div className="card-header d-flex justify-content-between align-items-center">
-          <h4 className="card-title mb-0">Release History</h4>
+          <h4 className="card-title mb-0 ">Release History</h4>
           <button
             className="btn btn-outline-secondary btn-sm"
             onClick={fetchHistory}
@@ -316,7 +401,6 @@ const ReleaseProduction = ({ item, onClose }) => {
 
                     <th>Panel Count Before</th>
                     <th>Panel Count After</th>
-                    <th>Panel Numbers</th>
                     <th>Panel Unique No.</th>
                     <th>Remark</th>
                   </tr>
@@ -327,24 +411,10 @@ const ReleaseProduction = ({ item, onClose }) => {
                       <tr key={row._id}>
                         <td><strong>{index + 1}</strong></td>
                         <td>{row.released_date || "—"}</td>
-                     
+
                         <td>{row.old_panel_count_before}</td>
                         <td>{row.old_panel_count_after}</td>
-                        <td>
-                          {row.released_panel_numbers?.length > 0 ? (
-                            <button
-                              className="btn btn-outline-primary btn-sm"
-                              onClick={() =>
-                                openPopup(
-                                  `Panel Numbers (${row.released_panel_numbers.length})`,
-                                  row.released_panel_numbers
-                                )
-                              }
-                            >
-                              View {row.released_panel_numbers.length}
-                            </button>
-                          ) : "—"}
-                        </td>
+
                         <td>
                           {row.released_panel_unique_numbers?.length > 0 ? (
                             <button
