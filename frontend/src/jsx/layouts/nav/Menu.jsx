@@ -38,6 +38,17 @@ export const MenuList = [
   },
 
   {
+    title: "Hold Production",
+    classsChange: "mm-collapse",
+   iconStyle: <i className="fa-solid fa-pause-circle fw-bold"></i>,
+    content: [
+      { title: "Add Hold Production", to: "hold-production/add",  permission: "add_production"  },
+      { title: "View Hold Production", to: "hold-production/list", permission: "add_production"   },
+    
+    ],
+  },
+
+  {
     title: "Dispatch Panel",
     classsChange: "mm-collapse",
     iconStyle: <i className="fa-solid fa-truck-fast fw-bold"></i>,

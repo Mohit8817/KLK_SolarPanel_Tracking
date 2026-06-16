@@ -14,6 +14,8 @@ export const createProductionPanel = async (req, res) => {
       panel_count,
       panel_type,
       project,
+      prefix,
+      generated_year,
       state,
       date,
       created_by,
@@ -45,16 +47,17 @@ export const createProductionPanel = async (req, res) => {
        2️⃣ Get Available Panels
     =============================== */
 
-    const availablePanels = await PanelNumber.find({
+   const availablePanels = await PanelNumber.find({
       production_status: 0,
+      hold_status: 0,
       production_id: null,
-
+      prefix: String(prefix).trim(),
+      generated_year: String(generated_year).trim(),
       panel_capacity: String(panel_capacity).trim(),
-
       panel_type: String(panel_type).trim(),
     })
-      .sort({ panel_no: 1 })
-      .limit(count);
+    .sort({ panel_no: 1 })
+    .limit(count);
 
     /* ===============================
        3️⃣ Check Availability

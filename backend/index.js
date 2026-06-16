@@ -13,6 +13,7 @@ import dispatchpanelroures from './routes/dispatchpanel.routes.js'
 import damagepanelroures from './routes/damagepanel.routes.js'
 import dashboardroutes from './routes/dashboard.routes.js'
 import roleroutes from './routes/role.routes.js'
+import holdpanelroutes from './routes/holdpanel.routes.js'
 
 
 const app = express()
@@ -58,6 +59,7 @@ app.use("/api/production", productionopanelroures)
 app.use("/api/dispatch", dispatchpanelroures)
 app.use("/api/damage", damagepanelroures)
 app.use("/api/role", roleroutes)
+app.use("/api/holdpanel", holdpanelroutes)
 
 
 app.listen(3000, () => {

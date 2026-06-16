@@ -12,11 +12,10 @@ const PanelNumberSchema = new mongoose.Schema(
       ref: "PanelSerialLot",
       required: true,
     },
-
     panel_unique_no: {
       type: String,
       required: true,
-      unique: true, // only unique field now
+      unique: true, 
     },
     panel_no: {
       type: Number,
@@ -32,6 +31,14 @@ const PanelNumberSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+
+    generated_year: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    prefix: { type: String, required: true, trim: true, },
 
     state: {
       type: String,
@@ -52,6 +59,30 @@ const PanelNumberSchema = new mongoose.Schema(
       trim: true,
     },
 
+    hold_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "HoldPanel",
+    },
+
+    hold_lot_size: {
+      type: Number,
+    },
+
+    hold_status: {
+    type: Number,
+    enum: [0,1,2],
+    default : 0
+    },
+
+    release_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ReleasePanel",
+    },
+
+    release_lot_size: {
+      type: Number,
+    },
+
     // 🧩 Assignment
     production_id: {
       type: mongoose.Schema.Types.ObjectId,
@@ -62,11 +93,11 @@ const PanelNumberSchema = new mongoose.Schema(
     },
     production_status: {
       type: Number,
-      enum: [0, 1], // 0 = pending, 1 = assigned
+      enum: [0, 1, 2], 
       default: 0,
     },
 
-        manufacturing_status: {
+    manufacturing_status: {
       type: Number,
       enum: [0, 1],
       default: 0,
@@ -77,7 +108,7 @@ const PanelNumberSchema = new mongoose.Schema(
       trim: true,
     },
     vendor_status: {
-      type: Number, default: 0, // 0 = not assigned, 1 = assigned
+      type: Number, default: 0, 
       required: true,
       trim: true,
     },
@@ -104,7 +135,7 @@ const PanelNumberSchema = new mongoose.Schema(
     },
     dispatch_panel_type: {
       type: Number,
-      enum: [1, 2], // 1 = DCR, 2 = NON DCR
+      enum: [1, 2], 
       default: null,
     },
 

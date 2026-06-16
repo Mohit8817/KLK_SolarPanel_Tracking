@@ -130,7 +130,13 @@ const ViewGeneratePanel = () => {
                         <td style={{ color: "#5bcfc5" , fontWeight : "700" }}>
                           {item.panel_capacity} WP
                         </td>
-                        <td>{item.panel_type == "1" ? "DCR" : "NON DCR"}</td>
+                        <td>
+                      {{
+                        "1": "Polly",
+                        "2": "Mono",
+                        "3": "Bifacial",
+                      }[item.panel_type] || "NA"}
+                    </td>
                         <td>{item.panel_alot_state}</td>
                         <td>{item.panel_alot_project}</td>
                         <td className="text-center">

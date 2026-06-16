@@ -46,6 +46,11 @@ import PermissionList from "./components/RolePermission/PermissionList";
 import VendorProduction from "./components/Production/VendorProduction";
 
 
+import HoldProductionform from "./components/HoldProduction/HoldProductionform";
+import ViewHoldProd from "./components/HoldProduction/ViewHoldProd";
+import ViewHoldPanels from "./components/HoldProduction/ViewHoldpanels";
+
+
 
 const ProtectedRoute = () => {
   const token = localStorage.getItem("token");
@@ -96,6 +101,10 @@ const Markup = () => {
 
     { url: "role/list", component: <RoleList /> },
     { url: "permission/list", component: <PermissionList /> },
+
+    { url: "hold-production/add", component: <HoldProductionform /> },
+    { url: "hold-production/list", component: < ViewHoldProd/> },
+    { url: "hold-production-panels/:id", component: < ViewHoldPanels/> },
 
   ];
 
