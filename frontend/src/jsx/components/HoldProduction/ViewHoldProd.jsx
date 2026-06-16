@@ -6,7 +6,7 @@ import TableExportActions from "../Common/TableExportActions";
 import { Link } from "react-router-dom";
 import axios from "axios";
 
-import ReleaseForm from "./ReleaseForm";
+import ReleaseForm from "./releaseForm";
 import ViewRelease from "./ViewRelease";
 
 const ViewHoldProduction = () => {
