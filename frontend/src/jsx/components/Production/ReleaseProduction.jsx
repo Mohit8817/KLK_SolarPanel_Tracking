@@ -5,6 +5,8 @@ import axios from "axios";
 const ReleaseProduction = ({ item, onClose }) => {
   const [formData, setFormData] = useState({
     new_vendor_id: "",
+    new_project: item?.project || "",
+    new_state: item?.state || "",
     remark: "",
   });
 
@@ -14,22 +16,32 @@ const ReleaseProduction = ({ item, onClose }) => {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [popup, setPopup] = useState({ show: false, title: "", items: [] });
 
-
   const [panelList, setPanelList] = useState([]);
   const [panelListLoading, setPanelListLoading] = useState(false);
   const [startPanelId, setStartPanelId] = useState("");
   const [endPanelId, setEndPanelId] = useState("");
 
+  // 🔹 Local, reactive copy of panel_count so the UI updates immediately
+  // after a release, instead of relying on the (static) item prop.
+  const [currentPanels, setCurrentPanels] = useState(item?.panel_count || 0);
+
   const token = localStorage.getItem("token");
   const created_by = localStorage.getItem("user_id") || "";
-
-  const currentPanels = item?.panel_count || 0;
 
   useEffect(() => {
     if (item?._id) {
       fetchHistory();
       fetchVendors();
       fetchPanelList();
+      setCurrentPanels(item?.panel_count || 0); // 🔹 sync when a new item is opened
+      setFormData({
+        new_vendor_id: "",
+        new_project: item?.project || "",
+        new_state: item?.state || "",
+        remark: "",
+      });
+      setStartPanelId("");
+      setEndPanelId("");
     }
   }, [item]);
 
@@ -60,14 +72,14 @@ const ReleaseProduction = ({ item, onClose }) => {
         `${import.meta.env.VITE_BACKEND_API_URL}production/get-production-release-history/${item._id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setHistory(res.data?.data?.history || []);
+      setHistory(res.data?.data || []);
     } catch (err) {
       console.error("History Fetch Error:", err);
+      setHistory([]);
     } finally {
       setHistoryLoading(false);
     }
   };
-
 
   const fetchPanelList = async () => {
     setPanelListLoading(true);
@@ -77,7 +89,7 @@ const ReleaseProduction = ({ item, onClose }) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const list = res?.data?.data || [];
-      // sorting 
+      // sorting
       const sorted = [...list].sort(
         (a, b) => (a.panel_no || 0) - (b.panel_no || 0)
       );
@@ -99,7 +111,6 @@ const ReleaseProduction = ({ item, onClose }) => {
     () => panelList.findIndex((p) => p._id === startPanelId),
     [panelList, startPanelId]
   );
-
 
   const endOptions = useMemo(() => {
     if (startIndex === -1) return [];
@@ -150,11 +161,13 @@ const ReleaseProduction = ({ item, onClose }) => {
       const payload = {
         production_id: item._id,
         release_count: enteredCount,
-        start_panel_no: releasedPanels[0]?.panel_unique_no,
-        end_panel_no: releasedPanels[releasedPanels.length - 1]?.panel_unique_no,
+        start_panel_no: releasedPanels[0]?.panel_no,
+        end_panel_no: releasedPanels[releasedPanels.length - 1]?.panel_no,
         panel_ids: releasedPanels.map((p) => p._id),
         panel_unique_numbers: releasedPanels.map((p) => p.panel_unique_no),
         new_vendor_id: formData.new_vendor_id || undefined,
+        new_project: formData.new_project || undefined,
+        new_state: formData.new_state || undefined,
         created_by,
         remark: formData.remark || undefined,
       };
@@ -167,7 +180,18 @@ const ReleaseProduction = ({ item, onClose }) => {
 
       if (res.data?.success) {
         alert("Panels Released Successfully!");
-        setFormData({ new_vendor_id: "", remark: "" });
+
+        // 🔹 Update the live count immediately so the banner + Panel Count
+        // hint reflect the release right away, without waiting for a
+        // parent re-fetch or page reload.
+        setCurrentPanels((prev) => prev - enteredCount);
+
+        setFormData({
+          new_vendor_id: "",
+          new_project: item?.project || "",
+          new_state: item?.state || "",
+          remark: "",
+        });
         setStartPanelId("");
         setEndPanelId("");
         fetchHistory();
@@ -191,15 +215,16 @@ const ReleaseProduction = ({ item, onClose }) => {
 
   return (
     <Fragment>
-
       {/* ── Info Banner ── */}
       <div className="alert border border-primary mb-3">
         <div className="d-flex flex-wrap gap-4">
           <span>
-            <strong className="text-primary">Total Panels:</strong> <b>{item?.panel_count}</b>
+            <strong className="text-primary">Total Panels:</strong>{" "}
+            <b>{currentPanels}</b>
           </span>
           <span>
-            <strong className="text-primary">Type:</strong>  <b>
+            <strong className="text-primary">Type:</strong>{" "}
+            <b>
               {{
                 "1": "Polly",
                 "2": "Mono",
@@ -222,7 +247,6 @@ const ReleaseProduction = ({ item, onClose }) => {
           <span>
             <strong className="text-primary">vendor Email:</strong> <b>{item?.vendor_details?.email || "—"} </b>
           </span>
-
         </div>
       </div>
 
@@ -301,8 +325,7 @@ const ReleaseProduction = ({ item, onClose }) => {
                 )}
               </div>
 
-
-              <div className="col-md-2">
+              <div className="col-md-4">
                 <label className="form-label fw-semibold">Assign New Vendor</label>
                 <select
                   className="form-control"
@@ -319,9 +342,79 @@ const ReleaseProduction = ({ item, onClose }) => {
                 </select>
                 <small className="text-muted">Leave blank to release without vendor</small>
               </div>
+            </div>
 
+            {/* ── New Project / New State / Remark ── */}
+            <div className="row g-3 mt-1">
+              <div className="col-md-4">
+                <label className="form-label fw-semibold">New Project</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="new_project"
+                  placeholder="Project"
+                  value={formData.new_project}
+                  onChange={handleChange}
+                />
+                <small className="text-muted">Prefilled with current project — change if needed</small>
+              </div>
 
-              <div className="col-md-2">
+              <div className="col-md-4">
+                <label className="form-label fw-semibold">New State</label>
+                <select
+                  className="form-control"
+                  name="new_state"
+                  value={formData.new_state}
+                  onChange={handleChange}
+                >
+                  <option value="">— Select State —</option>
+
+                  {/* States */}
+                  <option value="Andhra_Pradesh">Andhra Pradesh</option>
+                  <option value="Arunachal_Pradesh">Arunachal Pradesh</option>
+                  <option value="Assam">Assam</option>
+                  <option value="Bihar">Bihar</option>
+                  <option value="Chhattisgarh">Chhattisgarh</option>
+                  <option value="Goa">Goa</option>
+                  <option value="Gujarat">Gujarat</option>
+                  <option value="Haryana">Haryana</option>
+                  <option value="Himachal_Pradesh">Himachal Pradesh</option>
+                  <option value="Jharkhand">Jharkhand</option>
+                  <option value="Karnataka">Karnataka</option>
+                  <option value="Kerala">Kerala</option>
+                  <option value="Madhya_Pradesh">Madhya Pradesh</option>
+                  <option value="Maharashtra">Maharashtra</option>
+                  <option value="Manipur">Manipur</option>
+                  <option value="Meghalaya">Meghalaya</option>
+                  <option value="Mizoram">Mizoram</option>
+                  <option value="Nagaland">Nagaland</option>
+                  <option value="Odisha">Odisha</option>
+                  <option value="Punjab">Punjab</option>
+                  <option value="Rajasthan">Rajasthan</option>
+                  <option value="Sikkim">Sikkim</option>
+                  <option value="Tamil_Nadu">Tamil Nadu</option>
+                  <option value="Telangana">Telangana</option>
+                  <option value="Tripura">Tripura</option>
+                  <option value="Uttar_Pradesh">Uttar Pradesh</option>
+                  <option value="Uttarakhand">Uttarakhand</option>
+                  <option value="West_Bengal">West Bengal</option>
+
+                  {/* Union Territories */}
+                  <option value="Andaman_Nicobar">Andaman and Nicobar Islands</option>
+                  <option value="Chandigarh">Chandigarh</option>
+                  <option value="Dadra_Nagar_Haveli_Daman_Diu">
+                    Dadra and Nagar Haveli and Daman and Diu
+                  </option>
+                  <option value="Delhi">Delhi</option>
+                  <option value="Jammu_Kashmir">Jammu and Kashmir</option>
+                  <option value="Ladakh">Ladakh</option>
+                  <option value="Lakshadweep">Lakshadweep</option>
+                  <option value="Puducherry">Puducherry</option>
+                </select>
+                <small className="text-muted">Prefilled with current state — change if needed</small>
+              </div>
+
+              <div className="col-md-4">
                 <label className="form-label fw-semibold">Remark</label>
                 <input
                   type="text"
@@ -332,7 +425,6 @@ const ReleaseProduction = ({ item, onClose }) => {
                   onChange={handleChange}
                 />
               </div>
-
             </div>
 
             <div className="d-flex justify-content-end gap-2 mt-4">
@@ -398,7 +490,6 @@ const ReleaseProduction = ({ item, onClose }) => {
                   <tr>
                     <th>S No.</th>
                     <th>Release Date</th>
-
                     <th>Panel Count Before</th>
                     <th>Panel Count After</th>
                     <th>Panel Unique No.</th>
@@ -411,22 +502,20 @@ const ReleaseProduction = ({ item, onClose }) => {
                       <tr key={row._id}>
                         <td><strong>{index + 1}</strong></td>
                         <td>{row.released_date || "—"}</td>
-
                         <td>{row.old_panel_count_before}</td>
                         <td>{row.old_panel_count_after}</td>
-
                         <td>
-                          {row.released_panel_unique_numbers?.length > 0 ? (
+                          {row.panels?.length > 0 ? (
                             <button
-                              className="btn btn-outline-info btn-sm"
+                              className="btn btn-outline-primary btn-sm"
                               onClick={() =>
                                 openPopup(
-                                  `Panel Unique Numbers (${row.released_panel_unique_numbers.length})`,
-                                  row.released_panel_unique_numbers
+                                  `Panel Unique Numbers (${row.panels.length})`,
+                                  row.panels.map((p) => p.panel_unique_no)
                                 )
                               }
                             >
-                              View {row.released_panel_unique_numbers.length}
+                              View {row.panels.length}
                             </button>
                           ) : "—"}
                         </td>
@@ -435,7 +524,7 @@ const ReleaseProduction = ({ item, onClose }) => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="8" className="text-center text-muted py-3">
+                      <td colSpan="6" className="text-center text-muted py-3">
                         No release history found
                       </td>
                     </tr>
@@ -471,7 +560,7 @@ const ReleaseProduction = ({ item, onClose }) => {
                 {popup.items.length > 0 ? (
                   <div className="d-flex flex-wrap gap-2">
                     {popup.items.map((panelItem, i) => (
-                      <span key={i} className="badge bg-secondary fs-6 fw-normal">
+                      <span key={i} className="badge bg-primary fs-6 fw-normal">
                         {panelItem}
                       </span>
                     ))}
@@ -480,20 +569,10 @@ const ReleaseProduction = ({ item, onClose }) => {
                   <p className="text-muted text-center mb-0">No data available</p>
                 )}
               </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-light"
-                  onClick={closePopup}
-                >
-                  Close
-                </button>
-              </div>
             </div>
           </div>
         </div>
       )}
-
     </Fragment>
   );
 };

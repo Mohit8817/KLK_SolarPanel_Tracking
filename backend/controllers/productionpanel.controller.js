@@ -586,10 +586,12 @@ export const releaseProductionPanel = async (req, res) => {
       release_count,
       start_panel_no,
       end_panel_no,
-      created_by,
+      new_project,
+      new_state,
       remark,
     } = req.body;
     const count = Number(release_count);
+const created_by= req.user?.id;
 
     if (!production_id || !count) {
       return res.status(400).json({
@@ -627,11 +629,11 @@ export const releaseProductionPanel = async (req, res) => {
     const panelsToRelease = await PanelNumber.find({
       production_id: oldProduction._id,
       production_status: 1,
-      panel_unique_no: {
-        $gte: start_panel_no,
-        $lte: end_panel_no,
+      panel_no: {
+        $gte: Number(start_panel_no),
+        $lte: Number(end_panel_no),
       },
-    }).sort({ panel_unique_no: 1 });
+    }).sort({ panel_no: 1 });
 
     if (!panelsToRelease.length) {
       return res.status(400).json({
@@ -640,45 +642,15 @@ export const releaseProductionPanel = async (req, res) => {
       });
     }
 
-    //     const panelsToRelease = await PanelNumber.find({
-    //   production_id: oldProduction._id,
-    //   production_status: 1,
-    //   panel_unique_no: {
-    //     $gte: Number(start_panel_no), 
-    //     $lte: Number(end_panel_no),  
-    //   },
-    // }).sort({ panel_unique_no: 1 });
-
-    // if (panelsToRelease.length === 0) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "No panels found in the selected range.",
-    //   });
-    // }
-
-    // const panelsToRelease = await PanelNumber.find({
-    //   production_id: oldProduction._id,
-    //   production_status: 1,
-    //   panel_unique_no:start_panel_no,
-    //   panel_unique_no:end_panel_no
-    // })
-    //   .sort({ panel_no: -1 })
-    //   .limit(count);
-    // if (panelsToRelease.length < count) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: `Only ${panelsToRelease.length} panels available to release`,
-    //   });
-    // }
-
     const newProduction = await ProductionPanel.create({
       company_id: oldProduction.company_id,
       panel_capacity: oldProduction.panel_capacity,
       panel_count: count,
       panel_type: oldProduction.panel_type,
-      project: oldProduction.project,
-      state: oldProduction.state,
-      date: oldProduction.date,
+      project: new_project,
+      state: new_state,
+      date:oldProduction.date,
+      // date: date('d-m-y'),
       created_by: created_by || oldProduction.created_by,
       vendor_id: new_vendor_id || 0,
       vendor_status: new_vendor_id ? 1 : 0,
@@ -713,8 +685,8 @@ export const releaseProductionPanel = async (req, res) => {
       old_panel_count_after: oldPanelCountAfter,
       released_count: count,
       new_vendor_id: new_vendor_id || 0,
-      released_panel_numbers: panelsToRelease.map((p) => p.panel_no),
-      released_panel_unique_numbers: panelsToRelease.map((p) => p.panel_unique_no),
+      // released_panel_numbers: panelsToRelease.map((p) => p.panel_no),
+      // released_panel_unique_numbers: panelsToRelease.map((p) => p.panel_unique_no),
       released_by: created_by,
       released_date: today,
       remark: remark || null,
@@ -750,17 +722,29 @@ export const releaseProductionPanel = async (req, res) => {
 export const getProductionReleaseHistory = async (req, res) => {
   try {
     const { production_id } = req.params;
+
     const history = await ProductionReleaseHistory.find({
-      $or: [
-        { old_production_id: production_id }
-      ],
+      old_production_id: production_id,
     }).sort({ createdAt: -1 });
+
+    const historyWithPanels = await Promise.all(
+      history.map(async (item) => {
+        const panels = await PanelNumber.find({
+          production_id: item.new_production_id,
+        })
+          .select("panel_no panel_unique_no")
+          .sort({ panel_unique_no: 1 });
+
+        return {
+          ...item.toObject(),
+          panels,
+        };
+      })
+    );
+
     return res.status(200).json({
       success: true,
-      data: {
-        history,
-        total_release_events: history.length,
-      },
+      data: historyWithPanels,
     });
   } catch (error) {
     return res.status(500).json({
@@ -769,3 +753,56 @@ export const getProductionReleaseHistory = async (req, res) => {
     });
   }
 };
+
+// export const getProductionReleaseHistory = async (req, res) => {
+//   try {
+//     const { production_id } = req.params;
+//     const history = await ProductionReleaseHistory.find({
+//       $or: [
+//         { old_production_id: production_id }
+//       ],
+//     }).sort({ createdAt: -1 });
+//     return res.status(200).json({
+//       success: true,
+//       data: {
+//         history,
+//         total_release_events: history.length,
+//       },
+//     });
+//   } catch (error) {
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+
+
+// export const getProductionReleaseHistory = async (req, res) => {
+//   try {
+//     const { production_id } = req.params;
+
+//     const history = await ProductionReleaseHistory.find({
+//       old_production_id: production_id,
+//     }).sort({ createdAt: -1 });
+
+//     const newProductionIds = history.map(item => item.new_production_id);
+
+//     const panel = await PanelNumber.find({
+//       production_id: { $in: newProductionIds },
+//     }).sort({ createdAt: -1 });
+
+//     return res.status(200).json({
+//       success: true,
+//       data: {
+//         history,
+//         panel,
+//       },
+//     });
+//   } catch (error) {
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };

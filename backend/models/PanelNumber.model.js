@@ -66,7 +66,7 @@ const PanelNumberSchema = new mongoose.Schema(
       default: 0,
     },
 
-        manufacturing_status: {
+      manufacturing_status: {
       type: Number,
       enum: [0, 1],
       default: 0,
