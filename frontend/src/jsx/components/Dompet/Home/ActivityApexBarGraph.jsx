@@ -42,8 +42,7 @@ class ActivityApexBarGraph extends React.Component {
         },
         yaxis: {
           labels: {
-            formatter: (val) => `${val}`,
-            style: {
+            formatter: (val) => `${val}`,            style: {
               colors: "#3e4954",
               fontSize: "12px",
               fontFamily: "poppins",

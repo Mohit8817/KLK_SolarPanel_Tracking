@@ -3,16 +3,16 @@ import PageTitle from "../../layouts/PageTitle";
 
 const ProductionForm = () => {
     const [formData, setFormData] = useState({
-            date: "",
-            panel_capacity: "",
-            generated_year: "",
-            prefix: "",
-            panel_count: "",
-            panel_type: "",
-            project: "",
-            state: "",
-            vendor_id: "",
-            });
+        date: "",
+        panel_capacity: "",
+        generated_year: "",
+        prefix: "",
+        panel_count: "",
+        panel_type: "",
+        project: "",
+        state: "",
+        vendor_id: "",
+    });
     const [vendors, setVendors] = useState([]);
     const [loading, setLoading] = useState(false);
     const [capacities, setCapacities] = useState([]);
@@ -21,207 +21,207 @@ const ProductionForm = () => {
     const [panelTypes, setPanelTypes] = useState([]);
     const [availableData, setAvailableData] = useState(null);
 
-  const handleChange = (e) => {
-  const { name, value } = e.target;
+    const handleChange = (e) => {
+        const { name, value } = e.target;
 
-  setFormData((prev) => ({
-    ...prev,
-    [name]: value,
-  }));
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
 
-  if (name === "panel_capacity") {
-    setFormData((prev) => ({
-      ...prev,
-      panel_capacity: value,
-      generated_year: "",
-      prefix: "",
-      panel_type: "",
-    }));
+        if (name === "panel_capacity") {
+            setFormData((prev) => ({
+                ...prev,
+                panel_capacity: value,
+                generated_year: "",
+                prefix: "",
+                panel_type: "",
+            }));
 
-    setYears([]);
-    setPrefixes([]);
-    setPanelTypes([]);
-    setAvailableData(null);
-  }
+            setYears([]);
+            setPrefixes([]);
+            setPanelTypes([]);
+            setAvailableData(null);
+        }
 
-  if (name === "generated_year") {
-    setFormData((prev) => ({
-      ...prev,
-      generated_year: value,
-      prefix: "",
-      panel_type: "",
-    }));
+        if (name === "generated_year") {
+            setFormData((prev) => ({
+                ...prev,
+                generated_year: value,
+                prefix: "",
+                panel_type: "",
+            }));
 
-    setPrefixes([]);
-    setPanelTypes([]);
-    setAvailableData(null);
-  }
+            setPrefixes([]);
+            setPanelTypes([]);
+            setAvailableData(null);
+        }
 
-  if (name === "prefix") {
-    setFormData((prev) => ({
-      ...prev,
-      prefix: value,
-      panel_type: "",
-    }));
+        if (name === "prefix") {
+            setFormData((prev) => ({
+                ...prev,
+                prefix: value,
+                panel_type: "",
+            }));
 
-    setPanelTypes([]);
-    setAvailableData(null);
-  }
-};
-
-
-const fetchCapacities = async () => {
-  try {
-    const token = localStorage.getItem("token");
-
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_API_URL}holdpanel/hold-capacity`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    const data = await response.json();
-
-    if (data.success) {
-      setCapacities(data.data);
-    }
-  } catch (error) {
-    console.log(error);
-  }
-};
+            setPanelTypes([]);
+            setAvailableData(null);
+        }
+    };
 
 
-useEffect(() => {
-  if (!formData.panel_capacity) return;
+    const fetchCapacities = async () => {
+        try {
+            const token = localStorage.getItem("token");
 
-  const fetchYears = async () => {
-    const token = localStorage.getItem("token");
+            const response = await fetch(
+                `${import.meta.env.VITE_BACKEND_API_URL}holdpanel/hold-capacity`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
 
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_API_URL}holdpanel/generated-year?panel_capacity=${formData.panel_capacity}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+            const data = await response.json();
 
-    const data = await response.json();
-
-    if (data.success) {
-      setYears(data.data);
-    }
-  };
-
-  fetchYears();
-}, [formData.panel_capacity]);
-
-useEffect(() => {
-  if (
-    !formData.panel_capacity ||
-    !formData.generated_year
-  )
-    return;
-
-  const fetchPrefixes = async () => {
-    const token = localStorage.getItem("token");
-
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_API_URL}holdpanel/company-prefix?panel_capacity=${formData.panel_capacity}&generated_year=${formData.generated_year}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    const data = await response.json();
-
-    if (data.success) {
-      setPrefixes(data.data);
-    }
-  };
-
-  fetchPrefixes();
-}, [
-  formData.panel_capacity,
-  formData.generated_year,
-]);
+            if (data.success) {
+                setCapacities(data.data);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
 
-useEffect(() => {
-  if (
-    !formData.panel_capacity ||
-    !formData.generated_year ||
-    !formData.prefix
-  )
-    return;
+    useEffect(() => {
+        if (!formData.panel_capacity) return;
 
-  const fetchPanelTypes = async () => {
-    const token = localStorage.getItem("token");
+        const fetchYears = async () => {
+            const token = localStorage.getItem("token");
 
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_API_URL}holdpanel/panel-type?panel_capacity=${formData.panel_capacity}&generated_year=${formData.generated_year}&prefix=${formData.prefix}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+            const response = await fetch(
+                `${import.meta.env.VITE_BACKEND_API_URL}holdpanel/generated-year?panel_capacity=${formData.panel_capacity}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
 
-    const data = await response.json();
+            const data = await response.json();
 
-    if (data.success) {
-      setPanelTypes(data.data);
-    }
-  };
+            if (data.success) {
+                setYears(data.data);
+            }
+        };
 
-  fetchPanelTypes();
-}, [
-  formData.panel_capacity,
-  formData.generated_year,
-  formData.prefix,
-]);
+        fetchYears();
+    }, [formData.panel_capacity]);
+
+    useEffect(() => {
+        if (
+            !formData.panel_capacity ||
+            !formData.generated_year
+        )
+            return;
+
+        const fetchPrefixes = async () => {
+            const token = localStorage.getItem("token");
+
+            const response = await fetch(
+                `${import.meta.env.VITE_BACKEND_API_URL}holdpanel/company-prefix?panel_capacity=${formData.panel_capacity}&generated_year=${formData.generated_year}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            const data = await response.json();
+
+            if (data.success) {
+                setPrefixes(data.data);
+            }
+        };
+
+        fetchPrefixes();
+    }, [
+        formData.panel_capacity,
+        formData.generated_year,
+    ]);
 
 
-useEffect(() => {
-  if (
-    !formData.panel_capacity ||
-    !formData.generated_year ||
-    !formData.prefix ||
-    !formData.panel_type
-  )
-    return;
+    useEffect(() => {
+        if (
+            !formData.panel_capacity ||
+            !formData.generated_year ||
+            !formData.prefix
+        )
+            return;
 
-  const fetchAvailable = async () => {
-    const token = localStorage.getItem("token");
+        const fetchPanelTypes = async () => {
+            const token = localStorage.getItem("token");
 
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_API_URL}holdpanel/available-count?panel_capacity=${formData.panel_capacity}&generated_year=${formData.generated_year}&prefix=${formData.prefix}&panel_type=${formData.panel_type}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+            const response = await fetch(
+                `${import.meta.env.VITE_BACKEND_API_URL}holdpanel/panel-type?panel_capacity=${formData.panel_capacity}&generated_year=${formData.generated_year}&prefix=${formData.prefix}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
 
-    const data = await response.json();
+            const data = await response.json();
 
-    if (data.success) {
-      setAvailableData(data);
-    }
-  };
+            if (data.success) {
+                setPanelTypes(data.data);
+            }
+        };
 
-  fetchAvailable();
-}, [
-  formData.panel_capacity,
-  formData.generated_year,
-  formData.prefix,
-  formData.panel_type,
-]);
+        fetchPanelTypes();
+    }, [
+        formData.panel_capacity,
+        formData.generated_year,
+        formData.prefix,
+    ]);
+
+
+    useEffect(() => {
+        if (
+            !formData.panel_capacity ||
+            !formData.generated_year ||
+            !formData.prefix ||
+            !formData.panel_type
+        )
+            return;
+
+        const fetchAvailable = async () => {
+            const token = localStorage.getItem("token");
+
+            const response = await fetch(
+                `${import.meta.env.VITE_BACKEND_API_URL}holdpanel/available-count?panel_capacity=${formData.panel_capacity}&generated_year=${formData.generated_year}&prefix=${formData.prefix}&panel_type=${formData.panel_type}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            const data = await response.json();
+
+            if (data.success) {
+                setAvailableData(data);
+            }
+        };
+
+        fetchAvailable();
+    }, [
+        formData.panel_capacity,
+        formData.generated_year,
+        formData.prefix,
+        formData.panel_type,
+    ]);
 
 
     // FETCH VENDOR LIST
@@ -382,61 +382,61 @@ useEffect(() => {
                                                 required>
                                                 <option value="">Select Capacity</option>
                                                 {capacities.map((capacity) => (
-                                                <option key={capacity} value={capacity}>
-                                                    {capacity}
-                                                </option>
+                                                    <option key={capacity} value={capacity}>
+                                                        {capacity}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </div>
                                     </div>
 
                                     <div className="col-xl-6 col-md-6">
-  <div className="form-group mb-3">
-    <label className="form-label">
-      Generated Year <span className="text-danger">*</span>
-    </label>
+                                        <div className="form-group mb-3">
+                                            <label className="form-label">
+                                                Generated Year <span className="text-danger">*</span>
+                                            </label>
 
-    <select
-      className="form-control"
-      name="generated_year"
-      value={formData.generated_year}
-      onChange={handleChange}
-      required
-    >
-      <option value="">Select Year</option>
+                                            <select
+                                                className="form-control"
+                                                name="generated_year"
+                                                value={formData.generated_year}
+                                                onChange={handleChange}
+                                                required
+                                            >
+                                                <option value="">Select Year</option>
 
-      {years.map((year) => (
-        <option key={year} value={year}>
-          {year}
-        </option>
-      ))}
-    </select>
-  </div>
-</div>
+                                                {years.map((year) => (
+                                                    <option key={year} value={year}>
+                                                        {year}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
 
-<div className="col-xl-6 col-md-6">
-  <div className="form-group mb-3">
-    <label className="form-label">
-      Prefix <span className="text-danger">*</span>
-    </label>
+                                    <div className="col-xl-6 col-md-6">
+                                        <div className="form-group mb-3">
+                                            <label className="form-label">
+                                                Prefix <span className="text-danger">*</span>
+                                            </label>
 
-    <select
-      className="form-control"
-      name="prefix"
-      value={formData.prefix}
-      onChange={handleChange}
-      required
-    >
-      <option value="">Select Prefix</option>
+                                            <select
+                                                className="form-control"
+                                                name="prefix"
+                                                value={formData.prefix}
+                                                onChange={handleChange}
+                                                required
+                                            >
+                                                <option value="">Select Prefix</option>
 
-      {prefixes.map((prefix) => (
-        <option key={prefix} value={prefix}>
-          {prefix}
-        </option>
-      ))}
-    </select>
-  </div>
-</div>
+                                                {prefixes.map((prefix) => (
+                                                    <option key={prefix} value={prefix}>
+                                                        {prefix}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
 
                                     <div className="col-xl-6 col-md-6">
                                         <div className="form-group mb-3">
@@ -453,72 +453,72 @@ useEffect(() => {
                                                 <option value="">Select Type</option>
 
                                                 {panelTypes.map((item) => (
-                                                <option key={item._id} value={item._id}>
-                                                    {item._id == 1
-                                                    ? "Poly"
-                                                    : item._id == 2
-                                                    ? "Mono"
-                                                    : "Bifacial"} ({item.count})
-                                                </option>
+                                                    <option key={item._id} value={item._id}>
+                                                        {item._id == 1
+                                                            ? "Poly"
+                                                            : item._id == 2
+                                                                ? "Mono"
+                                                                : "Bifacial"} ({item.count})
+                                                    </option>
                                                 ))}
                                             </select>
                                         </div>
                                     </div>
 
-                             {availableData && (
-  <div className="col-lg-12 mb-3">
-    <div className="card border-primary shadow-sm">
-      <div className="card-header bg-primary text-white py-2">
-        <strong>Available Panel Information</strong>
-      </div>
+                                    {availableData && (
+                                        <div className="col-lg-12 mb-3">
+                                            <div className="card border-primary shadow-sm">
+                                                <div className="card-header bg-primary text-white py-2">
+                                                    <strong>Available Panel Information</strong>
+                                                </div>
 
-      <div className="card-body">
-        <div className="row text-center">
+                                                <div className="card-body">
+                                                    <div className="row text-center">
 
-          <div className="col-md-4 mb-3">
-            <div className="border rounded p-3 h-100">
-              <h6 className="text-muted mb-1">
-                Available Panels
-              </h6>
-              <h4 className="mb-0 text-primary">
-                {availableData.available_count}
-              </h4>
-            </div>
-          </div>
+                                                        <div className="col-md-4 mb-3">
+                                                            <div className="border rounded p-3 h-100">
+                                                                <h6 className="text-muted mb-1">
+                                                                    Available Panels
+                                                                </h6>
+                                                                <h4 className="mb-0 text-primary">
+                                                                    {availableData.available_count}
+                                                                </h4>
+                                                            </div>
+                                                        </div>
 
-          <div className="col-md-4 mb-3">
-            <div className="border rounded p-3 h-100">
-              <h6 className="text-muted mb-1">
-                Starting Panel No
-              </h6>
-              <h4 className="mb-0 text-success">
-                {availableData.starting_panel_no}
-              </h4>
-            </div>
-          </div>
+                                                        <div className="col-md-4 mb-3">
+                                                            <div className="border rounded p-3 h-100">
+                                                                <h6 className="text-muted mb-1">
+                                                                    Starting Panel No
+                                                                </h6>
+                                                                <h4 className="mb-0 text-success">
+                                                                    {availableData.starting_panel_no}
+                                                                </h4>
+                                                            </div>
+                                                        </div>
 
-          <div className="col-md-4 mb-3">
-            <div className="border rounded p-3 h-100">
-              <h6 className="text-muted mb-1">
-                Starting Unique No
-              </h6>
-              <div
-                className="fw-bold text-dark"
-                style={{
-                  wordBreak: "break-all",
-                  fontSize: "14px",
-                }}
-              >
-                {availableData.starting_panel_unique_no}
-              </div>
-            </div>
-          </div>
+                                                        <div className="col-md-4 mb-3">
+                                                            <div className="border rounded p-3 h-100">
+                                                                <h6 className="text-muted mb-1">
+                                                                    Starting Unique No
+                                                                </h6>
+                                                                <div
+                                                                    className="fw-bold text-dark"
+                                                                    style={{
+                                                                        wordBreak: "break-all",
+                                                                        fontSize: "14px",
+                                                                    }}
+                                                                >
+                                                                    {availableData.starting_panel_unique_no}
+                                                                </div>
+                                                            </div>
+                                                        </div>
 
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
 
 
 

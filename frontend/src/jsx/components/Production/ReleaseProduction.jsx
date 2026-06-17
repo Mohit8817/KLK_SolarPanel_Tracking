@@ -20,9 +20,6 @@ const ReleaseProduction = ({ item, onClose }) => {
   const [panelListLoading, setPanelListLoading] = useState(false);
   const [startPanelId, setStartPanelId] = useState("");
   const [endPanelId, setEndPanelId] = useState("");
-
-  // 🔹 Local, reactive copy of panel_count so the UI updates immediately
-  // after a release, instead of relying on the (static) item prop.
   const [currentPanels, setCurrentPanels] = useState(item?.panel_count || 0);
 
   const token = localStorage.getItem("token");
@@ -33,7 +30,7 @@ const ReleaseProduction = ({ item, onClose }) => {
       fetchHistory();
       fetchVendors();
       fetchPanelList();
-      setCurrentPanels(item?.panel_count || 0); // 🔹 sync when a new item is opened
+      setCurrentPanels(item?.panel_count || 0);
       setFormData({
         new_vendor_id: "",
         new_project: item?.project || "",
@@ -181,9 +178,6 @@ const ReleaseProduction = ({ item, onClose }) => {
       if (res.data?.success) {
         alert("Panels Released Successfully!");
 
-        // 🔹 Update the live count immediately so the banner + Panel Count
-        // hint reflect the release right away, without waiting for a
-        // parent re-fetch or page reload.
         setCurrentPanels((prev) => prev - enteredCount);
 
         setFormData({

@@ -52,9 +52,6 @@ import ViewHoldPanels from "./components/HoldProduction/ViewHoldpanels";
 
 
 
-import HoldProductionform from "./components/HoldProduction/HoldProductionform";
-import ViewHoldProd from "./components/HoldProduction/ViewHoldProd";
-import ViewHoldPanels from "./components/HoldProduction/ViewHoldpanels";
 
 
 
