@@ -1,55 +1,89 @@
+import { useEffect, useState } from "react";
 import { Table } from "react-bootstrap";
+import axios from "axios";
 
-const ViewRelease = () => {
-  const releaseList = [
-    {
-      start: 1001,
-      lot_size: 500,
-      release_date: "2026-06-06",
-      count: 200,
-      project_name: "JAKEDA",
-      project_state: "Rajasthan",
-      remarks: "Released for Project",
-    },
-    {
-      start: 1201,
-      lot_size: 500,
-      release_date: "2026-06-08",
-      count: 100,
-      project_name: "Solar Park",
-      project_state: "Haryana",
-      remarks: "Dispatch Ready",
-    },
-  ];
+const ViewRelease = ({ holdData }) => {
+  const [releaseList, setReleaseList] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchReleaseHistory = async () => {
+    try {
+      if (!holdData?._id) return;
+
+      setLoading(true);
+
+      const token = localStorage.getItem("token");
+
+      const response = await axios.get(
+        `${import.meta.env.VITE_BACKEND_API_URL}holdpanel/release-panels/${holdData._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setReleaseList(response.data.data || []);
+      }
+    } catch (error) {
+      console.error("Release History Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReleaseHistory();
+  }, [holdData]);
 
   return (
-    <Table responsive  hover>
+    <Table responsive hover>
       <thead>
         <tr>
           <th>#</th>
-          <th>Start</th>
-          <th>Lot Size</th>
-          <th>Release Date</th>
-          <th>Count</th>
           <th>Project Name</th>
           <th>Project State</th>
+          <th>Starting No</th>
+          <th>Last No</th>
+          <th>Release Lot</th>
+          <th>Release Date</th>
           <th>Remarks</th>
         </tr>
       </thead>
 
       <tbody>
-        {releaseList.map((item, index) => (
-          <tr key={index}>
-            <td>{index + 1}</td>
-            <td>{item.start}</td>
-            <td>{item.lot_size}</td>
-            <td>{item.release_date}</td>
-            <td>{item.count}</td>
-            <td>{item.project_name}</td>
-            <td>{item.project_state}</td>
-            <td>{item.remarks}</td>
+        {loading ? (
+          <tr>
+            <td colSpan="8" className="text-center">
+              Loading...
+            </td>
           </tr>
-        ))}
+        ) : releaseList.length > 0 ? (
+          releaseList.map((item, index) => (
+            <tr key={item._id}>
+              <td>{index + 1}</td>
+              <td>{item.project}</td>
+              <td>{item.state}</td>
+              <td>{item.start_panel_no}</td>
+              <td>{item.end_panel_no}</td>
+              <td>{item.release_count}</td>
+              <td>
+                {item.release_date
+                  ? new Date(item.release_date).toLocaleDateString("en-GB")
+                  : "-"}
+              </td>
+
+              <td>{item.remarks}</td>
+            </tr>
+          ))
+        ) : (
+          <tr>
+            <td colSpan="8" className="text-center">
+              No Release History Found
+            </td>
+          </tr>
+        )}
       </tbody>
     </Table>
   );

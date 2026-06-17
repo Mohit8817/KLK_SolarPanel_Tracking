@@ -1,46 +1,53 @@
+import { useEffect, useState } from "react";
 import { Card, Col, Table, Badge } from "react-bootstrap";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+
 import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
 import Search, { useSearch } from "../Common/Search";
 
 const ViewHoldPanels = () => {
-  const panelList = [
-    {
-      _id: 1,
-      panel_unique_no: "PNL20260001",
-      panel_no: "1001",
-      panel_capacity: "550",
-      hold_status: 1,
-      dispatch_status: 0,
-      production_damage_status: 0,
-    },
-    {
-      _id: 2,
-      panel_unique_no: "PNL20260002",
-      panel_no: "1002",
-      panel_capacity: "550",
-      hold_status: 1,
-      dispatch_status: 1,
-      production_damage_status: 0,
-    },
-    {
-      _id: 3,
-      panel_unique_no: "PNL20260003",
-      panel_no: "1003",
-      panel_capacity: "550",
-      hold_status: 1,
-      dispatch_status: 0,
-      production_damage_status: 1,
-    },
-  ];
+  const { id } = useParams();
+
+  const [panelList, setPanelList] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchHoldPanels = async () => {
+  try {
+    setLoading(true);
+
+    const token = localStorage.getItem("token");
+
+    const response = await axios.get(
+      `${import.meta.env.VITE_BACKEND_API_URL}holdpanel/hold-panel/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log("Response:", response.data);
+
+    if (response.data.success) {
+      setPanelList(response.data.data || []);
+    }
+  } catch (error) {
+    console.error("Fetch Error:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+  useEffect(() => {
+    fetchHoldPanels();
+  }, [id]);
 
   const SEARCH_KEYS = [
     "panel_unique_no",
     "panel_no",
     "panel_capacity",
-    "hold_status",
-    "dispatch_status",
-    "production_damage_status"  
   ];
 
   const {
@@ -58,9 +65,16 @@ const ViewHoldPanels = () => {
     panel_unique_no: item.panel_unique_no,
     panel_no: item.panel_no,
     panel_capacity: item.panel_capacity,
-    hold_status: item.hold_status ? "Hold" : "Released",
-    dispatch_status: item.dispatch_status ? "Dispatch" : "Pending",
-    production_damage_status: item.production_damage_status ? "Damage" : "Safe",
+    hold_status:
+      item.hold_status === 1 ? "Hold" : "Released",
+    Production_status:
+      item.production_status === 1
+        ? "Assigned"
+        : "Pending",
+    production_damage_status:
+      item.production_damage_status === 1
+        ? "Damage"
+        : "Safe",
   }));
 
   const exportColumns = [
@@ -69,8 +83,11 @@ const ViewHoldPanels = () => {
     { label: "Panel No", key: "panel_no" },
     { label: "Capacity", key: "panel_capacity" },
     { label: "Hold Status", key: "hold_status" },
-    { label: "Dispatch Status", key: "dispatch_status" },
-    { label: "Damage Status", key: "production_damage_status" },
+    { label: "Production Status", key: "production_status" },
+    {
+      label: "Production Damage Status",
+      key: "production_damage_status",
+    },
   ];
 
   return (
@@ -110,53 +127,86 @@ const ViewHoldPanels = () => {
                 <th>Panel No</th>
                 <th>Capacity</th>
                 <th>Hold Status</th>
-                <th>Dispatch Status</th>
-                <th>Damage Status</th>
+                <th>Production Status</th>
+                <th>P Damage Status</th>
               </tr>
             </thead>
 
             <tbody>
-              {currentData.map((item, index) => (
-                <tr key={item._id}>
-                  <td>
-                    <strong>{startIndex + index + 1}</strong>
-                  </td>
-
-                  <td>{item.panel_unique_no}</td>
-                  <td>{item.panel_no}</td>
-                  <td>{item.panel_capacity} WP</td>
-
-                  <td>
-                    <Badge bg="danger">
-                      Hold
-                    </Badge>
-                  </td>
-
-                  <td>
-                    {item.dispatch_status === 1 ? (
-                      <Badge bg="success">
-                        Dispatch
-                      </Badge>
-                    ) : (
-                      <Badge bg="warning">
-                        Pending
-                      </Badge>
-                    )}
-                  </td>
-
-                  <td>
-                    {item.production_damage_status === 1 ? (
-                      <Badge bg="danger">
-                        Damage
-                      </Badge>
-                    ) : (
-                      <Badge bg="success">
-                        Safe
-                      </Badge>
-                    )}
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan="7"
+                    className="text-center"
+                  >
+                    Loading...
                   </td>
                 </tr>
-              ))}
+              ) : currentData.length > 0 ? (
+                currentData.map((item, index) => (
+                  <tr key={item._id}>
+                    <td>
+                      {startIndex + index + 1}
+                    </td>
+
+                    <td>
+                      {item.panel_unique_no}
+                    </td>
+
+                    <td>{item.panel_no}</td>
+
+                    <td>
+                      {item.panel_capacity} WP
+                    </td>
+
+                    <td>
+                      {item.hold_status === 1 ? (
+                        <Badge bg="danger">
+                          Hold
+                        </Badge>
+                      ) : (
+                        <Badge bg="success">
+                          Released
+                        </Badge>
+                      )}
+                    </td>
+
+                    <td>
+                      {item.production_status === 1 ? (
+                        <Badge bg="success">
+                          Assigned
+                        </Badge>
+                      ) : (
+                        <Badge bg="warning">
+                          Pending
+                        </Badge>
+                      )}
+                    </td>
+
+                    <td>
+                      {item.production_damage_status ===
+                      1 ? (
+                        <Badge bg="danger">
+                          Damage
+                        </Badge>
+                      ) : (
+                        <Badge bg="success">
+                          Safe
+                        </Badge>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="7"
+                    className="text-center"
+                  >
+                    No Panels Found
+                  </td>
+                </tr>
+              )}
             </tbody>
           </Table>
 

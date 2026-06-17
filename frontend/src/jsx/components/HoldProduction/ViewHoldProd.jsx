@@ -1,29 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, Col, Table, Row, Modal } from "react-bootstrap";
 import Search, { useSearch } from "../Common/Search";
 import CommonPagination from "../Common/Pagination";
 import TableExportActions from "../Common/TableExportActions";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
-import ReleaseForm from "./ReleaseForm";
+import ReleaseForm from "./releaseForm";
 import ViewRelease from "./ViewRelease";
 
 const ViewHoldProduction = () => {
-  const [holdList] = useState([
-    {
-      _id: "1",
-      date: "2026-06-06",
-      hold_status: "Hold",
-      panel_count: 500,
-      panel_capacity: 550,
-      panel_type: "Mono",
-      state: "Haryana",
-      starting_no: 1001,
-      ending_no: 1500,
-      hold_by: "Mohit",
-      reason: "Quality Issue",
-    },
-  ]);
+  const [holdList, setHoldList] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const [showReleaseForm, setShowReleaseForm] = useState(false);
   const [showReleaseView, setShowReleaseView] = useState(false);
@@ -39,14 +27,42 @@ const ViewHoldProduction = () => {
     setShowReleaseView(true);
   };
 
+  const fetchHoldPanels = async () => {
+    try {
+      setLoading(true);
+
+      const token = localStorage.getItem("token");
+
+      const response = await axios.get(
+        `${import.meta.env.VITE_BACKEND_API_URL}holdpanel/view-hold-panel`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setHoldList(response.data.data || []);
+      }
+    } catch (error) {
+      console.error("Fetch Hold Panels Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHoldPanels();
+  }, []);
+
   const SEARCH_KEYS = [
-    "date",
     "hold_status",
     "panel_type",
     "panel_count",
     "panel_capacity",
     "state",
-    "hold_by",
+    "created_by",
     "reason",
   ];
 
@@ -62,15 +78,27 @@ const ViewHoldProduction = () => {
 
   const exportData = holdList.map((item, index) => ({
     sno: index + 1,
-    date: item.date,
-    hold_status: item.hold_status,
+    date: item.hold_date
+      ? new Date(item.hold_date).toLocaleDateString("en-GB")
+      : "-",
+    hold_status:
+      item.hold_status === "H"
+        ? "Hold"
+        : "Released",
     panel_count: item.panel_count,
     panel_capacity: item.panel_capacity,
-    panel_type: item.panel_type,
-    state: item.state,
+    panel_type:
+      item.panel_type == 1
+        ? "Poly"
+        : item.panel_type == 2
+        ? "Mono"
+        : item.panel_type == 3
+        ? "Bifacial"
+        : item.panel_type,
+    state: item.state || "-",
     starting_no: item.starting_no,
     ending_no: item.ending_no,
-    hold_by: item.hold_by,
+    hold_by: item.created_by,
     reason: item.reason,
   }));
 
@@ -81,9 +109,6 @@ const ViewHoldProduction = () => {
     { label: "Panel Count", key: "panel_count" },
     { label: "Capacity", key: "panel_capacity" },
     { label: "Panel Type", key: "panel_type" },
-    { label: "State", key: "state" },
-    { label: "Start No", key: "starting_no" },
-    { label: "End No", key: "ending_no" },
     { label: "Hold By", key: "hold_by" },
     { label: "Reason", key: "reason" },
   ];
@@ -125,9 +150,6 @@ const ViewHoldProduction = () => {
                   <th>Panel Count</th>
                   <th>Capacity</th>
                   <th>Type</th>
-                  <th>State</th>
-                  <th>Start No</th>
-                  <th>End No</th>
                   <th>Hold By</th>
                   <th>Reason</th>
                   <th>Release Panel</th>
@@ -136,36 +158,58 @@ const ViewHoldProduction = () => {
               </thead>
 
               <tbody>
-                {currentData.length > 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan="13" className="text-center">
+                      Loading...
+                    </td>
+                  </tr>
+                ) : currentData.length > 0 ? (
                   currentData.map((item, index) => (
                     <tr key={item._id}>
                       <td>{startIndex + index + 1}</td>
 
-                      <td>{item.date}</td>
+                      <td>
+                        {item.hold_date
+                          ? new Date(
+                              item.hold_date
+                            ).toLocaleDateString("en-GB")
+                          : "-"}
+                      </td>
 
                       <td>
                         <span
                           className={`badge ${
-                            item.hold_status === "Hold"
+                            item.hold_status === "H"
                               ? "bg-danger"
                               : "bg-success"
                           }`}
                         >
-                          {item.hold_status}
+                          {item.hold_status === "H"
+                            ? "Hold"
+                            : "Released"}
                         </span>
                       </td>
 
                       <td>{item.panel_count}</td>
-                      <td>{item.panel_capacity} WP</td>
-                      <td>{item.panel_type}</td>
-                      <td>{item.state}</td>
-                      <td>{item.starting_no}</td>
-                      <td>{item.ending_no}</td>
-                      <td>{item.hold_by}</td>
+
+                      <td>{item.panel_capacity}</td>
+
+                      <td>
+                        {item.panel_type == 1
+                          ? "Poly"
+                          : item.panel_type == 2
+                          ? "Mono"
+                          : item.panel_type == 3
+                          ? "Bifacial"
+                          : item.panel_type}
+                      </td>
+
+                      <td>{item.created_by ?? '-'}</td>
+
                       <td>{item.reason}</td>
 
-                      {/* Release Panel */}
-                      <td className="">
+                      <td>
                         <div className="d-flex gap-3 text-center justify-content-center">
                           <button
                             className="btn btn-primary btn-xs sharp"
@@ -174,7 +218,7 @@ const ViewHoldProduction = () => {
                               handleOpenReleaseModal(item)
                             }
                           >
-                            <i className="fa fa-plus" />
+                            <i className="fa fa-minus" />
                           </button>
 
                           <button
@@ -189,19 +233,18 @@ const ViewHoldProduction = () => {
                         </div>
                       </td>
 
-                      {/* Actions */}
                       <td>
                         <div className="d-flex gap-1">
                           <Link
-                            to="/hold-production-panels"
+                            to={`/hold-production-panels/${item._id}`}
                             className="btn btn-info btn-xs sharp"
                           >
                             <i className="fa fa-eye" />
                           </Link>
 
-                          <button className="btn btn-danger btn-xs sharp">
+                          {/* <button className="btn btn-danger btn-xs sharp">
                             <i className="fa fa-trash" />
-                          </button>
+                          </button> */}
                         </div>
                       </td>
                     </tr>
@@ -225,7 +268,6 @@ const ViewHoldProduction = () => {
         </Card>
       </Col>
 
-      {/* Add Release Modal */}
       <Modal
         show={showReleaseForm}
         onHide={() => setShowReleaseForm(false)}
@@ -245,27 +287,37 @@ const ViewHoldProduction = () => {
         </Modal.Header>
 
         <Modal.Body>
-          <ReleaseForm />
-        </Modal.Body>
+        <ReleaseForm
+          holdData={selectedHold}
+          onSuccess={() => {
+            setShowReleaseForm(false);
+            fetchHoldPanels();
+          }}
+        />
+      </Modal.Body>
       </Modal>
 
-      {/* View Release Modal */}
-      <Modal
-        show={showReleaseView}
-        onHide={() => setShowReleaseView(false)}
-        centered
-        size="xl"
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>
-            Release Panel History
-          </Modal.Title>
-        </Modal.Header>
+ <Modal
+  show={showReleaseView}
+  onHide={() => setShowReleaseView(false)}
+  centered
+  size="xl"
+>
+  <Modal.Header closeButton>
+    <Modal.Title>
+      Release Panel History
+      {selectedHold && (
+        <span className="ms-2 text-muted">
+          ({selectedHold.panel_count} Panels)
+        </span>
+      )}
+    </Modal.Title>
+  </Modal.Header>
 
-        <Modal.Body>
-          <ViewRelease />
-        </Modal.Body>
-      </Modal>
+  <Modal.Body>
+    <ViewRelease holdData={selectedHold} />
+  </Modal.Body>
+</Modal>
     </>
   );
 };

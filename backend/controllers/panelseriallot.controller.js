@@ -40,6 +40,7 @@ export const getNextPanelNumber = async (req, res) => {
     });
   }
 };
+
 export const createPanelSerialLot = async (req, res) => {
   try {
     const {
@@ -100,6 +101,8 @@ export const createPanelSerialLot = async (req, res) => {
     const monthYear = `${month}${yearShort}`;
 
     const formattedPanelType = String(panel_type).trim();
+
+    const generated_year = yearFull;
 
     /* ==========================
        3️⃣ Atomic Counter Update
@@ -169,13 +172,15 @@ export const createPanelSerialLot = async (req, res) => {
         panel_lot_id: lotId,
 
         panel_capacity,
+        prefix,
         panel_type: formattedPanelType,
         panel_category,
 
         panel_lot_count: totalPanelsNum,
-
+ 
         // Numeric sequence
         panel_no: serial,
+        generated_year : generated_year,
 
         // Display serial
         panel_unique_no:
