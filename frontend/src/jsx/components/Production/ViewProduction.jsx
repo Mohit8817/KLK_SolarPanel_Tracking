@@ -138,7 +138,7 @@ const ViewProduction = () => {
       console.log("API ERROR:", err);
     }
   };
-
+  
   useEffect(() => {
     fetchProduction();
   }, []);
@@ -192,20 +192,37 @@ const ViewProduction = () => {
 
   const deleteProduction = async (id) => {
     if (!window.confirm("Are you sure you want to delete?")) return;
+
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(
+
+      const res = await axios.delete(
         `${import.meta.env.VITE_BACKEND_API_URL}production/delete-production-panel/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
-      alert("Deleted Successfully");
+
+      alert(res.data.message || "Deleted Successfully");
+
       fetchProduction();
+
     } catch (error) {
       console.error("Delete Error:", error);
-      alert("Failed to delete");
+
+      // Backend message handle
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to delete production";
+
+      alert(message);
     }
   };
 
+  
   // ── Helper: show only manufactured count ────────────────────────────────
   const getManufacturedCount = (manufactured) => {
     if (manufactured === undefined || manufactured === null)
@@ -270,7 +287,7 @@ const ViewProduction = () => {
                       {getManufacturedCount(manufacturedCounts[item._id])}
                     </td>
 
-                    <td style={{ color: "#5bcfc5" , fontWeight : "700" }}>
+                    <td style={{ color: "#5bcfc5", fontWeight: "700" }}>
                       {item.panel_capacity} WP
                     </td>
                     <td>
@@ -306,9 +323,25 @@ const ViewProduction = () => {
                           <i className="fa fa-file-excel" />
                         </button>
 
-                        <button
+                        {/* <button
                           className="btn btn-danger btn-xs sharp"
                           onClick={() => deleteProduction(item._id)}
+                        >
+                          <i className="fa fa-trash" />
+                        </button> */}
+
+                        <button
+                          className={`btn btn-xs sharp ${item.is_dispatch_locked
+                              ? "btn-secondary"
+                              : "btn-danger"
+                            }`}
+                          onClick={() => deleteProduction(item._id)}
+                          disabled={item.is_dispatch_locked}
+                          title={
+                            item.is_dispatch_locked
+                              ? "Cannot delete because some panels are dispatched"
+                              : "Delete Production"
+                          }
                         >
                           <i className="fa fa-trash" />
                         </button>

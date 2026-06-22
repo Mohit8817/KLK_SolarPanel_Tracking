@@ -36,7 +36,7 @@ const ViewProductionPanels = () => {
     try {
       setLoading(true);
       const res = await axios.get(
-        `${import.meta.env.VITE_BACKEND_API_URL}production/productionlot/${id}`,
+        `${import.meta.env.VITE_BACKEND_API_URL}production/production/vendor/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setPanelList(res?.data?.data || []);
@@ -56,6 +56,7 @@ const ViewProductionPanels = () => {
     capacity: item.panel_capacity,
     production_status: item.production_status === 1 ? "Assigned" : "Pending",
     dispatch_status: item.dispatch_status === 1 ? "Dispatch" : "Pending",
+    release_status: item.release_status === 1 ? "Release" : "Pending",
     damage_status: item.damage_status === 1 ? "Damage" : "Safe",
   }));
 
@@ -66,6 +67,7 @@ const ViewProductionPanels = () => {
     { label: "Capacity", key: "capacity" },
     { label: "Production Status", key: "production_status" },
     { label: "Dispatch Status", key: "dispatch_status" },
+    { label: "Release Status", key: "release_status" },
     { label: "Damage Status", key: "production_damage_status" },
   ];
 
@@ -76,7 +78,7 @@ const ViewProductionPanels = () => {
         {/* HEADER */}
         <Card.Header>
           <Col lg={4}>
-            <Card.Title className="mb-0">Production Panel Details</Card.Title>
+            <Card.Title className="mb-0">Production Panel Details </Card.Title>
             <div><strong>Production ID:</strong> {id}</div>
           </Col>
 
@@ -113,6 +115,7 @@ const ViewProductionPanels = () => {
                     <th>Capacity</th>
                     <th>Production Status</th>
                     <th>Dispatch Status</th>
+                    <th>Release Status</th>
                     <th>Damage Status</th>
                   </tr>
                 </thead>
@@ -137,6 +140,14 @@ const ViewProductionPanels = () => {
                         <td>
                           {item.dispatch_status === 1
                             ? <Badge bg="success">Dispatch</Badge>
+                            : <Badge bg="warning">Pending</Badge>}
+                        </td>
+
+
+                           {/* Release Status */}
+                        <td>
+                          {item.release_status=== 1
+                            ? <Badge bg="success">Release</Badge>
                             : <Badge bg="warning">Pending</Badge>}
                         </td>
 

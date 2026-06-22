@@ -113,6 +113,16 @@ const PanelNumberSchema = new mongoose.Schema(
       trim: true,
     },
 
+    vendor_release_status: {
+      type: Number,
+      default: 0,
+      required: true
+    },
+    vendor_release_id: {
+      type: [String],
+      default: []
+    },
+    
     production_damage_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "DamagePanel",

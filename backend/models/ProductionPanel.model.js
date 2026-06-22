@@ -56,6 +56,10 @@ const ProductionPanelSchema = new mongoose.Schema({
       type: String,
       trim: true,
     },
+    old_panel_count: {
+    type: Number,
+    trim: true,
+    },
     created_by: {
       type: String,
       trim: true,

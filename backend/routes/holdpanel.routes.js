@@ -13,7 +13,7 @@ import {
   getHoldDetails,
   releasePanel,
   getReleasePanels
-} from "../controllers/holdPanel.controller.js";
+} from "../controllers/holdpanel.controller.js";
 
 const router = express.Router();
 

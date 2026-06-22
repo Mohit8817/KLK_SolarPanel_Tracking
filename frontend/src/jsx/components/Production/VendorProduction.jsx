@@ -1,12 +1,17 @@
-import { Card, Col, Table } from "react-bootstrap";
+import { Card, Col, Table, Modal } from "react-bootstrap";
 import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import ReleaseProduction from "./ReleaseProduction";
 
 const VendorProduction = () => {
   const [productionList, setProductionList] = useState([]);
+
+  // Modal state
+  const [showReleaseModal, setShowReleaseModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   // PAGINATION
   const itemsPerPage = 100;
@@ -33,6 +38,18 @@ const VendorProduction = () => {
     fetchVendorProduction();
   }, []);
 
+  // Open Release Modal
+  const handleOpenReleaseModal = (item) => {
+    setSelectedItem(item);
+    setShowReleaseModal(true);
+  };
+
+  // Close Release Modal
+  const handleCloseReleaseModal = () => {
+    setShowReleaseModal(false);
+    setSelectedItem(null);
+  };
+
   const downloadExcel = async (id) => {
     try {
       const token = localStorage.getItem("token");
@@ -57,28 +74,12 @@ const VendorProduction = () => {
     }
   };
 
-  const deleteProduction = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete?");
-    if (!confirmDelete) return;
-    try {
-      const token = localStorage.getItem("token");
-      await axios.delete(
-        `${import.meta.env.VITE_BACKEND_API_URL}production/delete-production-panel/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      alert("Deleted Successfully");
-      fetchVendorProduction();
-    } catch (error) {
-      console.error("Delete Error:", error);
-      alert("Failed to delete");
-    }
-  };
-
   // Export Data
   const exportData = productionList.map((item, index) => ({
     sno: index + 1,
     date: item.date,
     panel_count: item.panel_count,
+    Old_panel_count: item.old_panel_count,
     panel_capacity: item.panel_capacity,
     panel_type: item.panel_type,
     project: item.project,
@@ -94,6 +95,8 @@ const VendorProduction = () => {
     { label: "S No", key: "sno" },
     { label: "Date", key: "date" },
     { label: "Panel Count", key: "panel_count" },
+    { label: "Old Panel Count", key: "old_panel_count" },
+
     { label: "Capacity", key: "panel_capacity" },
     { label: "Panel Type", key: "panel_type" },
     { label: "Project", key: "project" },
@@ -116,12 +119,13 @@ const VendorProduction = () => {
         </Card.Header>
 
         <Card.Body>
-          <Table responsive className="table-hover align-middle">
+          <Table responsive className="table-hover">
             <thead>
               <tr>
                 <th>S No.</th>
                 <th>Date</th>
-                <th>Panel Count</th>
+                <th>Current Count</th>
+                <th>Old Panel Count</th>
                 <th>Capacity</th>
                 <th>Panel Type</th>
                 <th>Project</th>
@@ -129,6 +133,7 @@ const VendorProduction = () => {
                 <th>Vendor Name</th>
                 <th>Email</th>
                 <th>WhatsApp</th>
+                <th className="text-center">Release Panel</th>
                 <th className="text-center">Action</th>
               </tr>
             </thead>
@@ -141,8 +146,15 @@ const VendorProduction = () => {
                     </td>
                     <td>{item.date}</td>
                     <td>{item.panel_count}</td>
+                    <td>{item.old_panel_count}</td>
                     <td>{item.panel_capacity}</td>
-                    <td>{item.panel_type}</td>
+                    <td>
+                      {{
+                        "1": "Polly",
+                        "2": "Mono",
+                        "3": "Bifacial",
+                      }[item.panel_type] || "NA"}
+                    </td>
                     <td>{item.project}</td>
                     <td>{item.state}</td>
                     <td>
@@ -152,6 +164,20 @@ const VendorProduction = () => {
                     </td>
                     <td>{item.vendor_details?.email || "—"}</td>
                     <td>{item.vendor_details?.whatsapp_no || "—"}</td>
+
+
+                    {/* Release Panel Column */}
+                    <td className="text-center">
+                      <button
+                        className="btn btn-warning btn-xs sharp"
+                        title="Release Panel"
+                        onClick={() => handleOpenReleaseModal(item)}
+                      >
+                        <i className="fa fa-paper-plane" />
+                      </button>
+                    </td>
+
+
                     <td className="text-center">
                       <div className="d-flex gap-1 justify-content-center">
                         <Link
@@ -167,20 +193,15 @@ const VendorProduction = () => {
                         >
                           <i className="fa fa-file-excel" />
                         </button>
-
-                        <button
-                          className="btn btn-danger btn-xs sharp"
-                          onClick={() => deleteProduction(item._id)}
-                        >
-                          <i className="fa fa-trash" />
-                        </button>
                       </div>
                     </td>
+
+
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="11" className="text-center text-muted">
+                  <td colSpan="12" className="text-center text-muted">
                     No vendor production records found
                   </td>
                 </tr>
@@ -195,6 +216,32 @@ const VendorProduction = () => {
           />
         </Card.Body>
       </Card>
+
+      {/*  Release Production Modal */}
+      <Modal
+        show={showReleaseModal}
+        onHide={handleCloseReleaseModal}
+        size="xl"
+        centered
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Release Panel</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedItem && (
+            <ReleaseProduction
+              item={selectedItem}
+              onClose={handleCloseReleaseModal}
+              onSuccess={() => {
+                handleCloseReleaseModal();
+                fetchVendorProduction();
+              }}
+            />
+          )}
+        </Modal.Body>
+      </Modal>
     </Col>
   );
 };
