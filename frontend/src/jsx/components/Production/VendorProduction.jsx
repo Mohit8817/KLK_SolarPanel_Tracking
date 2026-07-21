@@ -79,6 +79,7 @@ const VendorProduction = () => {
     sno: index + 1,
     date: item.date,
     panel_count: item.panel_count,
+    Old_panel_count: item.old_panel_count,
     panel_capacity: item.panel_capacity,
     panel_type: item.panel_type,
     project: item.project,
@@ -94,6 +95,8 @@ const VendorProduction = () => {
     { label: "S No", key: "sno" },
     { label: "Date", key: "date" },
     { label: "Panel Count", key: "panel_count" },
+    { label: "Old Panel Count", key: "old_panel_count" },
+
     { label: "Capacity", key: "panel_capacity" },
     { label: "Panel Type", key: "panel_type" },
     { label: "Project", key: "project" },
@@ -122,6 +125,7 @@ const VendorProduction = () => {
                 <th>S No.</th>
                 <th>Date</th>
                 <th>Panel Count</th>
+                <th>Old Panel Count</th>
                 <th>Capacity</th>
                 <th>Panel Type</th>
                 <th>Project</th>
@@ -142,6 +146,7 @@ const VendorProduction = () => {
                     </td>
                     <td>{item.date}</td>
                     <td>{item.panel_count}</td>
+                    <td>{item.old_panel_count}</td>
                     <td>{item.panel_capacity}</td>
                     <td>
                       {{

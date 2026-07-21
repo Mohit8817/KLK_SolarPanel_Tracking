@@ -15,6 +15,12 @@ const ProductionPanelSchema = new mongoose.Schema({
       type: Number,
       trim: true,
     },
+
+    old_panel_count: {
+    type: Number,
+    trim: true,
+  },
+  
     panel_type: {
       type: String,
       required: true,

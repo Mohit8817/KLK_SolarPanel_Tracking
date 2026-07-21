@@ -221,6 +221,8 @@ const ViewProduction = () => {
       alert(message);
     }
   };
+
+  
   // ── Helper: show only manufactured count ────────────────────────────────
   const getManufacturedCount = (manufactured) => {
     if (manufactured === undefined || manufactured === null)

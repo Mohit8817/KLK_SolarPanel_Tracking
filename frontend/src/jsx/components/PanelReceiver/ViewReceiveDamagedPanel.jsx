@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react";
-import { Card, Col, Table } from "react-bootstrap";
+import { Card, Col, Row, Table } from "react-bootstrap";
 import PageTitle from "../../layouts/PageTitle";
 import CommonPagination from "../Common/Pagination";
 import TableExportActions from "../Common/TableExportActions";
+import Search, { useSearch } from "../Common/Search";
 
 const OnsiteDamagePanels = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const itemsPerPage = 5;
-  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetchPanels();
@@ -42,14 +40,19 @@ const OnsiteDamagePanels = () => {
     }
   };
 
-  /* ================= Pagination ================= */
-  const totalPages = Math.ceil(data.length / itemsPerPage) || 1;
-  const startIndex = (currentPage - 1) * itemsPerPage;
+  // ── SEARCH + PAGINATION ──────────────────────────────────────────────────
+  const SEARCH_KEYS = ["panel_no", "remarks"];
 
-  const currentData = data.slice(
+  const {
+    currentData,
+    searchQuery,
+    setSearchQuery,
+    currentPage,
+    setCurrentPage,
+    totalPages,
     startIndex,
-    startIndex + itemsPerPage
-  );
+  } = useSearch(data, SEARCH_KEYS, 100);
+  // ─────────────────────────────────────────────────────────────────────────
 
   /* ================= Export ================= */
   const exportData = data.map((item, index) => ({
@@ -80,26 +83,31 @@ const OnsiteDamagePanels = () => {
         <Card>
 
           {/* HEADER */}
-          <Card.Header className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <Card.Title className="mb-0">
-              Onsite Damage Panels
-            </Card.Title>
+          <Card.Header as={Row} className="align-items-center g-2">
+            <Col lg={4}>
+              <Card.Title className="mb-0">
+                Onsite Damage Panels
+              </Card.Title>
+            </Col>
 
-            <TableExportActions
-              data={exportData}
-              columns={exportColumns}
-              fileName="Onsite_Damage_Panels"
-            />
+            <Col lg={8} className="d-flex justify-content-end align-items-center gap-2">
+              <Search
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Search by panel no, remarks..."
+              />
+              <TableExportActions
+                data={exportData}
+                columns={exportColumns}
+                fileName="Onsite_Damage_Panels"
+              />
+            </Col>
           </Card.Header>
 
           <Card.Body>
 
             {loading ? (
               <p>Loading...</p>
-            ) : data.length === 0 ? (
-              <p className="text-muted text-center">
-                No onsite damaged panels found
-              </p>
             ) : (
               <>
                 <Table responsive className="table-hover align-middle">
@@ -115,40 +123,50 @@ const OnsiteDamagePanels = () => {
                   </thead>
 
                   <tbody>
-                    {currentData.map((item, index) => (
-                      <tr key={item._id}>
-                        <td>
-                          <strong>{startIndex + index + 1}</strong>
-                        </td>
+                    {currentData.length > 0 ? (
+                      currentData.map((item, index) => (
+                        <tr key={item._id}>
+                          <td>
+                            <strong>{startIndex + index + 1}</strong>
+                          </td>
 
-                        <td>{item.panel_no}</td>
+                          <td>{item.panel_no}</td>
 
-                        <td>
-                          <span className="badge bg-warning text-dark">
-                            Onsite Damage
-                          </span>
-                        </td>
+                          <td>
+                            <span className="badge bg-warning text-dark">
+                              Onsite Damage
+                            </span>
+                          </td>
 
-                        <td>{item.remarks || "-"}</td>
+                          <td>{item.remarks || "-"}</td>
 
-                        <td>
-                          {new Date(item.createdAt).toLocaleDateString()}
-                        </td>
+                          <td>
+                            {new Date(item.createdAt).toLocaleDateString()}
+                          </td>
 
-                        <td>
-                          {item.image ? (
-                            <img
-                              src={`${import.meta.env.VITE_BACKEND_URL}${item.image}`}
-                              alt="damage"
-                              width="50"
-                              style={{ borderRadius: "6px" }}
-                            />
-                          ) : (
-                            "-"
-                          )}
+                          <td>
+                            {item.image ? (
+                              <img
+                                src={`${import.meta.env.VITE_BACKEND_URL}${item.image}`}
+                                alt="damage"
+                                width="50"
+                                style={{ borderRadius: "6px" }}
+                              />
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="text-center text-muted">
+                          {searchQuery
+                            ? `No results for "${searchQuery}"`
+                            : "No onsite damaged panels found"}
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </Table>
 

@@ -1,6 +1,9 @@
 import { Fragment, useState, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
+import { Badge } from "react-bootstrap";
+
+
 
 const ReleaseProduction = ({ item, onClose }) => {
   const [formData, setFormData] = useState({
@@ -487,6 +490,7 @@ const ReleaseProduction = ({ item, onClose }) => {
                     <th>Panel Count Before</th>
                     <th>Panel Count After</th>
                     <th>Panel Unique No.</th>
+                    <th>Assign</th>
                     <th>Remark</th>
                   </tr>
                 </thead>
@@ -513,6 +517,22 @@ const ReleaseProduction = ({ item, onClose }) => {
                             </button>
                           ) : "—"}
                         </td>
+
+
+                        <td>
+                          {row.status === 1 ? (
+                            <div className="d-flex flex-column gap-1">
+                              <Badge bg="success">Vendor Assign</Badge>
+                              {row.vendor_name && (
+                                <small className="text-muted fw-semibold">{row.vendor_name}
+                                  fakdfhakjh</small>
+                              )}
+                            </div>
+                          ) : (
+                            <Badge bg="warning">Production</Badge>
+                          )}
+                        </td>
+
                         <td>{row.remark || "—"}</td>
                       </tr>
                     ))

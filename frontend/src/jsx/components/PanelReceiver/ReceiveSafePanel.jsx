@@ -219,16 +219,76 @@ const ReceiveSafePanel = () => {
 
           {loading && <p>Loading dispatch details...</p>}
 
-          {dispatchDetails && (
-            <div className="alert alert-info">
-              <h6>Dispatch Details</h6>
-              <p><strong>Truck:</strong> {dispatchDetails.truck_no}</p>
-              <p><strong>Challan:</strong> {dispatchDetails.challan_no}</p>
-              <p><strong>Driver:</strong> {dispatchDetails.driver_name} / {dispatchDetails.driver_no}</p>
-              <p><strong>Expected Panels:</strong> {dispatchDetails.dispatch_panel_count}</p>
-              <p><strong>Scanned Panels:</strong> {panels.length}</p>
-            </div>
-          )}
+{dispatchDetails && (
+  <div className="card mb-3 border-0 shadow-sm">
+    <div className="card-body py-3">
+      <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h6 className="mb-0 text-primary">
+          <i className="fa fa-truck me-2"></i>
+          Dispatch #{dispatchDetails.dispatch_id}
+        </h6>
+
+        {dispatchDetails.collect_status === 1 ? (
+          <span className="badge bg-success px-3 py-2">
+            <i className="fa fa-check-circle me-1"></i> Received
+          </span>
+        ) : (
+          <span className="badge bg-warning text-dark px-3 py-2">
+            <i className="fa fa-clock me-1"></i> Pending
+          </span>
+        )}
+      </div>
+
+      <div className="row g-3 text-center">
+
+        <div className="col-6 col-md-2 border-end">
+          <div className="text-muted small">Truck No</div>
+          <div className="fw-bold">{dispatchDetails.truck_no || "-"}</div>
+        </div>
+
+        <div className="col-6 col-md-2 border-end">
+          <div className="text-muted small">Challan No</div>
+          <div className="fw-bold">{dispatchDetails.challan_no || "-"}</div>
+        </div>
+
+        <div className="col-6 col-md-2 border-end">
+          <div className="text-muted small">Driver</div>
+          <div className="fw-bold">
+            {dispatchDetails.driver_name !== "NA" ? dispatchDetails.driver_name : "-"}
+            <div className="small text-muted">{dispatchDetails.driver_no}</div>
+          </div>
+        </div>
+
+        <div className="col-6 col-md-2 border-end">
+          <div className="text-muted small">State</div>
+          <div className="fw-bold">{dispatchDetails.state || "-"}</div>
+        </div>
+
+        <div className="col-6 col-md-2 border-end">
+          <div className="text-muted small">Expected Panels</div>
+          <div className="fw-bold text-info">{dispatchDetails.dispatch_panel_count}</div>
+        </div>
+
+        <div className="col-6 col-md-2">
+          <div className="text-muted small">Scanned Now</div>
+          <div className="fw-bold" style={{ color: "#5bcfc5" }}>
+            {panels.length}
+          </div>
+        </div>
+
+      </div>
+
+      {dispatchDetails.collect_status === 1 && dispatchDetails.collect_date && (
+        <div className="text-end mt-2">
+          <small className="text-muted">
+            <i className="fa fa-calendar-check me-1"></i>
+            Collected on: {new Date(dispatchDetails.collect_date).toLocaleString()}
+          </small>
+        </div>
+      )}
+    </div>
+  </div>
+)}
 
           <form onSubmit={handleSubmit}>
 
