@@ -1,19 +1,39 @@
-import { Fragment, useState } from "react";
-import PageTitle from "../../layouts/PageTitle";
-import { createPanelSerial } from "./GeneratepanelApis";
+import { Fragment, useEffect, useMemo, useState } from "react";
+import PageHeader from "../Common/PageHeader";
+import StateSelect from "../Common/StateSelect";
+import FormSubmitButton from "../Common/FormSubmitButton";
+import SerialFormatBuilder from "./SerialFormatBuilder";
+import { PANEL_CAPACITIES } from "../../constants/indianStates";
+import { notifySuccess, notifyError } from "../../utils/toast";
+import {
+  DEFAULT_SERIAL_FORMAT,
+  DEFAULT_SEQUENCE_DIGITS,
+  ALLOWED_SEQUENCE_DIGITS,
+  padSequence,
+  buildSerialPreview,
+} from "../../utils/serialNumberFormat";
+import { createPanelSerial, getNextStartingNo } from "./GeneratepanelApis";
+
+const INITIAL_FORM = {
+  date: "",
+  total_panels: "",
+  panel_capacity: "",
+  panel_type: "",
+  panel_category: "",
+  prefix: "",
+  panel_alot_state: "",
+  panel_alot_project: "",
+};
 
 const Generatepanel = () => {
-  const [formData, setFormData] = useState({
-    date: "",
-    total_panels: "",
-    panel_capacity: "",
-    panel_type: "",
-    panel_category: "",
-    prefix: "",
-    panel_alot_state: "",
-    panel_alot_project: "",
-    starting_no: "",
-  });
+  const [formData, setFormData] = useState(INITIAL_FORM);
+  const [serialFormat, setSerialFormat] = useState([...DEFAULT_SERIAL_FORMAT]);
+  const [serialFormatLocked, setSerialFormatLocked] = useState(false);
+  const [sequenceDigits, setSequenceDigits] = useState(DEFAULT_SEQUENCE_DIGITS);
+  const [sequenceDigitsLocked, setSequenceDigitsLocked] = useState(false);
+  const [historyMessage, setHistoryMessage] = useState("");
+  const [startingNo, setStartingNo] = useState(1);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -22,53 +42,120 @@ const Generatepanel = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      await createPanelSerial(formData);
-      alert("Serial numbers generated successfully");
-    } catch (error) {
-      console.log("ERROR:", error?.response?.data);
-      alert(error?.response?.data?.message || "Failed to generate");
-    }
-  };
-
-
   const handlePrefixChange = (e) => {
-    let value = e.target.value;
-
-    // Remove spaces & special characters, allow only letters
-    value = value.replace(/[^a-zA-Z]/g, "");
-
-    // Convert to uppercase
-    value = value.toUpperCase();
-
+    let value = e.target.value.replace(/[^a-zA-Z]/g, "").toUpperCase();
     setFormData({
       ...formData,
       prefix: value,
     });
   };
 
+  useEffect(() => {
+    const canFetch =
+      formData.prefix &&
+      formData.panel_capacity &&
+      formData.panel_type &&
+      formData.date;
+
+    if (!canFetch) {
+      setStartingNo(1);
+      setSequenceDigitsLocked(false);
+      setSerialFormatLocked(false);
+      setHistoryMessage("");
+      setSerialFormat([...DEFAULT_SERIAL_FORMAT]);
+      return;
+    }
+
+    const fetchStartingNo = async () => {
+      try {
+        const res = await getNextStartingNo({
+          prefix: formData.prefix,
+          panel_capacity: formData.panel_capacity,
+          panel_type: formData.panel_type,
+          date: formData.date,
+        });
+        const data = res.data || {};
+        setStartingNo(data.next_starting_no || 1);
+        if (data.sequence_digits) {
+          setSequenceDigits(data.sequence_digits);
+        }
+        if (Array.isArray(data.serial_format) && data.serial_format.length) {
+          setSerialFormat(data.serial_format);
+        }
+        setSequenceDigitsLocked(Boolean(data.sequence_digits_locked));
+        setSerialFormatLocked(Boolean(data.serial_format_locked));
+        setHistoryMessage(data.history_message || "");
+      } catch {
+        setStartingNo(1);
+        setSequenceDigitsLocked(false);
+        setSerialFormatLocked(false);
+        setHistoryMessage("");
+      }
+    };
+
+    fetchStartingNo();
+  }, [
+    formData.prefix,
+    formData.panel_capacity,
+    formData.panel_type,
+    formData.date,
+  ]);
+
+  const preview = useMemo(
+    () =>
+      buildSerialPreview({
+        format: serialFormat,
+        formData,
+        startingNo,
+        totalPanels: formData.total_panels || 1,
+        sequenceDigits,
+      }),
+    [serialFormat, formData, startingNo, sequenceDigits]
+  );
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      setLoading(true);
+      await createPanelSerial({
+        ...formData,
+        serial_format: preview.normalized,
+        sequence_digits: sequenceDigits,
+      });
+      notifySuccess("Serial numbers generated successfully");
+      setFormData(INITIAL_FORM);
+      setSerialFormat([...DEFAULT_SERIAL_FORMAT]);
+      setSerialFormatLocked(false);
+      setSequenceDigits(DEFAULT_SEQUENCE_DIGITS);
+      setSequenceDigitsLocked(false);
+      setHistoryMessage("");
+      setStartingNo(1);
+    } catch (error) {
+      console.log("ERROR:", error?.response?.data);
+      notifyError(error?.response?.data?.message || "Failed to generate serial numbers");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Fragment>
-      <PageTitle
-        activeMenu="Generate Panel"
-        motherMenu="Panel Generation"
+      <PageHeader
+        title="Generate Panel Serial Number"
+        breadcrumbs={[
+          { label: "Dashboard", to: "/dashboard" },
+          { label: "Panel Generation", to: "/generate/panel/list" },
+          { label: "Generate" },
+        ]}
       />
 
       <div className="row">
         <div className="col-lg-12">
-          <div className="card">
-            <div className="card-header">
-              <h4 className="card-title">Generate Panel Serial Number</h4>
-            </div>
-
+          <div className="card klk-form-card klk-generate-panel">
             <div className="card-body">
-              <form className="form-valide" onSubmit={handleSubmit}>
+              <form className="form-valide klk-generate-panel__form" onSubmit={handleSubmit}>
                 <div className="row">
-
-                  {/* Date */}
                   <div className="col-xl-6 col-md-6">
                     <div className="form-group mb-3">
                       <label className="form-label">
@@ -85,7 +172,6 @@ const Generatepanel = () => {
                     </div>
                   </div>
 
-                  {/* No of Panels */}
                   <div className="col-xl-6 col-md-6">
                     <div className="form-group mb-3">
                       <label className="form-label">
@@ -97,12 +183,11 @@ const Generatepanel = () => {
                         name="total_panels"
                         value={formData.total_panels}
                         onChange={handleChange}
+                        min="1"
                         required
                       />
                     </div>
                   </div>
-
-                  {/* Capacity */}
 
                   <div className="col-xl-6 col-md-6">
                     <div className="form-group mb-3">
@@ -114,204 +199,18 @@ const Generatepanel = () => {
                         name="panel_capacity"
                         value={formData.panel_capacity}
                         onChange={handleChange}
-                        required >
+                        required
+                      >
                         <option value="">Select Capacity</option>
-                        <option value="50">50</option>
-                        <option value="55">55</option>
-                        <option value="60">60</option>
-                        <option value="65">65</option>
-                        <option value="70">70</option>
-                        <option value="75">75</option>
-                        <option value="80">80</option>
-                        <option value="85">85</option>
-                        <option value="90">90</option>
-                        <option value="95">95</option>
-                        <option value="100">100</option>
-                        <option value="105">105</option>
-                        <option value="110">110</option>
-                        <option value="115">115</option>
-                        <option value="120">120</option>
-                        <option value="125">125</option>
-                        <option value="130">130</option>
-                        <option value="135">135</option>
-                        <option value="140">140</option>
-                        <option value="145">145</option>
-                        <option value="150">150</option>
-                        <option value="155">155</option>
-                        <option value="160">160</option>
-                        <option value="165">165</option>
-                        <option value="170">170</option>
-                        <option value="175">175</option>
-                        <option value="180">180</option>
-                        <option value="185">185</option>
-                        <option value="190">190</option>
-                        <option value="195">195</option>
-                        <option value="200">200</option>
-                        <option value="205">205</option>
-                        <option value="210">210</option>
-                        <option value="215">215</option>
-                        <option value="220">220</option>
-                        <option value="225">225</option>
-                        <option value="230">230</option>
-                        <option value="235">235</option>
-                        <option value="240">240</option>
-                        <option value="245">245</option>
-                        <option value="250">250</option>
-                        <option value="255">255</option>
-                        <option value="260">260</option>
-                        <option value="265">265</option>
-                        <option value="270">270</option>
-                        <option value="275">275</option>
-                        <option value="280">280</option>
-                        <option value="285">285</option>
-                        <option value="290">290</option>
-                        <option value="295">295</option>
-                        <option value="300">300</option>
-                        <option value="305">305</option>
-                        <option value="310">310</option>
-                        <option value="315">315</option>
-                        <option value="320">320</option>
-                        <option value="325">325</option>
-                        <option value="330">330</option>
-                        <option value="335">335</option>
-                        <option value="340">340</option>
-                        <option value="345">345</option>
-                        <option value="350">350</option>
-                        <option value="355">355</option>
-                        <option value="360">360</option>
-                        <option value="365">365</option>
-                        <option value="370">370</option>
-                        <option value="375">375</option>
-                        <option value="380">380</option>
-                        <option value="385">385</option>
-                        <option value="390">390</option>
-                        <option value="395">395</option>
-                        <option value="400">400</option>
-                        <option value="405">405</option>
-                        <option value="410">410</option>
-                        <option value="415">415</option>
-                        <option value="420">420</option>
-                        <option value="425">425</option>
-                        <option value="430">430</option>
-                        <option value="435">435</option>
-                        <option value="440">440</option>
-                        <option value="445">445</option>
-                        <option value="450">450</option>
-                        <option value="455">455</option>
-                        <option value="460">460</option>
-                        <option value="465">465</option>
-                        <option value="470">470</option>
-                        <option value="475">475</option>
-                        <option value="480">480</option>
-                        <option value="485">485</option>
-                        <option value="490">490</option>
-                        <option value="495">495</option>
-                        <option value="500">500</option>
-                        <option value="505">505</option>
-                        <option value="510">510</option>
-                        <option value="515">515</option>
-                        <option value="520">520</option>
-                        <option value="525">525</option>
-                        <option value="530">530</option>
-                        <option value="535">535</option>
-                        <option value="540">540</option>
-                        <option value="545">545</option>
-                        <option value="550">550</option>
-                        <option value="555">555</option>
-                        <option value="560">560</option>
-                        <option value="565">565</option>
-                        <option value="570">570</option>
-                        <option value="575">575</option>
-                        <option value="580">580</option>
-                        <option value="585">585</option>
-                        <option value="590">590</option>
-                        <option value="595">595</option>
-                        <option value="600">600</option>
-                        <option value="605">605</option>
-                        <option value="610">610</option>
-                        <option value="615">615</option>
-                        <option value="620">620</option>
-                        <option value="625">625</option>
-                        <option value="630">630</option>
-                        <option value="635">635</option>
-                        <option value="640">640</option>
-                        <option value="645">645</option>
-                        <option value="650">650</option>
-                        <option value="655">655</option>
-                        <option value="660">660</option>
-                        <option value="665">665</option>
-                        <option value="670">670</option>
-                        <option value="675">675</option>
-                        <option value="680">680</option>
-                        <option value="685">685</option>
-                        <option value="690">690</option>
-                        <option value="695">695</option>
-                        <option value="700">700</option>
-                        <option value="705">705</option>
-                        <option value="710">710</option>
-                        <option value="715">715</option>
-                        <option value="720">720</option>
-                        <option value="725">725</option>
-                        <option value="730">730</option>
-                        <option value="735">735</option>
-                        <option value="740">740</option>
-                        <option value="745">745</option>
-                        <option value="750">750</option>
-                        <option value="755">755</option>
-                        <option value="760">760</option>
-                        <option value="765">765</option>
-                        <option value="770">770</option>
-                        <option value="775">775</option>
-                        <option value="780">780</option>
-                        <option value="785">785</option>
-                        <option value="790">790</option>
-                        <option value="795">795</option>
-                        <option value="800">800</option>
-                        <option value="805">805</option>
-                        <option value="810">810</option>
-                        <option value="815">815</option>
-                        <option value="820">820</option>
-                        <option value="825">825</option>
-                        <option value="830">830</option>
-                        <option value="835">835</option>
-                        <option value="840">840</option>
-                        <option value="845">845</option>
-                        <option value="850">850</option>
-                        <option value="855">855</option>
-                        <option value="860">860</option>
-                        <option value="865">865</option>
-                        <option value="870">870</option>
-                        <option value="875">875</option>
-                        <option value="880">880</option>
-                        <option value="885">885</option>
-                        <option value="890">890</option>
-                        <option value="895">895</option>
-                        <option value="900">900</option>
-                        <option value="905">905</option>
-                        <option value="910">910</option>
-                        <option value="915">915</option>
-                        <option value="920">920</option>
-                        <option value="925">925</option>
-                        <option value="930">930</option>
-                        <option value="935">935</option>
-                        <option value="940">940</option>
-                        <option value="945">945</option>
-                        <option value="950">950</option>
-                        <option value="955">955</option>
-                        <option value="960">960</option>
-                        <option value="965">965</option>
-                        <option value="970">970</option>
-                        <option value="975">975</option>
-                        <option value="980">980</option>
-                        <option value="985">985</option>
-                        <option value="990">990</option>
-                        <option value="995">995</option>
-                        <option value="1000">1000</option>
+                        {PANEL_CAPACITIES.map((cap) => (
+                          <option key={cap} value={String(cap)}>
+                            {cap}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   </div>
 
-                  {/* Panel Type */}
                   <div className="col-xl-6 col-md-6">
                     <div className="form-group mb-3">
                       <label className="form-label">
@@ -332,7 +231,6 @@ const Generatepanel = () => {
                     </div>
                   </div>
 
-                  {/* Panel Category */}
                   <div className="col-xl-6 col-md-6">
                     <div className="form-group mb-3">
                       <label className="form-label">
@@ -352,7 +250,6 @@ const Generatepanel = () => {
                     </div>
                   </div>
 
-                  {/* Prefix */}
                   <div className="col-xl-6 col-md-6">
                     <div className="form-group mb-3">
                       <label className="form-label">
@@ -370,68 +267,19 @@ const Generatepanel = () => {
                     </div>
                   </div>
 
-
-
                   <div className="col-xl-6 col-md-6">
                     <div className="form-group mb-3">
                       <label className="form-label">
                         State <span className="text-danger">*</span>
                       </label>
-
-                      <select
-                        className="form-control"
+                      <StateSelect
                         name="panel_alot_state"
                         value={formData.panel_alot_state}
                         onChange={handleChange}
                         required
-                      >
-                        <option value="">Select State</option>
-
-                        {/* States */}
-                        <option value="Andhra_Pradesh">Andhra Pradesh</option>
-                        <option value="Arunachal_Pradesh">Arunachal Pradesh</option>
-                        <option value="Assam">Assam</option>
-                        <option value="Bihar">Bihar</option>
-                        <option value="Chhattisgarh">Chhattisgarh</option>
-                        <option value="Goa">Goa</option>
-                        <option value="Gujarat">Gujarat</option>
-                        <option value="Haryana">Haryana</option>
-                        <option value="Himachal_Pradesh">Himachal Pradesh</option>
-                        <option value="Jharkhand">Jharkhand</option>
-                        <option value="Karnataka">Karnataka</option>
-                        <option value="Kerala">Kerala</option>
-                        <option value="Madhya_Pradesh">Madhya Pradesh</option>
-                        <option value="Maharashtra">Maharashtra</option>
-                        <option value="Manipur">Manipur</option>
-                        <option value="Meghalaya">Meghalaya</option>
-                        <option value="Mizoram">Mizoram</option>
-                        <option value="Nagaland">Nagaland</option>
-                        <option value="Odisha">Odisha</option>
-                        <option value="Punjab">Punjab</option>
-                        <option value="Rajasthan">Rajasthan</option>
-                        <option value="Sikkim">Sikkim</option>
-                        <option value="Tamil_Nadu">Tamil Nadu</option>
-                        <option value="Telangana">Telangana</option>
-                        <option value="Tripura">Tripura</option>
-                        <option value="Uttar_Pradesh">Uttar Pradesh</option>
-                        <option value="Uttarakhand">Uttarakhand</option>
-                        <option value="West_Bengal">West Bengal</option>
-
-                        {/* Union Territories */}
-                        <option value="Andaman_Nicobar">Andaman and Nicobar Islands</option>
-                        <option value="Chandigarh">Chandigarh</option>
-                        <option value="Dadra_Nagar_Haveli_Daman_Diu">
-                          Dadra and Nagar Haveli and Daman and Diu
-                        </option>
-                        <option value="Delhi">Delhi</option>
-                        <option value="Jammu_Kashmir">Jammu and Kashmir</option>
-                        <option value="Ladakh">Ladakh</option>
-                        <option value="Lakshadweep">Lakshadweep</option>
-                        <option value="Puducherry">Puducherry</option>
-                      </select>
+                      />
                     </div>
                   </div>
-
 
                   <div className="col-xl-6 col-md-6">
                     <div className="form-group mb-3">
@@ -450,41 +298,105 @@ const Generatepanel = () => {
                     </div>
                   </div>
 
-                  {/* Starting No */}
-                  <div className="col-xl-12 col-md-12">
+                  <div className="col-xl-6 col-md-6">
                     <div className="form-group mb-3">
-                      <label className="form-label">
-                        Starting No
-                      </label>
-                      <input
-                        type="number"
+                      <label className="form-label">Sequence Digits</label>
+                      <select
                         className="form-control"
-                        name="starting_no"
-                        placeholder="e.g. 1"
-                        value={formData.starting_no}
-                        onChange={handleChange}
+                        name="sequence_digits"
+                        value={sequenceDigits}
+                        onChange={(e) => setSequenceDigits(Number(e.target.value))}
+                        disabled={sequenceDigitsLocked}
+                      >
+                        {ALLOWED_SEQUENCE_DIGITS.map((digits) => (
+                          <option key={digits} value={digits}>
+                            {digits} digits{digits === DEFAULT_SEQUENCE_DIGITS ? " (default)" : ""}
+                          </option>
+                        ))}
+                      </select>
+                      {sequenceDigitsLocked ? (
+                        <small className="text-muted d-block mt-1">
+                          Locked to match existing panels for this prefix/capacity/type/year.
+                        </small>
+                      ) : (
+                        <small className="text-muted d-block mt-1">
+                          New series — choose digit length. It will be fixed once panels are generated.
+                        </small>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="col-xl-6 col-md-6">
+                    <div className="form-group mb-3">
+                      <label className="form-label">Starting No</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={padSequence(startingNo, sequenceDigits)}
                         disabled
                       />
                     </div>
                   </div>
-
-
-
-
-
                 </div>
 
-                <div className="row mt-3">
-                  <div className="col-lg-12 text-center">
-                    <button
-                      type="submit"
-                      className="btn btn-primary px-4"
-                    >
-                      Generate Serial No
-                    </button>
+                {historyMessage && (
+                  <div className="alert alert-info py-2 px-3 mb-3 klk-serial-history-note">
+                    <i className="fa fa-info-circle me-2" />
+                    {historyMessage}
+                  </div>
+                )}
+
+                <div className="row g-3 klk-generate-panel__format-row">
+                  <div className="col-lg-7">
+                    <SerialFormatBuilder
+                      format={serialFormat}
+                      onChange={setSerialFormat}
+                      sequenceDigits={sequenceDigits}
+                      locked={serialFormatLocked}
+                    />
+                  </div>
+
+                  <div className="col-lg-5">
+                    <div className="klk-serial-preview">
+                      <h6 className="klk-serial-preview__title">Live Preview</h6>
+                      <p className="klk-serial-preview__hint">
+                        Example of how serial numbers will be generated with your current settings.
+                      </p>
+
+                      <div className="klk-serial-preview__example">
+                        <span className="klk-serial-preview__label">First</span>
+                        <code>{preview.first || "Fill required fields to preview"}</code>
+                      </div>
+
+                      {preview.second && (
+                        <div className="klk-serial-preview__example">
+                          <span className="klk-serial-preview__label">Second</span>
+                          <code>{preview.second}</code>
+                        </div>
+                      )}
+
+                      {preview.last && (
+                        <div className="klk-serial-preview__example">
+                          <span className="klk-serial-preview__label">Last</span>
+                          <code>{preview.last}</code>
+                        </div>
+                      )}
+
+                      <div className="klk-serial-preview__format">
+                        Sequence: {preview.sequenceDigits} digits · Order:{" "}
+                        {preview.normalized
+                          .map((part, index) => `${index + 1}. ${part.replace("_", " ")}`)
+                          .join(" → ")}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
+                <FormSubmitButton
+                  loading={loading}
+                  label="Generate Serial No"
+                  loadingLabel="Generating..."
+                />
               </form>
             </div>
           </div>

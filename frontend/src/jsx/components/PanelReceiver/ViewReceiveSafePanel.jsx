@@ -3,6 +3,7 @@ import { Card, Col, Table, Badge } from "react-bootstrap";
 import CommonPagination from "../Common/Pagination";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import PageHeader from "../Common/PageHeader";
 
 const ReceiveList = () => {
 
@@ -55,12 +56,16 @@ const ReceiveList = () => {
   );
 
   return (
-    <Col lg={12}>
-      <Card>
-        <Card.Header>
-          <Card.Title>Receive Truck List</Card.Title>
-        </Card.Header>
-
+    <>
+      <PageHeader
+        title="Receive Truck List"
+        breadcrumbs={[
+          { label: "Dashboard", to: "/dashboard" },
+          { label: "Panel Receive" },
+        ]}
+      />
+      <Col lg={12}>
+      <Card className="klk-list-card">
         <Card.Body>
 
           {loading && <p>Loading...</p>}
@@ -133,6 +138,7 @@ const ReceiveList = () => {
         </Card.Body>
       </Card>
     </Col>
+    </>
   );
 };
 

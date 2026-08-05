@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from "react";
 import axios from "axios";
 import PageTitle from "../../layouts/PageTitle";
+import FormSubmitButton from "../Common/FormSubmitButton";
 
 const HoldProductionform = () => {
   const token = localStorage.getItem("token");
@@ -283,20 +284,13 @@ const fetchAvailableCount = async () => {
       <PageTitle
         activeMenu="Hold Production"
         motherMenu="Production Management"
+        motherLink="/hold-production/list"
       />
 
-      <div className="row">
-        <div className="col-lg-12">
-          <div className="card">
-            <div className="card-header">
-              <h4 className="card-title">
-                Hold Production Form
-              </h4>
-            </div>
-
-            <div className="card-body">
-              <form onSubmit={handleSubmit}>
-                <div className="row">
+      <div className="card klk-form-card klk-production-form klk-hold-production-form">
+        <div className="card-body">
+          <form className="klk-production-form__form" onSubmit={handleSubmit}>
+            <div className="row">
 
                   <div className="col-md-6">
                     <div className="mb-3">
@@ -464,7 +458,7 @@ const fetchAvailableCount = async () => {
 
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control klk-available-panel-card__serial"
                       value={startingPanelUniqueNo}
                       readOnly
                     />
@@ -507,22 +501,14 @@ const fetchAvailableCount = async () => {
                     </div>
                   </div>
 
-                </div>
-
-                <div className="text-center">
-                  <button
-                    type="submit"
-                    className="btn btn-primary px-5"
-                    disabled={loading}
-                  >
-                    {loading
-                      ? "Saving..."
-                      : "Save Hold Production"}
-                  </button>
-                </div>
-              </form>
             </div>
-          </div>
+
+            <FormSubmitButton
+              loading={loading}
+              label="Save Hold Production"
+              loadingLabel="Saving..."
+            />
+          </form>
         </div>
       </div>
     </Fragment>

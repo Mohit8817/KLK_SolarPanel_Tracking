@@ -14,6 +14,21 @@ const getUser = () => {
 
 
 
+// ================= GET NEXT STARTING NO =================
+export const getNextStartingNo = async (formData) => {
+  const token = getToken();
+
+  return axios.post(
+    `${BASE_URL}panels/next-starting-no`,
+    formData,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+};
+
 // ================= CREATE PANEL SERIAL =================
 export const createPanelSerial = async (formData) => {
   const user = getUser();

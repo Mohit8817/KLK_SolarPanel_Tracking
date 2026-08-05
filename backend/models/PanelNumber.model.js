@@ -119,8 +119,9 @@ const PanelNumberSchema = new mongoose.Schema(
       required: true
     },
     vendor_release_id: {
-      type: [String],
-      default: []
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "ProductionReleaseHistory",
+      default: [],
     },
     
     production_damage_id: {

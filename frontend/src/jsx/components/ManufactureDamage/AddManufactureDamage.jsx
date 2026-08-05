@@ -149,6 +149,7 @@ const AddManufactureDamage = () => {
       <PageTitle
         activeMenu="Manufacture Damage"
         motherMenu="Production"
+        motherLink="/manufacture-damage/list"
         pageContent="Manufacture Damage Panel"
       />
 

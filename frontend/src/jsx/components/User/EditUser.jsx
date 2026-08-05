@@ -311,23 +311,11 @@ const EditUser = () => {
       <PageTitle
         activeMenu="Edit User"
         motherMenu="User Management"
+        motherLink="/user/list"
         pageContent="Update User Details"
       />
 
-      {/* CARD */}
-      <Card>
-
-        <Card.Header>
-
-          <Card.Title>
-
-            <i className="fa fa-user-edit me-2"></i>
-
-            Edit User
-
-          </Card.Title>
-
-        </Card.Header>
+      <Card className="klk-form-card">
 
         <Card.Body>
 
@@ -663,13 +651,11 @@ const EditUser = () => {
             </Row>
 
             {/* SUBMIT BUTTON */}
-            <div className="text-center mt-4">
-
+            <div className="klk-form-actions">
               <Button
                 type="submit"
                 variant="primary"
                 disabled={saving}
-                className="px-5"
               >
 
                 {

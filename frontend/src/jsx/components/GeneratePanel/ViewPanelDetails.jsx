@@ -5,6 +5,8 @@ import { getPanelDetailsByLot } from "./GeneratepanelApis";
 import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
 import Search, { useSearch } from "../Common/Search";
+import PageHeader from "../Common/PageHeader";
+import ListToolbar from "../Common/ListToolbar";
 
 const ViewPanelDetails = () => {
   const { id } = useParams();
@@ -72,28 +74,31 @@ const ViewPanelDetails = () => {
   ];
 
   return (
-    <Col lg={12}>
-      <Card>
-
-        {/* HEADER */}
+    <>
+      <PageHeader
+        title="Panel Details"
+        breadcrumbs={[
+          { label: "Dashboard", to: "/dashboard" },
+          { label: "Generate Panel", to: "/generate/panel/list" },
+          { label: "Panel Details" },
+        ]}
+        subtitle={`Lot ID: ${id}`}
+      />
+      <Col lg={12}>
+      <Card className="klk-list-card">
         <Card.Header>
-          <Col lg={4}>
-            <Card.Title className="mb-0">Panel Details</Card.Title>
-            <div><strong>Lot ID:</strong> {id}</div>
-          </Col>
-
-          <Col lg={8} className="d-flex  justify-content-end align-items-center gap-2">
+          <ListToolbar>
             <Search
               value={searchQuery}
               onChange={setSearchQuery}
               placeholder="Search by panel no"
-            />  
+            />
             <TableExportActions
               data={exportData}
               columns={exportColumns}
               fileName="Panel_Details_Report"
             />
-          </Col>
+          </ListToolbar>
         </Card.Header>
         
         <Card.Body>
@@ -203,6 +208,7 @@ const ViewPanelDetails = () => {
         </Card.Body>
       </Card>
     </Col>
+    </>
   );
 };
 

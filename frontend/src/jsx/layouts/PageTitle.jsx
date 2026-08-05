@@ -1,30 +1,43 @@
-import { Link } from "react-router-dom";
+import PageHeader from "../components/Common/PageHeader";
 
-const PageTitle = ({ motherMenu, activeMenu }) => {
+/**
+ * Legacy wrapper — renders the shared PageHeader so all pages get
+ * the same breadcrumb bar and top heading.
+ *
+ * @param {string} activeMenu  Page title (also last breadcrumb)
+ * @param {string} motherMenu  Section name (middle breadcrumb)
+ * @param {string} [motherLink] Optional link for the section breadcrumb
+ * @param {string} [pageContent] Legacy subtitle
+ */
+const PageTitle = ({
+  activeMenu,
+  motherMenu,
+  motherLink,
+  subtitle,
+  pageContent,
+  action,
+}) => {
+  const breadcrumbs = [{ label: "Dashboard", to: "/dashboard" }];
 
-  const handleClick = (e) => {
-    e.preventDefault(); // redirect stop
-  };
+  if (motherMenu) {
+    breadcrumbs.push(
+      motherLink
+        ? { label: motherMenu, to: motherLink }
+        : { label: motherMenu }
+    );
+  }
+
+  if (activeMenu && activeMenu !== motherMenu) {
+    breadcrumbs.push({ label: activeMenu });
+  }
 
   return (
-    <div className="row page-titles mx-0">
-      <ol className="breadcrumb">
-        
-        <li className="breadcrumb-item">
-          <Link
-           href="/" onClick={handleClick}>
-            {motherMenu}
-          </Link>
-        </li>
-
-        <li className="breadcrumb-item active">
-          <Link href="/" onClick={handleClick} >
-            {activeMenu}
-          </Link>
-        </li>
-
-      </ol>
-    </div>
+    <PageHeader
+      title={activeMenu}
+      subtitle={subtitle || pageContent}
+      breadcrumbs={breadcrumbs}
+      action={action}
+    />
   );
 };
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import PermissionPopup from "./AssignPermission";
 import AddRole from "./AddRole";
 import CommonPagination from "../Common/Pagination";
+import PageHeader from "../Common/PageHeader";
 
 import {
   getRoles,
@@ -119,36 +120,24 @@ const RoleList = () => {
   };
 
   return (
-    <Col lg={12}>
-
-      <Card>
-
-        {/* HEADER */}
-        <Card.Header className="d-flex justify-content-between align-items-center">
-
-          <Card.Title className="mb-0">
-
-            <i className="fa fa-shield-alt me-2 text-success"></i>
-
-            Role List
-
-          </Card.Title>
-
-          <Button
-            variant="success"
-            size="sm"
-            onClick={handleAddRole}
-          >
-
-            <i className="fa fa-plus me-1"></i>
-
+    <>
+      <PageHeader
+        title="Role List"
+        breadcrumbs={[
+          { label: "Dashboard", to: "/dashboard" },
+          { label: "Role & Permission" },
+        ]}
+        action={
+          <Button variant="success" size="sm" onClick={handleAddRole}>
+            <i className="fa fa-plus me-1" />
             Add Role
-
           </Button>
+        }
+      />
+      <Col lg={12}>
 
-        </Card.Header>
+      <Card className="klk-list-card">
 
-        {/* BODY */}
         <Card.Body>
 
           <Table
@@ -363,6 +352,7 @@ const RoleList = () => {
       />
 
     </Col>
+    </>
   );
 };
 

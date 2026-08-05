@@ -132,14 +132,11 @@ const fetchRoles = async () => {
       <PageTitle
         activeMenu="Add User"
         motherMenu="User Management"
+        motherLink="/user/list"
         pageContent="Super Admin - Add New User"
       />
 
-      <Card>
-
-        <Card.Header>
-          <Card.Title>Add New User</Card.Title>
-        </Card.Header>
+      <Card className="klk-form-card">
 
         <Card.Body>
 
@@ -318,9 +315,8 @@ const fetchRoles = async () => {
             </Row>
 
             {/* SUBMIT */}
-            <div className="text-center mt-3">
-
-              <Button type="submit" disabled={loading}>
+            <div className="klk-form-actions">
+              <Button type="submit" disabled={loading} className="btn-primary">
 
                 {loading ? (
                   <>

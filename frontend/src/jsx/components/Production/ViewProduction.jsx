@@ -1,9 +1,12 @@
-import { Card, Col, Table, Modal, Button, Row } from "react-bootstrap";
+import { Card, Table, Modal, Button, Row, Col } from "react-bootstrap";
 import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
 import Search, { useSearch } from "../Common/Search";
-import { Link } from "react-router-dom";
+import PageHeader from "../Common/PageHeader";
+import ListToolbar from "../Common/ListToolbar";
+import { ViewAction, AddAction, ExportAction } from "../Common/ActionButtons";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import axios from "axios";
 
 const ViewProduction = () => {
@@ -232,18 +235,22 @@ const ViewProduction = () => {
   };
 
   return (
-    <Col lg={12}>
-      <Card>
-        {/* HEADER */}
-        <Card.Header as={Row} className="align-items-center g-2">
-          <Col lg={4}>
-            <Card.Title className="mb-0">View Production Details</Card.Title>
-          </Col>
-
-          <Col
-            lg={8}
-            className="d-flex justify-content-end align-items-center gap-2"
-          >
+    <>
+      <PageHeader
+        title="Production List"
+        breadcrumbs={[
+          { label: "Dashboard", to: "/dashboard" },
+          { label: "Production" },
+        ]}
+        action={
+          <Link to="/production/add" className="btn btn-primary btn-sm">
+            <i className="fa fa-plus me-1" /> Add Production
+          </Link>
+        }
+      />
+      <Card className="klk-list-card">
+        <Card.Header>
+          <ListToolbar>
             <Search
               value={searchQuery}
               onChange={setSearchQuery}
@@ -254,7 +261,7 @@ const ViewProduction = () => {
               columns={exportColumns}
               fileName="Production_Report"
             />
-          </Col>
+          </ListToolbar>
         </Card.Header>
 
         <Card.Body>
@@ -287,7 +294,7 @@ const ViewProduction = () => {
                       {getManufacturedCount(manufacturedCounts[item._id])}
                     </td>
 
-                    <td style={{ color: "#5bcfc5", fontWeight: "700" }}>
+                    <td className="text-primary fw-bold">
                       {item.panel_capacity} WP
                     </td>
                     <td>
@@ -300,36 +307,10 @@ const ViewProduction = () => {
                     <td>{item.project}</td>
                     <td>{item.state}</td>
                     <td className="text-center">
-                      <div className="d-flex gap-1 justify-content-center">
-                        <Link
-                          to={`/view-production-panels/${item._id}`}
-                          className="btn btn-info btn-xs sharp me-2"
-                        >
-                          <i className="fa fa-eye" />
-                        </Link>
-
-                        <button
-                          className="btn btn-primary btn-xs sharp me-2"
-                          onClick={() => handleModalOpen(item._id)}
-                          title="Add Entry"
-                        >
-                          <i className="fa fa-plus" />
-                        </button>
-
-                        <button
-                          className="btn btn-success btn-xs sharp me-2"
-                          onClick={() => downloadExcel(item._id)}
-                        >
-                          <i className="fa fa-file-excel" />
-                        </button>
-
-                        {/* <button
-                          className="btn btn-danger btn-xs sharp"
-                          onClick={() => deleteProduction(item._id)}
-                        >
-                          <i className="fa fa-trash" />
-                        </button> */}
-
+                      <div className="klk-actions">
+                        <ViewAction to={`/view-production-panels/${item._id}`} title="View panels" />
+                        <AddAction onClick={() => handleModalOpen(item._id)} title="Add manufacturing entry" />
+                        <ExportAction onClick={() => downloadExcel(item._id)} title="Export Excel" />
                         <button
                           className={`btn btn-xs sharp ${item.is_dispatch_locked
                               ? "btn-secondary"
@@ -523,7 +504,7 @@ const ViewProduction = () => {
           </div>
         </Modal.Body>
       </Modal>
-    </Col>
+    </>
   );
 };
 

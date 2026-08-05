@@ -1,6 +1,8 @@
-import { Card, Col, Table, Modal } from "react-bootstrap";
+import { Card, Col, Table, Modal, Button } from "react-bootstrap";
 import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
+import PageHeader from "../Common/PageHeader";
+import ListToolbar from "../Common/ListToolbar";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -107,15 +109,24 @@ const VendorProduction = () => {
   ];
 
   return (
-    <Col lg={12}>
-      <Card>
-        <Card.Header className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-          <Card.Title className="mb-0">View Vendor Production Details</Card.Title>
-          <TableExportActions
-            data={exportData}
-            columns={exportColumns}
-            fileName="Vendor_Production_Report"
-          />
+    <>
+      <PageHeader
+        title="Vendor Production List"
+        breadcrumbs={[
+          { label: "Dashboard", to: "/dashboard" },
+          { label: "Production" },
+        ]}
+      />
+      <Col lg={12}>
+      <Card className="klk-list-card">
+        <Card.Header>
+          <ListToolbar>
+            <TableExportActions
+              data={exportData}
+              columns={exportColumns}
+              fileName="Vendor_Production_Report"
+            />
+          </ListToolbar>
         </Card.Header>
 
         <Card.Body>
@@ -181,7 +192,7 @@ const VendorProduction = () => {
                     <td className="text-center">
                       <div className="d-flex gap-1 justify-content-center">
                         <Link
-                          to={`/view-production-panels/${item._id}`}
+                          to={`/view-production-panels/${item._id}?vendor=1`}
                           className="btn btn-info btn-xs sharp me-2"
                         >
                           <i className="fa fa-eye" />
@@ -243,6 +254,7 @@ const VendorProduction = () => {
         </Modal.Body>
       </Modal>
     </Col>
+    </>
   );
 };
 

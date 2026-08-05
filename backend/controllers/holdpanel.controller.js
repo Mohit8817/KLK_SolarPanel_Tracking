@@ -386,18 +386,18 @@ export const fetchHoldPanelById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const holdPanel = await HoldPanel.findById(id).sort({ panel_no: -1 });;
+    const holdPanel = await HoldPanel.findById(id);
 
     if (!holdPanel) {
       return res.status(404).json({
         success: false,
-        message: "Production panel not found",
+        message: "Hold panel not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      data: productionPanel,
+      data: holdPanel,
     });
   } catch (error) {
     res.status(500).json({
@@ -610,7 +610,7 @@ export const releasePanel = async (req, res) => {
             await HoldPanel.findByIdAndUpdate(
                 hold_id,
                 {
-                    hold_status: 2,
+                    hold_status: "R",
                     updated_by: created_by
                 }
             );

@@ -6,6 +6,8 @@ import axios from "axios";
 import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
 import Search, { useSearch } from "../Common/Search";
+import PageHeader from "../Common/PageHeader";
+import ListToolbar from "../Common/ListToolbar";
 
 const ViewHoldPanels = () => {
   const { id } = useParams();
@@ -67,7 +69,7 @@ const ViewHoldPanels = () => {
     panel_capacity: item.panel_capacity,
     hold_status:
       item.hold_status === 1 ? "Hold" : "Released",
-    Production_status:
+    production_status:
       item.production_status === 1
         ? "Assigned"
         : "Pending",
@@ -91,31 +93,31 @@ const ViewHoldPanels = () => {
   ];
 
   return (
-    <Col lg={12}>
-      <Card>
+    <>
+      <PageHeader
+        title="Hold Panel Details"
+        breadcrumbs={[
+          { label: "Dashboard", to: "/dashboard" },
+          { label: "Hold Production", to: "/hold-production/list" },
+          { label: "Panel Details" },
+        ]}
+        subtitle={`Hold ID: ${id}`}
+      />
+      <Col lg={12}>
+      <Card className="klk-list-card">
         <Card.Header>
-          <Col lg={4}>
-            <Card.Title className="mb-0">
-              Hold Panel Details
-            </Card.Title>
-          </Col>
-
-          <Col
-            lg={8}
-            className="d-flex justify-content-end align-items-center gap-2"
-          >
+          <ListToolbar>
             <Search
               value={searchQuery}
               onChange={setSearchQuery}
               placeholder="Search panel..."
             />
-
             <TableExportActions
               data={exportData}
               columns={exportColumns}
               fileName="Hold_Panel_Report"
             />
-          </Col>
+          </ListToolbar>
         </Card.Header>
 
         <Card.Body>
@@ -218,6 +220,7 @@ const ViewHoldPanels = () => {
         </Card.Body>
       </Card>
     </Col>
+    </>
   );
 };
 

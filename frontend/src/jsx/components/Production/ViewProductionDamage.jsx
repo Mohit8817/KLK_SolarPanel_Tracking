@@ -3,6 +3,7 @@ import { Card, Col, Table } from "react-bootstrap";
 import PageTitle from "../../layouts/PageTitle";
 import CommonPagination from "../Common/Pagination";
 import TableExportActions from "../Common/TableExportActions";
+import ListToolbar from "../Common/ListToolbar";
 
 const ProductionDamagePanels = () => {
   const [data, setData] = useState([]);
@@ -73,23 +74,20 @@ const ProductionDamagePanels = () => {
       <PageTitle
         activeMenu="Production Damage"
         motherMenu="Panel Management"
+        motherLink="/production-damage/list"
         pageContent="Production Damaged Panels"
       />
 
       <Col lg={12}>
-        <Card>
-
-          {/* HEADER */}
-          <Card.Header className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <Card.Title className="mb-0">
-              Production Damage Panels
-            </Card.Title>
-
+        <Card className="klk-list-card">
+          <Card.Header>
+            <ListToolbar>
             <TableExportActions
               data={exportData}
               columns={exportColumns}
               fileName="Production_Damage_Panels"
             />
+            </ListToolbar>
           </Card.Header>
 
           <Card.Body>

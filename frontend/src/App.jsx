@@ -7,6 +7,9 @@ import { isAuthenticated } from './store/selectors/AuthSelectors';
 
 import './assets/vendor/swiper/css/swiper-bundle.min.css';
 import "./assets/css/style.css";
+import "react-toastify/dist/ReactToastify.css";
+import "./jsx/components/Common/ui.css";
+import { ToastContainer } from "react-toastify";
 
 const Login = lazy(() => import('./jsx/pages/Login.jsx'));
 const SignUp = lazy(() => import('./jsx/pages/Registration.jsx'));
@@ -55,6 +58,7 @@ function App(props) {
                 {/* Main App Routes (Dashboard + all internal pages) */}
                 <Route path="/*" element={<Index />} />
             </Routes>
+            <ToastContainer position="top-right" autoClose={3500} theme="colored" />
         </Suspense>
     );
 }

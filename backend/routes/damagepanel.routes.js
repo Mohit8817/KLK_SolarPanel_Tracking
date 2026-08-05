@@ -35,9 +35,9 @@ router.get("/all-damage-panel", getAllDamagePanels);
 router.get("/damage-panel/:panel_no", getDamageByPanelNo);
 
 /* ===============================
-   GET DAMAGE BY UNIQUE ID
+   GET DAMAGE BY ID
 =============================== */
-router.get("/damage-panel/:id", getDamageById);
+router.get("/damage-by-id/:id", getDamageById);
 
 
 router.put("/update-damage-panel/:id", updateDamagePanel);

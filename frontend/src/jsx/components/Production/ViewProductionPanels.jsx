@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
 import { Card, Col, Table, Badge } from "react-bootstrap";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
 import Search, { useSearch } from "../Common/Search";
+import PageHeader from "../Common/PageHeader";
+import ListToolbar from "../Common/ListToolbar";
 
 const ViewProductionPanels = () => {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const isVendorView = searchParams.get("vendor") === "1";
   const [panelList, setPanelList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -30,13 +34,17 @@ const ViewProductionPanels = () => {
 
   useEffect(() => {
     if (id) fetchPanels();
-  }, [id]);
+  }, [id, isVendorView]);
 
   const fetchPanels = async () => {
     try {
       setLoading(true);
+      const endpoint = isVendorView
+        ? `production/production/vendor/${id}`
+        : `production/productionlot/${id}`;
+
       const res = await axios.get(
-        `${import.meta.env.VITE_BACKEND_API_URL}production/production/vendor/${id}`,
+        `${import.meta.env.VITE_BACKEND_API_URL}${endpoint}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setPanelList(res?.data?.data || []);
@@ -57,7 +65,7 @@ const ViewProductionPanels = () => {
     production_status: item.production_status === 1 ? "Assigned" : "Pending",
     dispatch_status: item.dispatch_status === 1 ? "Dispatch" : "Pending",
     release_status: item.release_status === 1 ? "Release" : "Pending",
-    damage_status: item.damage_status === 1 ? "Damage" : "Safe",
+    damage_status: item.production_damage_status === 1 ? "Damage" : "Safe",
   }));
 
   const exportColumns = [
@@ -68,21 +76,24 @@ const ViewProductionPanels = () => {
     { label: "Production Status", key: "production_status" },
     { label: "Dispatch Status", key: "dispatch_status" },
     { label: "Release Status", key: "release_status" },
-    { label: "Damage Status", key: "production_damage_status" },
+    { label: "Damage Status", key: "damage_status" },
   ];
 
   return (
-    <Col lg={12}>
-      <Card>
-
-        {/* HEADER */}
+    <>
+      <PageHeader
+        title="Production Panel Details"
+        breadcrumbs={[
+          { label: "Dashboard", to: "/dashboard" },
+          { label: "Production", to: "/production/list" },
+          { label: "Panel Details" },
+        ]}
+        subtitle={`Production ID: ${id}`}
+      />
+      <Col lg={12}>
+      <Card className="klk-list-card">
         <Card.Header>
-          <Col lg={4}>
-            <Card.Title className="mb-0">Production Panel Details </Card.Title>
-            <div><strong>Production ID:</strong> {id}</div>
-          </Col>
-
-          <Col lg={8} className="d-flex justify-content-end align-items-center gap-2">
+          <ListToolbar>
             <Search
               value={searchQuery}
               onChange={setSearchQuery}
@@ -93,7 +104,7 @@ const ViewProductionPanels = () => {
               columns={exportColumns}
               fileName="Production_Panels"
             />
-          </Col>
+          </ListToolbar>
         </Card.Header>
 
         <Card.Body>
@@ -161,7 +172,7 @@ const ViewProductionPanels = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="7" className="text-center text-muted">
+                      <td colSpan="8" className="text-center text-muted">
                         {searchQuery
                           ? `No results for "${searchQuery}"`
                           : "No panels found"}
@@ -183,6 +194,7 @@ const ViewProductionPanels = () => {
         </Card.Body>
       </Card>
     </Col>
+    </>
   );
 };
 

@@ -5,6 +5,7 @@ import PanelNumber from "../models/PanelNumber.model.js";
 import ManufacturingPanel from '../models/ManufacturingPanel.model.js';
 import ProductionReleaseHistory from '../models/ProductionReleaseHistory.js';
 import User from '../models/users.model.js'
+import Role from '../models/Role.model.js'
 
 
 export const createProductionPanel = async (req, res) => {
@@ -341,13 +342,13 @@ export const exportProductionPanelNumbers = async (req, res) => {
 export const viewVendorProductionPanels = async (req, res) => {
   try {
     const loginUser = req.user;
-    console.log("Login User:", loginUser);
+    const vendorRole = await Role.findOne({ rolecode: "vendor" });
+    const isVendor =
+      vendorRole && String(loginUser.role) === String(vendorRole._id);
+
     const productionPanels = await ProductionPanel.find({
       vendor_status: 1,
-      ...(loginUser.role === "vendor" && {
-        vendor_id: loginUser
-      })
-
+      ...(isVendor && { vendor_id: String(loginUser.id) }),
     }).sort({ createdAt: -1 });
     const finalData = await Promise.all(
       productionPanels.map(async (panel) => {
@@ -682,8 +683,12 @@ export const getProductionReleaseHistory = async (req, res) => {
           .select("panel_no panel_unique_no")
           .sort({ panel_no: 1 });
 
-        const vendor = await User.findById(item.vendor_id)
-          .select("vendor_name vendor_code mobile");
+        const vendor =
+          item.new_vendor_id && item.new_vendor_id !== "0"
+            ? await User.findById(item.new_vendor_id).select(
+                "first_name last_name email whatsapp_no"
+              )
+            : null;
         return {
           ...item.toObject(),
           vendor,
@@ -714,7 +719,8 @@ export const getVendorPanelsByProductionId = async (req, res) => {
       old_production_id: new mongoose.Types.ObjectId(id),
     }).select("_id");
 
-    const historyIds = history.map(item => item._id.toString());
+    const historyIds = history.map((item) => item._id);
+    const historyIdStrings = new Set(historyIds.map(String));
 
     const panels = await PanelNumber.find({
       $or: [
@@ -723,14 +729,15 @@ export const getVendorPanelsByProductionId = async (req, res) => {
       ],
     }).sort({ panel_no: 1 });
 
-    const panelData = panels.map(panel => ({
-      ...panel.toObject(),
-     release_status:
-        panel.vendor_release_id &&
-        historyIds.includes(panel.vendor_release_id.toString())
+    const panelData = panels.map((panel) => {
+      const releaseIds = (panel.vendor_release_id || []).map(String);
+      return {
+        ...panel.toObject(),
+        release_status: releaseIds.some((rid) => historyIdStrings.has(rid))
           ? 1
           : 0,
-    }));
+      };
+    });
 
     return res.status(200).json({
       success: true,

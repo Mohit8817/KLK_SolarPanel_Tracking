@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { Card, Col, Table, Row, Modal } from "react-bootstrap";
+import { Card, Col, Table, Modal } from "react-bootstrap";
 import Search, { useSearch } from "../Common/Search";
 import CommonPagination from "../Common/Pagination";
 import TableExportActions from "../Common/TableExportActions";
+import PageHeader from "../Common/PageHeader";
+import ListToolbar from "../Common/ListToolbar";
 import { Link } from "react-router-dom";
 import axios from "axios";
 
@@ -115,29 +117,33 @@ const ViewHoldProduction = () => {
 
   return (
     <>
+      <PageHeader
+        title="Hold Production List"
+        breadcrumbs={[
+          { label: "Dashboard", to: "/dashboard" },
+          { label: "Production Management" },
+        ]}
+        action={
+          <Link to="/hold-production/add" className="btn btn-primary btn-sm">
+            <i className="fa fa-plus me-1" /> Hold Production
+          </Link>
+        }
+      />
       <Col lg={12}>
-        <Card>
-          <Card.Header as={Row} className="align-items-center">
-            <Col lg={4}>
-              <Card.Title>View Hold Production</Card.Title>
-            </Col>
-
-            <Col
-              lg={8}
-              className="d-flex justify-content-end align-items-center gap-2"
-            >
+        <Card className="klk-list-card">
+          <Card.Header>
+            <ListToolbar>
               <Search
                 value={searchQuery}
                 onChange={setSearchQuery}
                 placeholder="Search..."
               />
-
               <TableExportActions
                 data={exportData}
                 columns={exportColumns}
                 fileName="Hold_Production_Report"
               />
-            </Col>
+            </ListToolbar>
           </Card.Header>
 
           <Card.Body>

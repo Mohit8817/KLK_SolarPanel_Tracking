@@ -44,6 +44,14 @@ const PanelSerialLotSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    serial_format: {
+      type: [String],
+      default: ["prefix", "capacity", "type", "month_year", "sequence"],
+    },
+    sequence_digits: {
+      type: Number,
+      default: 6,
+    },
     created_by: {
       type: String,
       trim: true,

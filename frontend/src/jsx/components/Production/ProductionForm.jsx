@@ -1,18 +1,24 @@
 import { Fragment, useState, useEffect } from "react";
-import PageTitle from "../../layouts/PageTitle";
+import PageHeader from "../Common/PageHeader";
+import StateSelect from "../Common/StateSelect";
+import FormSubmitButton from "../Common/FormSubmitButton";
+import { InlineLoader } from "../Common/LoadingState";
+import { notifySuccess, notifyError } from "../../utils/toast";
+
+const INITIAL_FORM = {
+    date: "",
+    panel_capacity: "",
+    generated_year: "",
+    prefix: "",
+    panel_count: "",
+    panel_type: "",
+    project: "",
+    state: "",
+    vendor_id: "",
+};
 
 const ProductionForm = () => {
-    const [formData, setFormData] = useState({
-            date: "",
-            panel_capacity: "",
-            generated_year: "",
-            prefix: "",
-            panel_count: "",
-            panel_type: "",
-            project: "",
-            state: "",
-            vendor_id: "",
-            });
+    const [formData, setFormData] = useState(INITIAL_FORM);
     const [vendors, setVendors] = useState([]);
     const [loading, setLoading] = useState(false);
     const [capacities, setCapacities] = useState([]);
@@ -20,6 +26,11 @@ const ProductionForm = () => {
     const [prefixes, setPrefixes] = useState([]);
     const [panelTypes, setPanelTypes] = useState([]);
     const [availableData, setAvailableData] = useState(null);
+    const [loadingYears, setLoadingYears] = useState(false);
+    const [loadingPrefixes, setLoadingPrefixes] = useState(false);
+    const [loadingPanelTypes, setLoadingPanelTypes] = useState(false);
+    const [loadingAvailable, setLoadingAvailable] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState({});
 
   const handleChange = (e) => {
   const { name, value } = e.target;
@@ -98,6 +109,8 @@ useEffect(() => {
   if (!formData.panel_capacity) return;
 
   const fetchYears = async () => {
+    setLoadingYears(true);
+    try {
     const token = localStorage.getItem("token");
 
     const response = await fetch(
@@ -114,6 +127,9 @@ useEffect(() => {
     if (data.success) {
       setYears(data.data);
     }
+    } finally {
+      setLoadingYears(false);
+    }
   };
 
   fetchYears();
@@ -127,6 +143,8 @@ useEffect(() => {
     return;
 
   const fetchPrefixes = async () => {
+    setLoadingPrefixes(true);
+    try {
     const token = localStorage.getItem("token");
 
     const response = await fetch(
@@ -142,6 +160,9 @@ useEffect(() => {
 
     if (data.success) {
       setPrefixes(data.data);
+    }
+    } finally {
+      setLoadingPrefixes(false);
     }
   };
 
@@ -161,6 +182,8 @@ useEffect(() => {
     return;
 
   const fetchPanelTypes = async () => {
+    setLoadingPanelTypes(true);
+    try {
     const token = localStorage.getItem("token");
 
     const response = await fetch(
@@ -176,6 +199,9 @@ useEffect(() => {
 
     if (data.success) {
       setPanelTypes(data.data);
+    }
+    } finally {
+      setLoadingPanelTypes(false);
     }
   };
 
@@ -197,6 +223,8 @@ useEffect(() => {
     return;
 
   const fetchAvailable = async () => {
+    setLoadingAvailable(true);
+    try {
     const token = localStorage.getItem("token");
 
     const response = await fetch(
@@ -212,6 +240,9 @@ useEffect(() => {
 
     if (data.success) {
       setAvailableData(data);
+    }
+    } finally {
+      setLoadingAvailable(false);
     }
   };
 
@@ -271,6 +302,20 @@ useEffect(() => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setFieldErrors({});
+
+        if (
+            availableData &&
+            Number(formData.panel_count) > Number(availableData.available_count)
+        ) {
+            notifyError(
+                `Panel count cannot exceed available (${availableData.available_count})`
+            );
+            setFieldErrors({
+                panel_count: `Maximum ${availableData.available_count} panels available`,
+            });
+            return;
+        }
 
         try {
             setLoading(true);
@@ -297,22 +342,18 @@ useEffect(() => {
             const data = await response.json();
 
             if (response.ok) {
-                alert("Production entry submitted successfully!");
-
-                setFormData({
-                    date: "",
-                    panel_capacity: "",
-                    panel_count: "",
-                    panel_type: "",
-                    project: "",
-                    state: "",
-                });
+                notifySuccess("Production entry saved successfully");
+                setFormData(INITIAL_FORM);
+                setYears([]);
+                setPrefixes([]);
+                setPanelTypes([]);
+                setAvailableData(null);
             } else {
-                alert(data.message || "Failed to save production");
+                notifyError(data.message || "Failed to save production");
             }
         } catch (error) {
             console.error("Submit Error:", error);
-            alert("Server error");
+            notifyError("Server error. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -320,21 +361,19 @@ useEffect(() => {
 
     return (
         <Fragment>
-            <PageTitle
-                activeMenu="Production Form"
-                motherMenu="Production"
+            <PageHeader
+                title="Add Production Details"
+                breadcrumbs={[
+                    { label: "Dashboard", to: "/dashboard" },
+                    { label: "Production", to: "/production/list" },
+                    { label: "Add Production" },
+                ]}
             />
 
-            <div className="row">
-                <div className="col-lg-12">
-                    <div className="card">
-                        <div className="card-header">
-                            <h4 className="card-title">Add Production Details</h4>
-                        </div>
-
-                        <div className="card-body">
-                            <form className="form-valide" onSubmit={handleSubmit}>
-                                <div className="row">
+            <div className="card klk-form-card klk-production-form">
+                <div className="card-body">
+                    <form className="form-valide klk-production-form__form" onSubmit={handleSubmit}>
+                        <div className="row">
 
                                     <div className="col-xl-6 col-md-6">
                                         <div className="form-group mb-3">
@@ -359,13 +398,18 @@ useEffect(() => {
                                             </label>
                                             <input
                                                 type="number"
-                                                className="form-control"
+                                                className={`form-control${fieldErrors.panel_count ? " is-invalid" : ""}`}
                                                 name="panel_count"
                                                 placeholder="Enter number of panels"
                                                 value={formData.panel_count}
                                                 onChange={handleChange}
                                                 required
                                             />
+                                            {fieldErrors.panel_count && (
+                                                <div className="invalid-feedback d-block">
+                                                    {fieldErrors.panel_count}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
@@ -402,8 +446,11 @@ useEffect(() => {
       value={formData.generated_year}
       onChange={handleChange}
       required
+      disabled={!formData.panel_capacity || loadingYears}
     >
-      <option value="">Select Year</option>
+      <option value="">
+        {loadingYears ? "Loading years..." : "Select Year"}
+      </option>
 
       {years.map((year) => (
         <option key={year} value={year}>
@@ -426,8 +473,11 @@ useEffect(() => {
       value={formData.prefix}
       onChange={handleChange}
       required
+      disabled={!formData.generated_year || loadingPrefixes}
     >
-      <option value="">Select Prefix</option>
+      <option value="">
+        {loadingPrefixes ? "Loading prefixes..." : "Select Prefix"}
+      </option>
 
       {prefixes.map((prefix) => (
         <option key={prefix} value={prefix}>
@@ -449,8 +499,11 @@ useEffect(() => {
                                                 value={formData.panel_type}
                                                 onChange={handleChange}
                                                 required
+                                                disabled={!formData.prefix || loadingPanelTypes}
                                             >
-                                                <option value="">Select Type</option>
+                                                <option value="">
+                                                  {loadingPanelTypes ? "Loading types..." : "Select Type"}
+                                                </option>
 
                                                 {panelTypes.map((item) => (
                                                 <option key={item._id} value={item._id}>
@@ -465,62 +518,11 @@ useEffect(() => {
                                         </div>
                                     </div>
 
-                             {availableData && (
-  <div className="col-lg-12 mb-3">
-    <div className="card border-primary shadow-sm">
-      <div className="card-header bg-primary text-white py-2">
-        <strong>Available Panel Information</strong>
-      </div>
-
-      <div className="card-body">
-        <div className="row text-center">
-
-          <div className="col-md-4 mb-3">
-            <div className="border rounded p-3 h-100">
-              <h6 className="text-muted mb-1">
-                Available Panels
-              </h6>
-              <h4 className="mb-0 text-primary">
-                {availableData.available_count}
-              </h4>
-            </div>
-          </div>
-
-          <div className="col-md-4 mb-3">
-            <div className="border rounded p-3 h-100">
-              <h6 className="text-muted mb-1">
-                Starting Panel No
-              </h6>
-              <h4 className="mb-0 text-success">
-                {availableData.starting_panel_no}
-              </h4>
-            </div>
-          </div>
-
-          <div className="col-md-4 mb-3">
-            <div className="border rounded p-3 h-100">
-              <h6 className="text-muted mb-1">
-                Starting Unique No
-              </h6>
-              <div
-                className="fw-bold text-dark"
-                style={{
-                  wordBreak: "break-all",
-                  fontSize: "14px",
-                }}
-              >
-                {availableData.starting_panel_unique_no}
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
+                             {loadingAvailable && (
+  <div className="col-12 mb-2">
+    <InlineLoader message="Loading available panel info..." />
   </div>
 )}
-
-
 
                                     <div className="col-xl-6 col-md-6">
                                         <div className="form-group mb-3">
@@ -585,77 +587,65 @@ useEffect(() => {
                                                 State <span className="text-danger">*</span>
                                             </label>
 
-                                            <select
-                                                className="form-control"
+                                            <StateSelect
                                                 name="state"
                                                 value={formData.state}
                                                 onChange={handleChange}
                                                 required
-                                            >
-                                                <option value="">Select State</option>
-
-                                                {/* States */}
-                                                <option value="Andhra_Pradesh">Andhra Pradesh</option>
-                                                <option value="Arunachal_Pradesh">Arunachal Pradesh</option>
-                                                <option value="Assam">Assam</option>
-                                                <option value="Bihar">Bihar</option>
-                                                <option value="Chhattisgarh">Chhattisgarh</option>
-                                                <option value="Goa">Goa</option>
-                                                <option value="Gujarat">Gujarat</option>
-                                                <option value="Haryana">Haryana</option>
-                                                <option value="Himachal_Pradesh">Himachal Pradesh</option>
-                                                <option value="Jharkhand">Jharkhand</option>
-                                                <option value="Karnataka">Karnataka</option>
-                                                <option value="Kerala">Kerala</option>
-                                                <option value="Madhya_Pradesh">Madhya Pradesh</option>
-                                                <option value="Maharashtra">Maharashtra</option>
-                                                <option value="Manipur">Manipur</option>
-                                                <option value="Meghalaya">Meghalaya</option>
-                                                <option value="Mizoram">Mizoram</option>
-                                                <option value="Nagaland">Nagaland</option>
-                                                <option value="Odisha">Odisha</option>
-                                                <option value="Punjab">Punjab</option>
-                                                <option value="Rajasthan">Rajasthan</option>
-                                                <option value="Sikkim">Sikkim</option>
-                                                <option value="Tamil_Nadu">Tamil Nadu</option>
-                                                <option value="Telangana">Telangana</option>
-                                                <option value="Tripura">Tripura</option>
-                                                <option value="Uttar_Pradesh">Uttar Pradesh</option>
-                                                <option value="Uttarakhand">Uttarakhand</option>
-                                                <option value="West_Bengal">West Bengal</option>
-
-                                                {/* Union Territories */}
-                                                <option value="Andaman_Nicobar">Andaman and Nicobar Islands</option>
-                                                <option value="Chandigarh">Chandigarh</option>
-                                                <option value="Dadra_Nagar_Haveli_Daman_Diu">
-                                                    Dadra and Nagar Haveli and Daman and Diu
-                                                </option>
-                                                <option value="Delhi">Delhi</option>
-                                                <option value="Jammu_Kashmir">Jammu and Kashmir</option>
-                                                <option value="Ladakh">Ladakh</option>
-                                                <option value="Lakshadweep">Lakshadweep</option>
-                                                <option value="Puducherry">Puducherry</option>
-                                            </select>
+                                            />
                                         </div>
                                     </div>
 
                                 </div>
 
-                                <div className="row mt-3">
-                                    <div className="col-lg-12 text-center">
-                                        <button
-                                            type="submit"
-                                            className="btn btn-success px-4"
-                                            disabled={loading}
-                                        >
-                                            {loading ? "Saving..." : "Save Production"}
-                                        </button>
+                        {availableData && (
+                            <div className="klk-available-panel-card mb-3">
+                                <div className="card border-primary shadow-sm">
+                                    <div className="card-header bg-primary text-white py-2">
+                                        <strong>Available Panel Information</strong>
+                                    </div>
+
+                                    <div className="card-body">
+                                        <div className="row text-center g-3">
+                                            <div className="col-md-4">
+                                                <div className="border rounded p-3 h-100">
+                                                    <h6 className="text-muted mb-1">Available Panels</h6>
+                                                    <h4 className="mb-0 text-primary">
+                                                        {availableData.available_count}
+                                                    </h4>
+                                                </div>
+                                            </div>
+
+                                            <div className="col-md-4">
+                                                <div className="border rounded p-3 h-100">
+                                                    <h6 className="text-muted mb-1">Starting Panel No</h6>
+                                                    <h4 className="mb-0 text-success">
+                                                        {availableData.starting_panel_no}
+                                                    </h4>
+                                                </div>
+                                            </div>
+
+                                            <div className="col-md-4">
+                                                <div className="border rounded p-3 h-100">
+                                                    <h6 className="text-muted mb-1">Starting Unique No</h6>
+                                                    <div className="fw-bold text-dark klk-available-panel-card__serial">
+                                                        {availableData.starting_panel_unique_no}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+                            </div>
+                        )}
 
-                            </form>
-                        </div>
-                    </div>
+                                <FormSubmitButton
+                                    loading={loading}
+                                    label="Save Production"
+                                    loadingLabel="Saving..."
+                                />
+
+                    </form>
                 </div>
             </div>
         </Fragment>

@@ -1,9 +1,4 @@
-import React from "react";
-import { getUser, getPermissions, hasPermission } from "../../../utils/auth.js";
-
-
-console.log("RAW permissions:", localStorage.getItem("permissions"));
-console.log("PARSED permissions:", getPermissions());
+import { getPermissions, hasPermission } from "../../../utils/auth.js";
 
 // ================= MENU =================
 export const MenuList = [
@@ -33,18 +28,17 @@ export const MenuList = [
       { title: "View Production List", to: "production/list", permission: "view_production" },
       { title: "Add Damage", to: "production-damage/add", permission: "add_production_damage" },
       { title: "Damage List", to: "production-damage/list", permission: "view_production_damage_list" },
-      { title: 'Vendor Production List', to: 'production/vendor-list', permission: "view_vendor_production_list" },
+      { title: "Vendor Production List", to: "production/vendor-list", permission: "view_vendor_production_list" },
     ],
   },
 
   {
     title: "Hold Production",
     classsChange: "mm-collapse",
-   iconStyle: <i className="fa-solid fa-pause-circle fw-bold"></i>,
+    iconStyle: <i className="fa-solid fa-pause-circle fw-bold"></i>,
     content: [
-      { title: "Add Hold Production", to: "hold-production/add",  permission: "add_production"  },
-      { title: "View Hold Production", to: "hold-production/list", permission: "add_production"   },
-    
+      { title: "Add Hold Production", to: "hold-production/add", permission: "add_production" },
+      { title: "View Hold Production", to: "hold-production/list", permission: "add_production" },
     ],
   },
 
@@ -60,29 +54,28 @@ export const MenuList = [
     ],
   },
 
-  // Receive Panel
-    {
-        title: "Receive Panel",
-        classsChange: 'mm-collapse',
-        iconStyle: <i className="fa-solid fa-truck-ramp-box fw-bold" />,
-        content: [
-            {
-                title: 'View Safe Panels',
-                to: 'receiver/safe/list',
-                permission: "recieve_panels"
-            },
-            {
-                title: 'Add Reicieving Damage Panel',
-                to: 'receiver/damage/create',
-                permission: "add_recieving_damage"
-            },
-            {
-                title: 'View Reicieving Damage List',
-                to: 'receiver/damage/list',
-                permission: "view_recieving_damage"
-            },
-        ],
-    },
+  {
+    title: "Receive Panel",
+    classsChange: "mm-collapse",
+    iconStyle: <i className="fa-solid fa-truck-ramp-box fw-bold" />,
+    content: [
+      {
+        title: "View Safe Panels",
+        to: "receiver/safe/list",
+        permission: "recieve_panels",
+      },
+      {
+        title: "Add Reicieving Damage Panel",
+        to: "receiver/damage/create",
+        permission: "add_recieving_damage",
+      },
+      {
+        title: "View Reicieving Damage List",
+        to: "receiver/damage/list",
+        permission: "view_recieving_damage",
+      },
+    ],
+  },
 
   {
     title: "User Management",
@@ -94,7 +87,7 @@ export const MenuList = [
     ],
   },
 
-    {
+  {
     title: "Settings",
     classsChange: "mm-collapse",
     iconStyle: <i className="fa-solid fa-gear fw-bold"></i>,
@@ -105,25 +98,20 @@ export const MenuList = [
   },
 ];
 
-// ================= STRICT FILTER =================
-export const FilteredMenuList = MenuList
-  .map(menu => {
-
-    // SUB MENU
+export const getFilteredMenuList = () =>
+  MenuList.map((menu) => {
     if (menu.content) {
-      const filtered = menu.content.filter(item =>
+      const filtered = menu.content.filter((item) =>
         hasPermission(item.permission)
       );
 
-      return filtered.length > 0
-        ? { ...menu, content: filtered }
-        : null;
+      return filtered.length > 0 ? { ...menu, content: filtered } : null;
     }
 
-    // SINGLE MENU
     return hasPermission(menu.permission) ? menu : null;
+  }).filter(Boolean);
 
-  })
-  .filter(Boolean);
+// Recomputed on each import after login navigation; prefer getFilteredMenuList() in components.
+export const FilteredMenuList = getFilteredMenuList();
 
 export default FilteredMenuList;

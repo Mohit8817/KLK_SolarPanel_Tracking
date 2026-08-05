@@ -5,6 +5,8 @@ import loadable from "@loadable/component";
 import pMinDelay from "p-min-delay";
 import axios from "axios";
 import { ThemeContext } from "../../../context/ThemeContext";
+import { PageLoader, ErrorState } from "../Common/LoadingState";
+import PageHeader from "../Common/PageHeader";
 
 const PolarChart = loadable(() =>
 	pMinDelay(import("../Dompet/Home/PolarChart"), 1000)
@@ -18,6 +20,8 @@ const TransactionApexBar = loadable(() =>
 
 const Home = () => {
 	const [dashboardData, setDashboardData] = useState(null);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
 
 	const {
 		changeBackground,
@@ -46,6 +50,8 @@ const Home = () => {
 
 	const fetchDashboard = async () => {
 		try {
+			setLoading(true);
+			setError(null);
 			const response = await axios.get(
 				`${BASE_URL}dashboard/main-dashboard`,
 				{
@@ -58,6 +64,9 @@ const Home = () => {
 
 		} catch (error) {
 			console.log("API ERROR:", error);
+			setError("Unable to load dashboard data. Please try again.");
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -87,12 +96,24 @@ const Home = () => {
 	const getPercent = (val) =>
 		totalDamage ? ((val / totalDamage) * 100).toFixed(0) : 0;
 
+	if (loading) {
+		return <PageLoader message="Loading dashboard..." />;
+	}
+
+	if (error) {
+		return <ErrorState message={error} onRetry={fetchDashboard} />;
+	}
 
 	return (
 		<>
+			<PageHeader
+				title="Dashboard"
+				breadcrumbs={[{ label: "Dashboard" }]}
+			/>
 			<div className="row invoice-card-row">
 				{/* Total Panels Generated */}
 				<div className="col-xl-3 col-xxl-4 col-sm-4">
+					<Link to="/generate/panel/list" className="klk-stat-card-link">
 					<div className="card bg-primary invoice-card">
 						<div className="card-body d-flex">
 							<div className="icon me-3">
@@ -106,10 +127,12 @@ const Home = () => {
 							</div>
 						</div>
 					</div>
+					</Link>
 				</div>
 
 				{/* Panels Dispatched */}
 				<div className="col-xl-3 col-xxl-4 col-sm-4">
+					<Link to="/production/list" className="klk-stat-card-link">
 					<div className="card bg-secondary invoice-card">
 						<div className="card-body d-flex">
 							<div className="icon me-3">
@@ -126,10 +149,12 @@ const Home = () => {
 							</div>
 						</div>
 					</div>
+					</Link>
 				</div>
 
 				{/* Pending Dispatch */}
 				<div className="col-xl-3 col-xxl-4 col-sm-4">
+					<Link to="/dispatch/list" className="klk-stat-card-link">
 					<div className="card bg-success  invoice-card">
 						<div className="card-body d-flex">
 							<div className="icon me-3">
@@ -146,10 +171,12 @@ const Home = () => {
 							</div>
 						</div>
 					</div>
+					</Link>
 				</div>
 
 				{/* Damaged Panels */}
 				<div className="col-xl-3 col-xxl-3 col-sm-3">
+					<Link to="/production-damage/list" className="klk-stat-card-link">
 					<div className="card bg-warning invoice-card">
 						<div className="card-body d-flex">
 							<div className="icon me-3">
@@ -165,6 +192,7 @@ const Home = () => {
 							</div>
 						</div>
 					</div>
+					</Link>
 				</div>
 
 

@@ -3,6 +3,7 @@ import { Card, Col, Table, Badge, Nav, Tab } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
+import PageHeader from "../Common/PageHeader";
 import PropTypes from "prop-types";
 
 const ViewDamagePanel = () => {
@@ -237,8 +238,16 @@ const ViewDamagePanel = () => {
   /* ========== MAIN UI ========= */
 
   return (
-    <Col lg={12}>
-      <Card>
+    <>
+      <PageHeader
+        title="Damage Panel List"
+        breadcrumbs={[
+          { label: "Dashboard", to: "/dashboard" },
+          { label: "Panel Management" },
+        ]}
+      />
+      <Col lg={12}>
+      <Card className="klk-list-card">
         <Card.Body>
           <Tab.Container defaultActiveKey="sender">
             <div className="d-flex justify-content-between align-items-center mb-3">
@@ -320,6 +329,7 @@ const ViewDamagePanel = () => {
         </Card.Body>
       </Card>
     </Col>
+    </>
   );
 };
 

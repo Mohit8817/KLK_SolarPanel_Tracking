@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { Card, Col, Table, Badge } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import PageHeader from "../Common/PageHeader";
 
-const ViewDispatchPanels = () => {
+const ViewReceivedPanels = () => {
   const { id } = useParams();
   const [panelList, setPanelList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,13 +58,18 @@ const ViewDispatchPanels = () => {
   };
 
   return (
-    <Col lg={12}>
-      <Card>
-        <Card.Header className="d-flex justify-content-between">
-          <Card.Title>Receive Panel Details</Card.Title>
-          <div><strong>Receive ID:</strong> {id}</div>
-        </Card.Header>
-
+    <>
+      <PageHeader
+        title="Receive Panel Details"
+        breadcrumbs={[
+          { label: "Dashboard", to: "/dashboard" },
+          { label: "Panel Receive", to: "/receiver/safe/list" },
+          { label: "Panel Details" },
+        ]}
+        subtitle={`Receive ID: ${id}`}
+      />
+      <Col lg={12}>
+      <Card className="klk-list-card">
         <Card.Body>
           {loading ? (
             <p>Loading...</p>
@@ -139,7 +145,8 @@ const ViewDispatchPanels = () => {
         </Card.Body>
       </Card>
     </Col>
+    </>
   );
 };
 
-export default ViewDispatchPanels;
+export default ViewReceivedPanels;

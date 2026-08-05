@@ -111,13 +111,7 @@ const Search = ({
   placeholder = "Search here...",
 }) => {
   return (
-    <div
-      style={{
-        // position: "relative !important",   // ← overrides any fixed/absolute from theme
-        zIndex: "9999 !important",         // ← removes z-index stacking
-        width: "250px",
-      }}
-    >
+    <div className="klk-search">
       <div className="input-group">
         <input
           type="text"
@@ -125,14 +119,13 @@ const Search = ({
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          style={{ borderRadius: "0.375rem" }}
         />
         {value && (
           <button
             className="btn btn-outline-secondary"
             type="button"
             onClick={() => onChange("")}
-            style={{ borderRadius: "0 0.375rem 0.375rem 0" }}
+            aria-label="Clear search"
           >
             <i className="fa fa-times" />
           </button>

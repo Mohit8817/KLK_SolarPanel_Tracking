@@ -1,0 +1,724 @@
+/* KLK Ventures — login (app teal theme, premium layout) */
+
+.klk-login {
+  --primary: #5bcfc5;
+  --primary-hover: #38bfb3;
+  --primary-dark: #217069;
+  --secondary: #709fba;
+  --primary-soft: #d4f5f2;
+  --primary-glow: rgba(91, 207, 197, 0.35);
+  --primary-ring: rgba(91, 207, 197, 0.28);
+  --rgba-primary-1: rgba(91, 207, 197, 0.12);
+  --rgba-primary-2: rgba(91, 207, 197, 0.22);
+  --ink: #1a1a2e;
+  --ink-soft: #3d4a5c;
+  --ink-muted: #969ba0;
+  --line: #e4e8ee;
+  --panel: #ffffff;
+  --panel-soft: #f8fafb;
+  --surface: #eef3f7;
+
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  font-family: inherit;
+}
+
+/* ══════════════════════════════════════
+   LEFT — Brand panel with photo + overlay
+   ══════════════════════════════════════ */
+.klk-login__brand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2.75rem 3rem 2rem;
+  color: #fff;
+  overflow: hidden;
+  background-color: var(--primary-dark);
+  background-image:
+    linear-gradient(
+      145deg,
+      rgba(26, 80, 76, 0.94) 0%,
+      rgba(33, 112, 105, 0.88) 35%,
+      rgba(91, 207, 197, 0.82) 100%
+    ),
+    url("../../assets/images/bg-login.jpg");
+  background-size: cover;
+  background-position: center;
+}
+
+.klk-login__brand::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, transparent 85%);
+  pointer-events: none;
+}
+
+.klk-login__brand-glow {
+  position: absolute;
+  width: 560px;
+  height: 560px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--primary-glow) 0%, transparent 65%);
+  top: -200px;
+  right: -140px;
+  pointer-events: none;
+  animation: klk-pulse 8s ease-in-out infinite;
+}
+
+.klk-login__brand::after {
+  content: "";
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  bottom: -100px;
+  left: -80px;
+  pointer-events: none;
+}
+
+@keyframes klk-pulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.klk-login__visual {
+  position: absolute;
+  right: -30px;
+  bottom: 60px;
+  width: min(440px, 58%);
+  opacity: 0.72;
+  pointer-events: none;
+  animation: klk-float 7s ease-in-out infinite;
+}
+
+@keyframes klk-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.klk-login__visual svg {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 12px 40px rgba(0, 0, 0, 0.15));
+}
+
+.klk-login__brand-content {
+  position: relative;
+  z-index: 1;
+  max-width: 500px;
+}
+
+.klk-login__logo-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  text-decoration: none;
+  color: inherit;
+  margin-bottom: 2.5rem;
+  padding: 0.75rem 1.125rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.klk-login__logo-row:hover {
+  background: rgba(255, 255, 255, 0.14);
+  transform: translateY(-1px);
+}
+
+.klk-login__logo {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
+}
+
+.klk-login__brand-name {
+  display: block;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.klk-login__brand-tag {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.klk-login__hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.875rem;
+  margin-bottom: 1.125rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 100px;
+}
+
+.klk-login__hero-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  box-shadow: 0 0 8px var(--primary-soft);
+}
+
+.klk-login__hero h1 {
+  font-size: clamp(1.875rem, 3vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.035em;
+  margin: 0 0 1.125rem;
+  color: #ffffff;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.12);
+}
+
+.klk-login__hero h1 em {
+  font-style: normal;
+  color: var(--primary-soft);
+}
+
+.klk-login__hero p {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.88);
+  margin: 0 0 2rem;
+  max-width: 440px;
+}
+
+.klk-login__features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.klk-login__features li {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.klk-login__check {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.klk-login__check i {
+  font-size: 0.6rem;
+  color: var(--primary-dark);
+}
+
+.klk-login__metrics {
+  display: flex;
+  gap: 0.75rem;
+  max-width: 440px;
+}
+
+.klk-login__metric {
+  flex: 1;
+  padding: 1rem 0.875rem;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, background 0.2s;
+}
+
+.klk-login__metric:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.klk-login__metric strong {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.klk-login__metric:first-child strong {
+  color: var(--primary-soft);
+}
+
+.klk-login__metric span {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.klk-login__footer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  padding-top: 1.5rem;
+}
+
+.klk-login__footer a {
+  color: rgba(255, 255, 255, 0.82);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.klk-login__footer a:hover {
+  color: #fff;
+}
+
+/* ══════════════════════════════════════
+   RIGHT — Form panel
+   ══════════════════════════════════════ */
+.klk-login__main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem;
+  background: var(--surface);
+  position: relative;
+  overflow: hidden;
+}
+
+.klk-login__main::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 90% 8%, var(--rgba-primary-2) 0%, transparent 42%),
+    radial-gradient(circle at 8% 92%, rgba(112, 159, 186, 0.1) 0%, transparent 38%);
+  pointer-events: none;
+}
+
+.klk-login__main::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(91, 207, 197, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(ellipse at center, black 0%, transparent 75%);
+  pointer-events: none;
+}
+
+.klk-login__main-inner {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  z-index: 1;
+}
+
+.klk-login__form-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+.klk-login__form-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.25rem;
+  color: var(--primary-dark);
+  background: linear-gradient(135deg, var(--rgba-primary-1) 0%, rgba(91, 207, 197, 0.22) 100%);
+  border: 1px solid rgba(91, 207, 197, 0.35);
+  box-shadow: 0 4px 16px rgba(91, 207, 197, 0.2);
+}
+
+.klk-login__form-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  display: none;
+}
+
+.klk-login__form-header h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 0.25rem;
+  letter-spacing: -0.035em;
+}
+
+.klk-login__form-header p {
+  font-size: 0.9375rem;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+.klk-login__form-box {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 2rem 1.875rem 1.875rem;
+  box-shadow:
+    0 4px 6px rgba(26, 26, 46, 0.02),
+    0 20px 48px rgba(26, 26, 46, 0.08);
+  overflow: hidden;
+}
+
+.klk-login__form-box::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-dark), var(--primary), var(--secondary));
+}
+
+.klk-login__alert {
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-start;
+  padding: 0.75rem 0.875rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #842029;
+  background: #f8d7da;
+  border-radius: 10px;
+  border: 1px solid #f5c2c7;
+}
+
+.klk-login__alert i {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.klk-login__field {
+  margin-bottom: 1.25rem;
+}
+
+.klk-login__field label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 0.45rem;
+}
+
+.klk-login__input-wrap {
+  position: relative;
+}
+
+.klk-login__input-wrap .field-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: var(--primary-dark);
+  font-size: 0.85rem;
+  background: var(--rgba-primary-1);
+  pointer-events: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.klk-login__input-wrap input {
+  width: 100%;
+  height: 52px;
+  padding: 0 2.75rem 0 3.5rem;
+  font-size: 0.9375rem;
+  color: var(--ink);
+  background: var(--panel-soft);
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.klk-login__input-wrap input::placeholder {
+  color: #b0b8c4;
+}
+
+.klk-login__input-wrap input:hover:not(:focus) {
+  border-color: #cdd5df;
+  background: #fff;
+}
+
+.klk-login__input-wrap input:focus {
+  outline: none;
+  background: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-ring);
+}
+
+.klk-login__input-wrap:focus-within .field-icon {
+  background: var(--primary);
+  color: #fff;
+}
+
+.klk-login__input-wrap input.is-error {
+  border-color: #dc3545;
+  background: #fff;
+}
+
+.klk-login__toggle-pw {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.klk-login__toggle-pw:hover {
+  color: var(--primary-dark);
+  background: var(--rgba-primary-1);
+}
+
+.klk-login__field-error {
+  font-size: 0.75rem;
+  color: #dc3545;
+  margin: 0.35rem 0 0;
+  font-weight: 500;
+}
+
+.klk-login__options {
+  margin-bottom: 1.5rem;
+}
+
+.klk-login__remember {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.klk-login__remember input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.klk-login__submit {
+  width: 100%;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0d3d38;
+  background: linear-gradient(135deg, #6bd8cf 0%, var(--primary) 50%, var(--primary-hover) 100%);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(91, 207, 197, 0.45);
+  transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+}
+
+.klk-login__submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(91, 207, 197, 0.5);
+  filter: brightness(1.03);
+}
+
+.klk-login__submit:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 4px 14px rgba(91, 207, 197, 0.4);
+}
+
+.klk-login__submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.klk-login__submit i {
+  font-size: 0.8rem;
+  transition: transform 0.15s;
+}
+
+.klk-login__submit:hover:not(:disabled) i {
+  transform: translateX(3px);
+}
+
+.klk-login__spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(13, 61, 56, 0.2);
+  border-top-color: #0d3d38;
+  border-radius: 50%;
+  animation: klk-spin 0.65s linear infinite;
+}
+
+@keyframes klk-spin {
+  to { transform: rotate(360deg); }
+}
+
+.klk-login__secure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1.375rem 0 0;
+  padding: 0.625rem 1rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  letter-spacing: 0.02em;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 100px;
+  border: 1px solid var(--line);
+}
+
+.klk-login__secure i {
+  font-size: 0.625rem;
+  color: var(--primary-dark);
+}
+
+/* ══════════════════════════════════════
+   Responsive
+   ══════════════════════════════════════ */
+@media (max-width: 960px) {
+  .klk-login {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .klk-login__brand {
+    padding: 2rem 1.75rem 1.75rem;
+  }
+
+  .klk-login__visual,
+  .klk-login__metrics,
+  .klk-login__footer {
+    display: none;
+  }
+
+  .klk-login__logo-row {
+    margin-bottom: 1.5rem;
+  }
+
+  .klk-login__hero-badge {
+    margin-bottom: 0.875rem;
+  }
+
+  .klk-login__hero h1 {
+    font-size: 1.625rem;
+  }
+
+  .klk-login__hero p {
+    margin-bottom: 1.25rem;
+    font-size: 0.9375rem;
+  }
+
+  .klk-login__features {
+    margin-bottom: 0;
+  }
+
+  .klk-login__main {
+    padding: 1.75rem;
+  }
+
+  .klk-login__form-badge {
+    display: none;
+  }
+
+  .klk-login__form-logo {
+    display: block;
+  }
+}
+
+@media (max-width: 480px) {
+  .klk-login__brand {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .klk-login__features {
+    display: none;
+  }
+
+  .klk-login__main {
+    padding: 1.25rem;
+  }
+
+  .klk-login__form-box {
+    padding: 1.5rem 1.25rem 1.25rem;
+    border-radius: 14px;
+  }
+
+  .klk-login__form-header h2 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .klk-login__visual,
+  .klk-login__brand-glow {
+    animation: none;
+  }
+}

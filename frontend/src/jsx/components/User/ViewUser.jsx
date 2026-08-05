@@ -2,6 +2,7 @@ import { Card, Col, Table, Badge, Spinner } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import CommonPagination from "../Common/Pagination";
+import PageHeader from "../Common/PageHeader";
 import { getUsers, deleteUser } from "./userApi";
 
 const ViewUser = () => {
@@ -56,12 +57,21 @@ const ViewUser = () => {
   const currentData = users.slice(startIndex, startIndex + itemsPerPage);
 
   return (
-    <Col lg={12}>
-      <Card>
-        <Card.Header>
-          <Card.Title>User List</Card.Title>
-        </Card.Header>
-
+    <>
+      <PageHeader
+        title="User List"
+        breadcrumbs={[
+          { label: "Dashboard", to: "/dashboard" },
+          { label: "User Management" },
+        ]}
+        action={
+          <Link to="/user/add" className="btn btn-primary btn-sm">
+            <i className="fa fa-plus me-1" /> Add User
+          </Link>
+        }
+      />
+      <Col lg={12}>
+      <Card className="klk-list-card">
         <Card.Body>
           {loading ? (
             <div className="text-center py-5">
@@ -173,6 +183,7 @@ const ViewUser = () => {
         </Card.Body>
       </Card>
     </Col>
+    </>
   );
 };
 

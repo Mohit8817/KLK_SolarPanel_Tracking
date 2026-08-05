@@ -48,6 +48,7 @@ const ViewSingleUser = () => {
       <PageTitle
         activeMenu="View User"
         motherMenu="User Management"
+        motherLink="/user/list"
         pageContent="User Details"
       />
 

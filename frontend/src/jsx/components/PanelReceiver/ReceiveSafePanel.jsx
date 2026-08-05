@@ -207,6 +207,7 @@ const ReceiveSafePanel = () => {
       <PageTitle
         activeMenu="Receive Safe Panel"
         motherMenu="Dispatch Panel"
+        motherLink="/receiver/safe/list"
         pageContent="Collect Safe Panels"
       />
 

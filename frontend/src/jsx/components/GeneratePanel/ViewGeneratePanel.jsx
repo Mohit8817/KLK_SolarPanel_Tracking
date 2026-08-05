@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
-import { Card, Col, Row, Table } from "react-bootstrap";
+import { Card, Table } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { getAllPanelLots, deletePanelLot } from "./GeneratepanelApis";
 import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
 import Search, { useSearch } from "../Common/Search";
+import PageHeader from "../Common/PageHeader";
+import ListToolbar from "../Common/ListToolbar";
+import { ViewAction, DeleteAction } from "../Common/ActionButtons";
+import { PageLoader } from "../Common/LoadingState";
 
 const ViewGeneratePanel = () => {
   const [panelList, setPanelList] = useState([]);
@@ -76,19 +80,22 @@ const ViewGeneratePanel = () => {
   ];
 
   return (
-    <Col lg={12}>
-      <Card>
-
-
-
-        {/* HEADER */}
-        <Card.Header as={Row} className="align-items-center g-2">
-          <Col lg={4}>
-            <Card.Title className="mb-0"> View Generate Panel Serial Number
-            </Card.Title>
-          </Col>
-
-          <Col lg={8} className="d-flex justify-content-end align-items-center gap-2">
+    <>
+      <PageHeader
+        title="Generated Panel Lots"
+        breadcrumbs={[
+          { label: "Dashboard", to: "/dashboard" },
+          { label: "Panel Generation" },
+        ]}
+        action={
+          <Link to="/panel/generate" className="btn btn-primary btn-sm">
+            <i className="fa fa-plus me-1" /> Generate Serial
+          </Link>
+        }
+      />
+      <Card className="klk-list-card">
+        <Card.Header>
+          <ListToolbar>
             <Search
               value={searchQuery}
               onChange={setSearchQuery}
@@ -99,11 +106,11 @@ const ViewGeneratePanel = () => {
               columns={exportColumns}
               fileName="Generated_Panel_Report"
             />
-          </Col>
+          </ListToolbar>
         </Card.Header>
         <Card.Body>
           {loading ? (
-            <p>Loading...</p>
+            <PageLoader message="Loading panel lots..." />
           ) : (
             <>
               <Table responsive className="table-hover align-middle">
@@ -127,7 +134,7 @@ const ViewGeneratePanel = () => {
                         <td><strong>{startIndex + index + 1}</strong></td>
                         <td>{item.date}</td>
                         <td>{item.total_panels}</td>
-                        <td style={{ color: "#5bcfc5" , fontWeight : "700" }}>
+                        <td className="text-primary fw-bold">
                           {item.panel_capacity} WP
                         </td>
                         <td>
@@ -140,19 +147,9 @@ const ViewGeneratePanel = () => {
                         <td>{item.panel_alot_state}</td>
                         <td>{item.panel_alot_project}</td>
                         <td className="text-center">
-                          <div className="d-flex gap-1 justify-content-center">
-                            <Link
-                              to={`/view-panel-details/${item._id}`}
-                              className="btn btn-primary btn-xs sharp me-2"
-                            >
-                              <i className="fa fa-eye" />
-                            </Link>
-                            <button
-                              className="btn btn-danger btn-xs sharp"
-                              onClick={() => handleDelete(item._id)}
-                            >
-                              <i className="fa fa-trash" />
-                            </button>
+                          <div className="klk-actions">
+                            <ViewAction to={`/view-panel-details/${item._id}`} />
+                            <DeleteAction onClick={() => handleDelete(item._id)} />
                           </div>
                         </td>
                       </tr>
@@ -178,7 +175,7 @@ const ViewGeneratePanel = () => {
           )}
         </Card.Body>
       </Card>
-    </Col>
+    </>
   );
 };
 

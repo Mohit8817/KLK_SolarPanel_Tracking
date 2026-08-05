@@ -12,8 +12,15 @@ export const loginUser = async (
 
   try {
 
-    const { email, password } =
-      req.body;
+    const email = String(req.body.email || "").trim().toLowerCase();
+    const { password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
+      });
+    }
 
     // =====================================
     // FIND USER
@@ -42,6 +49,13 @@ export const loginUser = async (
       });
     }
 
+    if (!user.role) {
+      return res.status(400).json({
+        success: false,
+        message: "User role is not assigned. Please contact admin.",
+      });
+    }
+
     // =====================================
     // FETCH ROLE PERMISSIONS
     // =====================================
@@ -51,10 +65,9 @@ export const loginUser = async (
       }).populate("permission_id");
 
     const permissions =
-      rolePermissions.map(
-        (item) =>
-          item.permission_id?.label
-      );
+      rolePermissions
+        .map((item) => item.permission_id?.label)
+        .filter(Boolean);
 
     // =====================================
     // GENERATE TOKEN
@@ -91,9 +104,6 @@ export const loginUser = async (
 
         first_name:
           user.first_name,
-
-        unique_id:
-          user.unique_id,
 
         last_name:
           user.last_name,

@@ -26,7 +26,8 @@ const ReleaseProduction = ({ item, onClose }) => {
   const [currentPanels, setCurrentPanels] = useState(item?.panel_count || 0);
 
   const token = localStorage.getItem("token");
-  const created_by = localStorage.getItem("user_id") || "";
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const created_by = user?.id || "";
 
   useEffect(() => {
     if (item?._id) {

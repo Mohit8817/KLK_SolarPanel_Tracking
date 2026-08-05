@@ -6,6 +6,10 @@ const PanelCounterSchema = new mongoose.Schema({
   panel_type: { type: String, required: true },
   year: { type: String, required: true },
   seq: { type: Number, default: 0 },
+  sequence_digits: { type: Number, default: 6 },
+  serial_format: {
+    type: [String],
+  },
   last_lot_id: { type: mongoose.Schema.Types.ObjectId },
 }, { timestamps: true });
 

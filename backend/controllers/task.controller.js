@@ -14,7 +14,7 @@ export const getAllTask = async(req,res) => {
 export const fetchTask = async(req,res) => {
     try {
         const task = await Task.findById(req.params.id).lean();
-        if(!task) res.status(404).json({message : 'task not found !!'})
+        if(!task) return res.status(404).json({message : 'task not found !!'})
         res.status(200).json(task);
     } catch (error) {
        res.status(500).json({message : error.message})
@@ -49,7 +49,7 @@ export const createTask = async (req, res) => {
 export const updateTask = async(req, res) => {
     try {
         const existingTask = await Task.findById(req.params.id).lean();
-        if(!existingTask) res.status(400).json({message : 'Task not find !!'})
+        if(!existingTask) return res.status(400).json({message : 'Task not find !!'})
         
         if(req.file){
             if(existingTask.document){

@@ -189,7 +189,7 @@ export const createDamagePanel = async (req, res) => {
 ========================================= */
 export const getAllDamagePanels = async (req, res) => {
   try {
-    const damages = await DamagePanel.find().sort({ unique_id: -1 });
+    const damages = await DamagePanel.find().sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
@@ -240,9 +240,16 @@ export const getDamageByPanelNo = async (req, res) => {
 ========================================= */
 export const getDamageById = async (req, res) => {
   try {
-    const { unique_id } = req.params;
+    const { id } = req.params;
 
-    const damage = await DamagePanel.findOne({ unique_id });
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid damage record id",
+      });
+    }
+
+    const damage = await DamagePanel.findById(id);
 
     if (!damage) {
       return res.status(404).json({
@@ -269,10 +276,17 @@ export const getDamageById = async (req, res) => {
 ========================================= */
 export const updateDamagePanel = async (req, res) => {
   try {
-    const { unique_id } = req.params;
+    const { id } = req.params;
 
-    const damage = await DamagePanel.findOneAndUpdate(
-      { unique_id },
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid damage record id",
+      });
+    }
+
+    const damage = await DamagePanel.findByIdAndUpdate(
+      id,
       req.body,
       { new: true }
     );

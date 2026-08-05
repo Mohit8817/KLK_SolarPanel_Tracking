@@ -3,6 +3,8 @@ import { Card, Col, Table } from "react-bootstrap";
 
 import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
+import PageHeader from "../Common/PageHeader";
+import ListToolbar from "../Common/ListToolbar";
 
 import {
     getAllManufactureDamage,
@@ -12,7 +14,7 @@ import {
 const ViewManufactureDamage = () => {
 
     const [data, setData] = useState([]);
-    const [setLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
 
     const itemsPerPage = 5;
     const [currentPage, setCurrentPage] = useState(1);
@@ -60,19 +62,24 @@ const ViewManufactureDamage = () => {
     ];
 
     return (
-        <Col lg={12}>
-            <Card>
-                {/* HEADER */}
-                <Card.Header className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <Card.Title className="mb-0">
-                        Manufacture Damage Panels
-                    </Card.Title>
-
+        <>
+            <PageHeader
+                title="Manufacture Damage List"
+                breadcrumbs={[
+                    { label: "Dashboard", to: "/dashboard" },
+                    { label: "Production" },
+                ]}
+            />
+            <Col lg={12}>
+            <Card className="klk-list-card">
+                <Card.Header>
+                    <ListToolbar>
                     <TableExportActions
                         data={exportData}
                         columns={exportColumns}
                         fileName="Manufacture_Damage"
                     />
+                    </ListToolbar>
                 </Card.Header>
 
                 <Card.Body>
@@ -123,6 +130,7 @@ const ViewManufactureDamage = () => {
                 </Card.Body>
             </Card>
         </Col>
+        </>
     );
 };
 

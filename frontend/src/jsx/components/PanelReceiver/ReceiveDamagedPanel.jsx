@@ -144,6 +144,7 @@ const DamagePanel = () => {
       <PageTitle
         activeMenu="Damage Panel"
         motherMenu="Panel Management"
+        motherLink="/receiver/damage/list"
         pageContent="Report Damaged Panels"
       />
 

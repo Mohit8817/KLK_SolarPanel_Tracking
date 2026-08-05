@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
-import { Card, Col, Row, Table, Spinner } from "react-bootstrap";
+import { Card, Table } from "react-bootstrap";
 import TableExportActions from "../Common/TableExportActions";
+import PageHeader from "../Common/PageHeader";
+import ListToolbar from "../Common/ListToolbar";
+import { ViewAction, EditAction, DeleteAction } from "../Common/ActionButtons";
+import { PageLoader } from "../Common/LoadingState";
+import { notifyError } from "../../utils/toast";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import Search, { useSearch } from "../Common/Search";
@@ -95,7 +100,7 @@ const ViewDispatchPanel = () => {
 
         } catch (error) {
             console.error("Delete API Error:", error);
-            alert("Failed to delete dispatch panel. Please try again.");
+            notifyError("Failed to delete dispatch. Please try again.");
         } finally {
             setDeletingId(null);
         }
@@ -171,14 +176,22 @@ const ViewDispatchPanel = () => {
     /* ================= UI ================= */
 
     return (
-        <Col lg={12}>
-            <Card>
-
-                <Card.Header as={Row} className="align-items-center g-2">
-                    <Col lg={4}>
-                        <Card.Title className="mb-0">Dispatch Panel List</Card.Title>
-                    </Col>
-                    <Col lg={8} className="d-flex justify-content-end align-items-center gap-2">
+        <>
+            <PageHeader
+                title="Dispatch List"
+                breadcrumbs={[
+                    { label: "Dashboard", to: "/dashboard" },
+                    { label: "Dispatch" },
+                ]}
+                action={
+                    <Link to="/dispatch/create" className="btn btn-primary btn-sm">
+                        <i className="fa fa-plus me-1" /> New Dispatch
+                    </Link>
+                }
+            />
+            <Card className="klk-list-card">
+                <Card.Header>
+                    <ListToolbar>
                         <Search
                             value={searchQuery}
                             onChange={setSearchQuery}
@@ -189,15 +202,12 @@ const ViewDispatchPanel = () => {
                             columns={exportColumns}
                             fileName="Dispatch_Panel_Report"
                         />
-                    </Col>
+                    </ListToolbar>
                 </Card.Header>
 
                 <Card.Body>
                     {loading ? (
-                        <div className="text-center py-4">
-                            <Spinner animation="border" size="sm" className="me-2" />
-                            <span className="text-muted">Loading dispatch records...</span>
-                        </div>
+                        <PageLoader message="Loading dispatch records..." />
                     ) : (
                         <>
                             <Table responsive className="table-hover align-middle">
@@ -261,37 +271,14 @@ const ViewDispatchPanel = () => {
                                                     </td>
 
                                                     <td className="text-center">
-                                                        <div className="d-flex gap-1 justify-content-center">
-
-                                                            <Link
-                                                                to={`/view-dispatch-panels/${item._id}`}
-                                                                className="btn btn-info btn-xs sharp"
-                                                                title="View Panels"
-                                                            >
-                                                                <i className="fa fa-eye" />
-                                                            </Link>
-
-                                                            <Link
-                                                                to={`/dispatch/panel/update/${item._id}`}
-                                                                className="btn btn-warning btn-xs sharp"
-                                                                title="Edit"
-                                                            >
-                                                                <i className="fa fa-pen" />
-                                                            </Link>
-
-                                                            {/* UPDATED DELETE BUTTON */}
-                                                            <button
-                                                                className="btn btn-danger btn-xs sharp"
+                                                        <div className="klk-actions">
+                                                            <ViewAction to={`/view-dispatch-panels/${item._id}`} title="View panels" />
+                                                            <EditAction to={`/dispatch/panel/update/${item._id}`} title="Edit dispatch" />
+                                                            <DeleteAction
                                                                 title="Delete"
                                                                 onClick={() => handleDelete(item._id)}
                                                                 disabled={deletingId === item._id}
-                                                            >
-                                                                {deletingId === item._id
-                                                                    ? <Spinner animation="border" size="sm" />
-                                                                    : <i className="fa fa-trash" />
-                                                                }
-                                                            </button>
-
+                                                            />
                                                         </div>
                                                     </td>
 
@@ -319,7 +306,7 @@ const ViewDispatchPanel = () => {
                     )}
                 </Card.Body>
             </Card>
-        </Col>
+        </>
     );
 };
 

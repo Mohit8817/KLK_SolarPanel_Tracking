@@ -38,12 +38,18 @@ export function signupAction(email, password, navigate) {
 }
 
 export function Logout(navigate) {
-	localStorage.removeItem('userDetails');
-    navigate('/login');
-    
-	return {
-        type: LOGOUT_ACTION,
-    };
+  localStorage.removeItem("userDetails");
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  localStorage.removeItem("permissions");
+
+  if (typeof navigate === "function") {
+    navigate("/login");
+  }
+
+  return {
+    type: LOGOUT_ACTION,
+  };
 }
 
 export function loginAction(email, password, navigate) {

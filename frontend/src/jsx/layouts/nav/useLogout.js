@@ -5,9 +5,10 @@ const useLogout = () => {
   const navigate = useNavigate();
 
   const logout = () => {
-    // Remove token & user
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("permissions");
+    localStorage.removeItem("userDetails");
 
     // Remove axios auth header
     delete axios.defaults.headers.common["Authorization"];

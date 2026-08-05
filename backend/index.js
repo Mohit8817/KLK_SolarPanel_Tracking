@@ -21,7 +21,14 @@ app.use(express.json())
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://klkventures.cloud"],
+    origin: [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+      "http://klkventures.cloud",
+      "https://klkventures.cloud",
+      "http://www.klkventures.cloud",
+      "https://www.klkventures.cloud",
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],

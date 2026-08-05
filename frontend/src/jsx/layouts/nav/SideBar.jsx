@@ -3,7 +3,7 @@ import PerfectScrollbar from "react-perfect-scrollbar";
 import { Link } from "react-router-dom";
 import { Collapse, Dropdown } from "react-bootstrap";
 import { useScrollPosition } from "@n8tb1t/use-scroll-position";
-import { FilteredMenuList } from "./Menu";
+import { getFilteredMenuList } from "./Menu";
 import { ThemeContext } from "../../../context/ThemeContext";
 import LogoutPage from "./Logout";
 import profile from "../../../assets/images/profile/profileimg3.jpg";
@@ -57,6 +57,7 @@ const SideBar = () => {
   }, []);
 
   const [user, setUser] = useState(null);
+  const [menuItems, setMenuItems] = useState(() => getFilteredMenuList());
 
 
   useEffect(() => {
@@ -65,6 +66,7 @@ const SideBar = () => {
       const parsed = JSON.parse(storedUser);
       setUser(parsed);
     }
+    setMenuItems(getFilteredMenuList());
   }, []);
 
 
@@ -182,7 +184,7 @@ const SideBar = () => {
           </Dropdown>
 
           {/* Menu */}
-          {FilteredMenuList.map((data, index) => {
+          {menuItems.map((data, index) => {
             let menuClass = data.classsChange;
 
             if (menuClass === "menu-title") {

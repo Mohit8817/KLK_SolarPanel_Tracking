@@ -15,6 +15,7 @@ import {
 import AddPermission from "./AddPermission";
 
 import CommonPagination from "../Common/Pagination";
+import PageHeader from "../Common/PageHeader";
 
 import {
   getPermissions,
@@ -153,36 +154,24 @@ const PermissionList = () => {
   };
 
   return (
-    <Col lg={12}>
-
-      <Card>
-
-        {/* HEADER */}
-        <Card.Header className="d-flex justify-content-between align-items-center">
-
-          <Card.Title className="mb-0">
-
-            <i className="fa fa-lock me-2 text-success"></i>
-
-            Permission List
-
-          </Card.Title>
-
-          <Button
-            variant="success"
-            size="sm"
-            onClick={handleAddPermission}
-          >
-
-            <i className="fa fa-plus me-1"></i>
-
+    <>
+      <PageHeader
+        title="Permission List"
+        breadcrumbs={[
+          { label: "Dashboard", to: "/dashboard" },
+          { label: "Role & Permission" },
+        ]}
+        action={
+          <Button variant="success" size="sm" onClick={handleAddPermission}>
+            <i className="fa fa-plus me-1" />
             Add Permission
-
           </Button>
+        }
+      />
+      <Col lg={12}>
 
-        </Card.Header>
+      <Card className="klk-list-card">
 
-        {/* BODY */}
         <Card.Body>
 
           <Table
@@ -404,6 +393,7 @@ const PermissionList = () => {
       />
 
     </Col>
+    </>
   );
 };
 

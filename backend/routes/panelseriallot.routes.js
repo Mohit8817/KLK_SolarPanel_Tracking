@@ -3,12 +3,15 @@ import {
   createPanelSerialLot,
   getAllPanelSerialLots,
   deletePanelSerialLot,
-  getPanelsByLotId
+  getPanelsByLotId,
+  getNextPanelNumber,
+  previewPanelSerialFormat,
 } from "../controllers/panelseriallot.controller.js";
 
 const router = express.Router();
 
-// CREATE
+router.post("/next-starting-no", getNextPanelNumber);
+router.post("/preview-serial-format", previewPanelSerialFormat);
 router.post("/create-panel-serial", createPanelSerialLot);
 
 // VIEW (all rows)
