@@ -39,12 +39,16 @@ class PolarChart extends Component {
 				{
 					data: [totalProduction, totalDispatched, inStock, totalDamage],
 					
-					backgroundColor: ["#496ecc", "#68e365", "#ffa755", "#c8c8c8"],
+					backgroundColor: ["#5bcfc5", "#709fba", "#ffa755", "#dc3545"],
 				},
 			],
 		};
 
-		return <PolarArea data={chartData} height={200} options={options} />;
+		return (
+			<div className="klk-polar-chart">
+				<PolarArea data={chartData} options={options} />
+			</div>
+		);
 	}
 }
 

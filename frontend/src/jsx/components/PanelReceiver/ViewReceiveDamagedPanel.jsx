@@ -4,6 +4,7 @@ import PageTitle from "../../layouts/PageTitle";
 import CommonPagination from "../Common/Pagination";
 import TableExportActions from "../Common/TableExportActions";
 import ListToolbar from "../Common/ListToolbar";
+import PrefixCell from "../Common/PrefixCell";
 
 const OnsiteDamagePanels = () => {
   const [data, setData] = useState([]);
@@ -56,6 +57,7 @@ const OnsiteDamagePanels = () => {
   const exportData = data.map((item, index) => ({
     sno: index + 1,
     panelNo: item.panel_no,
+    prefix: item.prefix,
     damage: "Onsite Damage",
     remarks: item.remarks || "-",
     date: new Date(item.createdAt).toLocaleDateString(),
@@ -64,6 +66,7 @@ const OnsiteDamagePanels = () => {
   const exportColumns = [
     { label: "S No", key: "sno" },
     { label: "Panel No", key: "panelNo" },
+    { label: "Prefix", key: "prefix" },
     { label: "Damage", key: "damage" },
     { label: "Remarks", key: "remarks" },
     { label: "Date", key: "date" },
@@ -105,6 +108,7 @@ const OnsiteDamagePanels = () => {
                     <tr>
                       <th>S No.</th>
                       <th>Panel No</th>
+                      <th>Prefix</th>
                       <th>Damage</th>
                       <th>Remarks</th>
                       <th>Date</th>
@@ -120,6 +124,8 @@ const OnsiteDamagePanels = () => {
                         </td>
 
                         <td>{item.panel_no}</td>
+
+                        <td><PrefixCell value={item.prefix} /></td>
 
                         <td>
                           <span className="badge bg-warning text-dark">

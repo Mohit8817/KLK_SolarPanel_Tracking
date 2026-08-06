@@ -8,6 +8,7 @@ import Search, { useSearch } from "../Common/Search";
 import PageHeader from "../Common/PageHeader";
 import ListToolbar from "../Common/ListToolbar";
 import { ViewAction, DeleteAction } from "../Common/ActionButtons";
+import PrefixCell from "../Common/PrefixCell";
 import { PageLoader } from "../Common/LoadingState";
 
 const ViewGeneratePanel = () => {
@@ -40,6 +41,7 @@ const ViewGeneratePanel = () => {
   // ── SEARCH + PAGINATION ──────────────────────────────────────────────────
   const SEARCH_KEYS = [
     "date",
+    "prefix",
     "total_panels",
     "panel_capacity",
     "panel_type",
@@ -62,6 +64,7 @@ const ViewGeneratePanel = () => {
   const exportData = panelList.map((item, index) => ({
     sno: index + 1,
     date: item.date,
+    prefix: item.prefix,
     totalPanels: item.total_panels,
     capacity: item.panel_capacity,
     panelType: item.panel_type,
@@ -72,6 +75,7 @@ const ViewGeneratePanel = () => {
   const exportColumns = [
     { label: "S No", key: "sno" },
     { label: "Date", key: "date" },
+    { label: "Prefix", key: "prefix" },
     { label: "Total Panels", key: "totalPanels" },
     { label: "Capacity", key: "capacity" },
     { label: "Panel Type", key: "panelType" },
@@ -99,7 +103,7 @@ const ViewGeneratePanel = () => {
             <Search
               value={searchQuery}
               onChange={setSearchQuery}
-              placeholder="Search by date, type, project..."
+              placeholder="Search by date, prefix, type, project..."
             />
             <TableExportActions
               data={exportData}
@@ -118,6 +122,7 @@ const ViewGeneratePanel = () => {
                   <tr>
                     <th>S no.</th>
                     <th>Date</th>
+                    <th>Prefix</th>
                     <th>Total Panels</th>
                     <th>Capacity</th>
                     <th>Panel Type</th>
@@ -133,6 +138,7 @@ const ViewGeneratePanel = () => {
                       <tr key={item._id}>
                         <td><strong>{startIndex + index + 1}</strong></td>
                         <td>{item.date}</td>
+                        <td><PrefixCell value={item.prefix} /></td>
                         <td>{item.total_panels}</td>
                         <td className="text-primary fw-bold">
                           {item.panel_capacity} WP
@@ -156,7 +162,7 @@ const ViewGeneratePanel = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="8" className="text-center text-muted">
+                      <td colSpan="9" className="text-center text-muted">
                         {searchQuery
                           ? `No results for "${searchQuery}"`
                           : "No records found"}

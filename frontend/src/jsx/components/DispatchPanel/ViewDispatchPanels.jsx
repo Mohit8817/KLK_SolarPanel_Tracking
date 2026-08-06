@@ -9,6 +9,7 @@ import CommonPagination from "../Common/Pagination";
 import Search, { useSearch } from "../Common/Search";
 import PageHeader from "../Common/PageHeader";
 import ListToolbar from "../Common/ListToolbar";
+import PrefixCell from "../Common/PrefixCell";
 
 const ViewDispatchPanels = () => {
   const { id } = useParams();
@@ -91,6 +92,7 @@ const ViewDispatchPanels = () => {
     "panel_unique_no",
     "panel_no",
     "panel_capacity",
+    "prefix",
     "dispatch_panel_type",
     "dispatch_status",
     "damage_status",
@@ -111,6 +113,7 @@ const ViewDispatchPanels = () => {
   const exportData = panelList.map((item, index) => ({
     sno: index + 1,
     panelUniqueNo: item.panel_unique_no,
+    prefix: item.prefix,
     panelNo: item.panel_no,
     capacity: item.panel_capacity,
     panelType: item.dispatch_panel_type === 1
@@ -125,6 +128,7 @@ const ViewDispatchPanels = () => {
   const exportColumns = [
     { label: "S No", key: "sno" },
     { label: "Panel Unique No", key: "panelUniqueNo" },
+    { label: "Prefix", key: "prefix" },
     { label: "Panel No", key: "panelNo" },
     { label: "Capacity", key: "capacity" },
     { label: "Panel Type", key: "panelType" },
@@ -204,11 +208,12 @@ const ViewDispatchPanels = () => {
     doc.text("Dispatch Panel Details", 14, cursorY);
     cursorY += 4;
 
-    const tableHead = [["S No", "Panel Unique No", "Panel No", "Capacity", "Panel Type", "Dispatch Status", "Damage Status"]];
+    const tableHead = [["S No", "Panel Unique No", "Prefix", "Panel No", "Capacity", "Panel Type", "Dispatch Status", "Damage Status"]];
 
     const tableBody = panelList.map((item, index) => [
       index + 1,
       item.panel_unique_no ?? "-",
+      item.prefix ?? "-",
       item.panel_no ?? "-",
       item.panel_capacity ?? "-",
       item.dispatch_panel_type === 1 ? "DCR" : item.dispatch_panel_type === 2 ? "NON DCR" : "-",
@@ -371,6 +376,7 @@ const ViewDispatchPanels = () => {
                   <tr>
                     <th>S No.</th>
                     <th>Panel Unique No</th>
+                    <th>Prefix</th>
                     <th>Panel No</th>
                     <th>Capacity</th>
                     <th>Panel Type</th>
@@ -386,6 +392,7 @@ const ViewDispatchPanels = () => {
                       <tr key={item._id}>
                         <td><strong>{startIndex + index + 1}</strong></td>
                         <td>{item.panel_unique_no}</td>
+                        <td><PrefixCell value={item.prefix} /></td>
                         <td>{item.panel_no}</td>
                         <td>{item.panel_capacity}</td>
                         <td>
@@ -423,7 +430,7 @@ const ViewDispatchPanels = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="8" className="text-center text-muted py-4">
+                      <td colSpan="9" className="text-center text-muted py-4">
                         {searchQuery
                           ? `No results for "${searchQuery}"`
                           : "No panels found"}

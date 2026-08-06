@@ -6,6 +6,7 @@ import ManufacturingPanel from '../models/ManufacturingPanel.model.js';
 import ProductionReleaseHistory from '../models/ProductionReleaseHistory.js';
 import User from '../models/users.model.js'
 import Role from '../models/Role.model.js'
+import { attachPrefixToRecords } from "../utils/attachPrefix.js";
 
 
 export const createProductionPanel = async (req, res) => {
@@ -165,9 +166,11 @@ export const fetchAllProductionPanels = async (req, res) => {
     )
       .sort({ date: -1 });
 
+    const data = await attachPrefixToRecords(productionPanels, "production_id");
+
     res.status(200).json({
       success: true,
-      data: productionPanels,
+      data,
     });
   } catch (error) {
     res.status(500).json({
@@ -369,9 +372,10 @@ export const viewVendorProductionPanels = async (req, res) => {
       })
 
     );
+    const data = await attachPrefixToRecords(finalData, "production_id");
     return res.status(200).json({
       success: true,
-      data: finalData,
+      data,
     });
   } catch (error) {
     return res.status(500).json({
@@ -486,9 +490,11 @@ export const getAllManufacturingPanels = async (req, res) => {
       .find({ production_id })
       .sort({ createdAt: -1 });
 
+    const data = await attachPrefixToRecords(panels, "production_id");
+
     return res.status(200).json({
       success: true,
-      data: panels
+      data
     });
 
   } catch (error) {
@@ -680,7 +686,7 @@ export const getProductionReleaseHistory = async (req, res) => {
         const panels = await PanelNumber.find({
           vendor_release_id: item._id,
         })
-          .select("panel_no panel_unique_no")
+          .select("panel_no panel_unique_no prefix")
           .sort({ panel_no: 1 });
 
         const vendor =

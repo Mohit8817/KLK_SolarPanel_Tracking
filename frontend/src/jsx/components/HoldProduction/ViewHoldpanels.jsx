@@ -8,6 +8,7 @@ import CommonPagination from "../Common/Pagination";
 import Search, { useSearch } from "../Common/Search";
 import PageHeader from "../Common/PageHeader";
 import ListToolbar from "../Common/ListToolbar";
+import PrefixCell from "../Common/PrefixCell";
 
 const ViewHoldPanels = () => {
   const { id } = useParams();
@@ -50,6 +51,7 @@ const ViewHoldPanels = () => {
     "panel_unique_no",
     "panel_no",
     "panel_capacity",
+    "prefix",
   ];
 
   const {
@@ -65,6 +67,7 @@ const ViewHoldPanels = () => {
   const exportData = panelList.map((item, index) => ({
     sno: index + 1,
     panel_unique_no: item.panel_unique_no,
+    prefix: item.prefix,
     panel_no: item.panel_no,
     panel_capacity: item.panel_capacity,
     hold_status:
@@ -82,6 +85,7 @@ const ViewHoldPanels = () => {
   const exportColumns = [
     { label: "S No", key: "sno" },
     { label: "Panel Unique No", key: "panel_unique_no" },
+    { label: "Prefix", key: "prefix" },
     { label: "Panel No", key: "panel_no" },
     { label: "Capacity", key: "panel_capacity" },
     { label: "Hold Status", key: "hold_status" },
@@ -126,6 +130,7 @@ const ViewHoldPanels = () => {
               <tr>
                 <th>S No.</th>
                 <th>Panel Unique No</th>
+                <th>Prefix</th>
                 <th>Panel No</th>
                 <th>Capacity</th>
                 <th>Hold Status</th>
@@ -138,7 +143,7 @@ const ViewHoldPanels = () => {
               {loading ? (
                 <tr>
                   <td
-                    colSpan="7"
+                    colSpan="8"
                     className="text-center"
                   >
                     Loading...
@@ -154,6 +159,8 @@ const ViewHoldPanels = () => {
                     <td>
                       {item.panel_unique_no}
                     </td>
+
+                    <td><PrefixCell value={item.prefix} /></td>
 
                     <td>{item.panel_no}</td>
 
@@ -202,7 +209,7 @@ const ViewHoldPanels = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan="7"
+                    colSpan="8"
                     className="text-center"
                   >
                     No Panels Found

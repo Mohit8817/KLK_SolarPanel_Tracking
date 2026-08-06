@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
 import PageHeader from "../Common/PageHeader";
+import PrefixCell from "../Common/PrefixCell";
 import PropTypes from "prop-types";
 
 const ViewDamagePanel = () => {
@@ -104,6 +105,7 @@ const ViewDamagePanel = () => {
     list.map((item, index) => ({
       sno: index + 1,
       panelId: item.panel_no,
+      prefix: item.prefix,
       panelType: getPanelType(item),
       remarks: item.remarks,
       date: new Date(item.createdAt).toLocaleDateString(),
@@ -113,6 +115,7 @@ const ViewDamagePanel = () => {
   const exportColumns = [
     { label: "S No", key: "sno" },
     { label: "Panel ID", key: "panelId" },
+    { label: "Prefix", key: "prefix" },
     { label: "Panel Type", key: "panelType" },
     { label: "Remarks", key: "remarks" },
     { label: "Reported Date", key: "date" },
@@ -139,6 +142,7 @@ const ViewDamagePanel = () => {
             <tr>
               <th>S no.</th>
               <th>Panel ID</th>
+              <th>Prefix</th>
               <th>Panel Type</th>
               <th>Damage Image</th>
               <th>Remarks</th>
@@ -158,6 +162,8 @@ const ViewDamagePanel = () => {
                   </td>
 
                   <td>{item.panel_no}</td>
+
+                  <td><PrefixCell value={item.prefix} /></td>
 
                   <td>
                     <span className={`badge ${getBadgeClass(item)}`}>
@@ -201,7 +207,7 @@ const ViewDamagePanel = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="8" className="text-center text-muted">
+                <td colSpan="9" className="text-center text-muted">
                   No damage records found
                 </td>
               </tr>

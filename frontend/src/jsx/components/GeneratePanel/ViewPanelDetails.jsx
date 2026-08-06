@@ -7,6 +7,7 @@ import CommonPagination from "../Common/Pagination";
 import Search, { useSearch } from "../Common/Search";
 import PageHeader from "../Common/PageHeader";
 import ListToolbar from "../Common/ListToolbar";
+import PrefixCell from "../Common/PrefixCell";
 
 const ViewPanelDetails = () => {
   const { id } = useParams();
@@ -30,7 +31,7 @@ const ViewPanelDetails = () => {
   };
 
   // ── REPLACE old pagination block with useSearch ──────────────────────────
-  const SEARCH_KEYS = ["panel_unique_no", "panel_capacity"];
+  const SEARCH_KEYS = ["panel_unique_no", "panel_capacity", "prefix"];
 
   const {
     currentData,
@@ -47,6 +48,7 @@ const ViewPanelDetails = () => {
   const exportData = panelList.map((item, index) => ({
     sno: index + 1,
     uniqueNo: item.panel_unique_no,
+    prefix: item.prefix,
     capacity: item.panel_capacity,
     category:
       item.dispatch_panel_type === 1 ? "DCR"
@@ -63,6 +65,7 @@ const ViewPanelDetails = () => {
   const exportColumns = [
     { label: "S No", key: "sno" },
     { label: "Panel Unique No", key: "uniqueNo" },
+    { label: "Prefix", key: "prefix" },
     { label: "Capacity", key: "capacity" },
     { label: "Category", key: "category" },
     { label: "Production", key: "production" },
@@ -113,6 +116,7 @@ const ViewPanelDetails = () => {
                   <tr>
                     <th>S No.</th>
                     <th>Panel Unique No</th>
+                    <th>Prefix</th>
                     <th>Capacity</th>
                     <th>Category</th>
                     <th>Production</th>
@@ -130,6 +134,7 @@ const ViewPanelDetails = () => {
                       <tr key={item._id}>
                         <td><strong>{startIndex + index + 1}</strong></td>
                         <td>{item.panel_unique_no}</td>
+                        <td><PrefixCell value={item.prefix} /></td>
                         <td>{item.panel_capacity}</td>
 
                         {/* Category */}
@@ -186,7 +191,7 @@ const ViewPanelDetails = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="10" className="text-center text-muted">
+                      <td colSpan="11" className="text-center text-muted">
                         {searchQuery
                           ? `No results for "${searchQuery}"`
                           : "No records found"}

@@ -19,7 +19,7 @@ class ActivityApexBarGraph extends React.Component {
             dataLabels: { position: "top" },
           },
         },
-        colors: ["#4CAF50", "#FF9800", "#2196F3", "#F44336"],
+        colors: ["#5bcfc5", "#709fba", "#ffa755", "#dc3545"],
         fill: { opacity: 1 },
         dataLabels: { enabled: false },
         stroke: {
@@ -78,55 +78,56 @@ class ActivityApexBarGraph extends React.Component {
     };
   }
 
-getSeries() {
+getChartData() {
   const { data } = this.props;
-
   const monthly = data?.monthWiseData;
 
-  if (monthly && monthly.length > 0) {
-    const months = Array.from({ length: 12 }, (_, i) => i + 1);
-
-    const getMonthVal = (key, month) => {
-      const found = monthly.find((m) => m?._id?.month === month);
-      return found ? found[key] || 0 : 0;
-    };
-
-    return [
-      {
-        name: "Panels Generated",
-        data: months.map((m) => getMonthVal("totalGenerated", m)),
-      },
-      {
-        name: "Total Production",
-        data: months.map((m) => getMonthVal("totalProduction", m)),
-      },
-      {
-        name: "Total Dispatched",
-        data: months.map((m) => getMonthVal("totalDispatched", m)),
-      },
-      {
-        name: "Total Damage",
-        data: months.map((m) => getMonthVal("totalDamage", m)),
-      },
-    ];
+  if (!monthly || monthly.length === 0) {
+    return { categories: [], series: [] };
   }
 
-  return [];
+  const sorted = [...monthly].sort((a, b) => {
+    const ay = a?._id?.year ?? 0;
+    const by = b?._id?.year ?? 0;
+    if (ay !== by) return ay - by;
+    return (a?._id?.month ?? 0) - (b?._id?.month ?? 0);
+  });
+
+  const categories = sorted.map(
+    (m) => m.monthLabel || `${m?._id?.year}-${String(m?._id?.month).padStart(2, "0")}`
+  );
+
+  const series = [
+    { name: "Panels Generated", data: sorted.map((m) => m.totalGenerated || 0) },
+    { name: "Total Production", data: sorted.map((m) => m.totalProduction || 0) },
+    { name: "Total Dispatched", data: sorted.map((m) => m.totalDispatched || 0) },
+    { name: "Total Damage", data: sorted.map((m) => m.totalDamage || 0) },
+  ];
+
+  return { categories, series };
 }
 
   render() {
+    const { height = 400 } = this.props;
+    const { categories, series } = this.getChartData();
+    const options = {
+      ...this.state.options,
+      xaxis: { ...this.state.options.xaxis, categories },
+    };
+
     return (
       <ReactApexChart
-        options={this.state.options}
-        series={this.getSeries()}
+        options={options}
+        series={series}
         type="bar"
-        height={400}
+        height={height}
       />
     );
   }
 }
 
 ActivityApexBarGraph.propTypes = {
+  height: PropTypes.number,
   data: PropTypes.shape({
     monthWiseData: PropTypes.arrayOf(
       PropTypes.shape({

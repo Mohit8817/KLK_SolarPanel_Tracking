@@ -192,10 +192,8 @@ const DispatchPanel = () => {
       notifySuccess("Dispatch started — begin scanning panels");
       forceFocus();
     } catch (error) {
-  console.log("Start Dispatch Error:", error);
-  console.log("Response:", error.response);
-  notifyError(error.response?.data?.message || "Failed to start dispatch");
-}
+      notifyError(error.response?.data?.message || "Failed to start dispatch");
+    }
   };
 
   /* ================= END DISPATCH ================= */
@@ -423,10 +421,10 @@ const handleEndDispatch = async (e) => {
                   </div>
                 </div>
 
-                <div className="klk-dispatch-details__actions">
+                <div className="klk-form-actions">
                   <button
                     type="submit"
-                    className="btn btn-success"
+                    className="btn btn-primary klk-form-actions__btn"
                     disabled={dispatchStarted}
                   >
                     {dispatchStarted ? "Dispatch Started" : "Start Dispatch"}
@@ -632,16 +630,16 @@ const handleEndDispatch = async (e) => {
                 </div>
               </div>
 
-              <div className="klk-form-actions klk-dispatch-actions">
+              <div className="klk-form-actions">
                 <button
                   type="button"
-                  className="btn btn-success"
+                  className="btn btn-primary klk-form-actions__btn"
                   onClick={handleEndDispatch}
                   disabled={!dispatchStarted || totalScanned === 0}
                 >
                   End Dispatch
                   {dispatchStarted && totalScanned > 0 && (
-                    <span className="badge bg-light text-success">
+                    <span className="badge bg-light text-primary ms-1">
                       {totalScanned} panel{totalScanned !== 1 ? "s" : ""}
                     </span>
                   )}

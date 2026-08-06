@@ -22,7 +22,7 @@ const HoldProductionform = () => {
   const [prefixes, setPrefixes] = useState([]);
   const [panelTypes, setPanelTypes] = useState([]);
   const [availableCount, setAvailableCount] = useState(0);
-  const [startingPanelNo, setStartingPanelNo] = useState("");
+  const [, setStartingPanelNo] = useState("");
   const [startingPanelUniqueNo, setStartingPanelUniqueNo] =
   useState("");
   const [loading, setLoading] = useState(false);

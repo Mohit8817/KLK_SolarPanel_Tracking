@@ -95,8 +95,9 @@
   border: none;
   border-radius: 12px;
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
+  overflow: visible;
   margin-bottom: 0;
+  height: auto !important;
 }
 
 .klk-form-card.klk-dispatch-form {
@@ -106,7 +107,7 @@
 .klk-form-card form {
   max-width: 100%;
   min-width: 0;
-  overflow-x: clip;
+  overflow: visible;
 }
 
 .klk-form-card form .row {
@@ -141,7 +142,8 @@
 
 .klk-form-card .card-body {
   padding: 1.25rem;
-  overflow-x: clip;
+  overflow: visible;
+  height: auto;
 }
 
 .klk-form-card .form-label {
@@ -168,6 +170,80 @@
   background: #fff;
   border-bottom: 1px solid #eef2f6;
   padding: 0.875rem 1.25rem;
+}
+
+.klk-prefix-cell {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #217069;
+  background: rgba(91, 207, 197, 0.12);
+  border: 1px solid rgba(91, 207, 197, 0.3);
+  border-radius: 6px;
+  letter-spacing: 0.03em;
+}
+
+.klk-breakdown-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-width: 6rem;
+  max-width: 16rem;
+}
+
+.klk-breakdown-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.22rem 0.5rem;
+  font-size: 0.75rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.klk-breakdown-chip--prefix {
+  background: rgba(33, 112, 105, 0.08);
+  border-color: rgba(33, 112, 105, 0.22);
+}
+
+.klk-breakdown-chip--prefix .klk-breakdown-chip__label {
+  color: #1e3a5f;
+}
+
+.klk-breakdown-chip--capacity {
+  background: rgba(91, 207, 197, 0.1);
+  border-color: rgba(91, 207, 197, 0.3);
+}
+
+.klk-breakdown-chip--capacity .klk-breakdown-chip__label {
+  color: #217069;
+}
+
+.klk-breakdown-chip__label {
+  font-weight: 700;
+}
+
+.klk-breakdown-chip__count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #475569;
+}
+
+.klk-cap-pill {
+  display: inline-block;
+  min-width: 2rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  border-radius: 999px;
+  color: #94a3b8;
+  background: #f8fafc;
+  border: 1px solid #eef2f6;
 }
 
 .klk-list-toolbar {
@@ -456,18 +532,19 @@
 }
 
 .klk-generate-panel .card-body {
-  overflow-x: hidden;
-  padding-bottom: 1rem;
+  overflow: visible;
+  padding-bottom: 1.25rem;
 }
 
 .klk-generate-panel__form {
   max-width: 100%;
-  overflow-x: hidden;
+  overflow: visible;
 }
 
 .klk-generate-panel__format-row {
-  margin-top: 0.5rem;
-  margin-bottom: 0.25rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
+  align-items: stretch;
 }
 
 .klk-generate-panel__format-row > [class*="col-"] {
@@ -712,7 +789,7 @@
   border-radius: 12px;
   padding: 1rem;
   background: #f8fafb;
-  height: 100%;
+  height: auto;
 }
 
 .klk-serial-format.is-locked {
@@ -815,7 +892,7 @@
   border-radius: 12px;
   padding: 1rem;
   background: rgba(91, 207, 197, 0.08);
-  height: 100%;
+  height: auto;
 }
 
 .klk-serial-preview__title {

@@ -1,10 +1,7 @@
-import React from 'react';
-import { useNavigate } from "react-router-dom";
-import useLogout from './useLogout'; // import your custom hook
+import useLogout from './useLogout';
 
 function LogoutPage() {
-  const navigate = useNavigate();
-  const logout = useLogout(); // initialize hook
+  const logout = useLogout();
 
   return (
     <>

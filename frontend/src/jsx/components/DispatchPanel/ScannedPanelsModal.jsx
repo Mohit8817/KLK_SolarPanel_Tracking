@@ -1,4 +1,5 @@
 import { Modal, Table, Badge } from "react-bootstrap";
+import PrefixCell from "../Common/PrefixCell";
 
 const ScannedPanelsModal = ({ show, onHide, dispatch }) => {
   if (!dispatch) return null;
@@ -27,6 +28,7 @@ const ScannedPanelsModal = ({ show, onHide, dispatch }) => {
           <thead>
             <tr>
               <th>#</th>
+              <th>Prefix</th>
               <th>Panel Code</th>
             </tr>
           </thead>
@@ -35,6 +37,7 @@ const ScannedPanelsModal = ({ show, onHide, dispatch }) => {
               panels.map((panel, index) => (
                 <tr key={index}>
                   <td>{index + 1}</td>
+                  <td><PrefixCell serial={panel} /></td>
                   <td>
                     <strong>{panel}</strong>
                   </td>
@@ -42,7 +45,7 @@ const ScannedPanelsModal = ({ show, onHide, dispatch }) => {
               ))
             ) : (
               <tr>
-                <td colSpan="2" className="text-center text-muted">
+                <td colSpan="3" className="text-center text-muted">
                   No scanned panels found
                 </td>
               </tr>

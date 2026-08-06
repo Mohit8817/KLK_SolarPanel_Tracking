@@ -62,7 +62,6 @@
 // export default Search;
 
 
-/* eslint-disable react/prop-types */
 import { useState, useMemo } from "react";
 
 export const useSearch = (data = [], keys = [], itemsPerPage = 10) => {

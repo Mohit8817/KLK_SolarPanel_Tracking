@@ -1,6 +1,7 @@
 import DamagePanel from "../models/damagepanel.model.js";
 import PanelNumber from "../models/PanelNumber.model.js";
 import mongoose from "mongoose";
+import { attachPrefixByPanelUniqueNo } from "../utils/attachPrefix.js";
 
 export const createDamagePanel = async (req, res) => {
   try {
@@ -190,11 +191,12 @@ export const createDamagePanel = async (req, res) => {
 export const getAllDamagePanels = async (req, res) => {
   try {
     const damages = await DamagePanel.find().sort({ createdAt: -1 });
+    const data = await attachPrefixByPanelUniqueNo(damages);
 
     res.status(200).json({
       success: true,
-      total: damages.length,
-      data: damages,
+      total: data.length,
+      data,
     });
   } catch (error) {
     res.status(500).json({
@@ -328,6 +330,7 @@ export const getDamageTypeOnePanels = async (req, res) => {
           ...damage.toObject(),
           panel_unique_no: panel?.panel_unique_no || null,
           panel_category: panel?.panel_category || null,
+          prefix: panel?.prefix || null,
         };
       })
     );
@@ -363,6 +366,7 @@ export const getDamageTypeTwoPanels = async (req, res) => {
           ...damage.toObject(),
           panel_unique_no: panel?.panel_unique_no || null,
           panel_category: panel?.panel_category || null,
+          prefix: panel?.prefix || null,
         };
       })
     );
@@ -391,13 +395,14 @@ export const getDamageTypeThreePanels = async (req, res) => {
     const result = await Promise.all(
       damages.map(async (damage) => {
         const panel = await PanelNumber.findOne({
-          collect_id: damage._id,
+          collect_damage_id: damage._id,
         });
 
         return {
           ...damage.toObject(),
           panel_unique_no: panel?.panel_unique_no || null,
           panel_category: panel?.panel_category || null,
+          prefix: panel?.prefix || null,
         };
       })
     );

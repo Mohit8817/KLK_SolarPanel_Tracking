@@ -1,28 +1,29 @@
-import { useReducer, useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import PerfectScrollbar from "react-perfect-scrollbar";
-import { Link } from "react-router-dom";
-import { Collapse, Dropdown } from "react-bootstrap";
+import { NavLink, Link, useLocation } from "react-router-dom";
+import { Dropdown } from "react-bootstrap";
 import { useScrollPosition } from "@n8tb1t/use-scroll-position";
+import { useDispatch, useSelector } from "react-redux";
 import { getFilteredMenuList } from "./Menu";
+import {
+  buildMenuWithSections,
+  getActiveParentTitle,
+  isMenuPathActive,
+  isParentRouteActive,
+} from "./menuUtils";
 import { ThemeContext } from "../../../context/ThemeContext";
+import { navtoggle } from "../../../store/actions/AuthActions";
 import LogoutPage from "./Logout";
 import profile from "../../../assets/images/profile/profileimg3.jpg";
+import "./Sidebar.css";
 
 const baseURL = import.meta.env.VITE_BACKEND_URL;
 
-// REDUX
-import { useDispatch, useSelector } from "react-redux";
-import { navtoggle } from "../../../store/actions/AuthActions";
-
-const reducer = (previousState, updatedState) => ({
-  ...previousState,
-  ...updatedState,
-});
-
-const initialState = {
-  active: "",
-  activeSubmenu: "",
-};
+const MenuIcon = ({ icon }) => (
+  <span className="klk-sidebar__icon-box">
+    <i className={`fa-solid ${icon}`} aria-hidden="true" />
+  </span>
+);
 
 const SideBar = () => {
   const {
@@ -35,42 +36,31 @@ const SideBar = () => {
 
   const dispatch = useDispatch();
   const sideMenu = useSelector((state) => state.sideMenu);
-
-
-
-  const [state, setState] = useReducer(reducer, initialState);
-
-  // Toggle listener
-  useEffect(() => {
-    const btn = document.querySelector(".nav-control");
-    const wrapper = document.querySelector("#main-wrapper");
-
-    const toggleFunc = () => {
-      wrapper.classList.toggle("menu-toggle");
-    };
-
-    if (btn) btn.addEventListener("click", toggleFunc);
-
-    return () => {
-      if (btn) btn.removeEventListener("click", toggleFunc);
-    };
-  }, []);
+  const isCollapsed = sideMenu;
+  const location = useLocation();
 
   const [user, setUser] = useState(null);
   const [menuItems, setMenuItems] = useState(() => getFilteredMenuList());
-
+  const [openMenu, setOpenMenu] = useState("");
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      const parsed = JSON.parse(storedUser);
-      setUser(parsed);
+      setUser(JSON.parse(storedUser));
     }
     setMenuItems(getFilteredMenuList());
   }, []);
 
+  useEffect(() => {
+    const parent = getActiveParentTitle(menuItems, location.pathname);
+    if (parent) setOpenMenu(parent);
+  }, [location.pathname, menuItems]);
 
-  // Scroll hide
+  const menuRows = useMemo(
+    () => buildMenuWithSections(menuItems),
+    [menuItems]
+  );
+
   const [hideOnScroll, setHideOnScroll] = useState(true);
 
   useScrollPosition(
@@ -81,16 +71,11 @@ const SideBar = () => {
     [hideOnScroll]
   );
 
-  // Menu Active
-  const handleMenuActive = (status) => {
-    setState({ active: status });
-    if (state.active === status) {
-      setState({ active: "" });
-    }
+  const handleMenuActive = (title) => {
+    if (isCollapsed) return;
+    setOpenMenu((prev) => (prev === title ? "" : title));
   };
 
-
-  // MOBILE AUTO CLOSE
   const closeSidebarMobile = () => {
     if (window.innerWidth < 991 && sideMenu) {
       ChangeIconSidebar(false);
@@ -103,145 +88,149 @@ const SideBar = () => {
     }
   };
 
-  // Path active
-  let path = window.location.pathname;
-  path = path.split("/");
-  path[path.length - 1];
+  const sidebarClass =
+    iconHover +
+    (sidebarposition.value === "fixed" &&
+    sidebarLayout.value === "horizontal" &&
+    headerposition.value === "static"
+      ? hideOnScroll > 120
+        ? " fixed"
+        : ""
+      : "");
 
   return (
     <div
       onMouseEnter={() => ChangeIconSidebar(true)}
       onMouseLeave={() => ChangeIconSidebar(false)}
-      className={`dlabnav ${iconHover} ${sidebarposition.value === "fixed" &&
-        sidebarLayout.value === "horizontal" &&
-        headerposition.value === "static"
-        ? hideOnScroll > 120
-          ? "fixed"
-          : ""
-        : ""
-        }`}
+      className={`dlabnav klk-sidebar${isCollapsed ? " klk-sidebar--collapsed" : ""} ${sidebarClass}`.trim()}
     >
       <PerfectScrollbar className="dlabnav-scroll">
         <ul className="metismenu" id="menu">
-
-          {/* Profile */}
-          <Dropdown as="li" className="nav-item dropdown header-profile">
-            <Dropdown.Toggle
-              variant=""
-              as="a"
-              className="nav-link i-false c-pointer"
-            >
-
-              <img
-                src={`${baseURL}/uploads/${user?.emp_image}`}
-                onError={(e) => {
-                  e.target.src = profile;
-                }}
-                width="50"
-                height="50"
-                alt="profile"
-                className="rounded-circle object-fit-cover"
-              />
-              <div className="header-info ms-3">
-                <span className="font-w600">
-                  Hi,<b>
+          <li className="klk-sidebar__profile">
+            <Dropdown as="div" className="w-100">
+              <Dropdown.Toggle
+                variant=""
+                as="a"
+                className="klk-sidebar__profile-toggle c-pointer"
+              >
+                <img
+                  src={`${baseURL}/uploads/${user?.emp_image}`}
+                  onError={(e) => {
+                    e.target.src = profile;
+                  }}
+                  alt="profile"
+                  className="klk-sidebar__avatar"
+                />
+                <div className="klk-sidebar__profile-info">
+                  <span className="klk-sidebar__profile-name">
                     {user
                       ? `${user.first_name} ${user.last_name}`
                       : "User"}
-                  </b>
-                </span>
+                  </span>
+                  <small className="klk-sidebar__profile-email">
+                    {user?.email || "No email"}
+                  </small>
+                </div>
+                <i
+                  className="fa-solid fa-chevron-down klk-sidebar__profile-chev"
+                  aria-hidden="true"
+                />
+              </Dropdown.Toggle>
 
-                <small className="text-start font-w400">
-                  {user?.email || "No Email"}
-                </small>
-              </div>
-            </Dropdown.Toggle>
+              <Dropdown.Menu align="end" className="mt-2 dropdown-menu dropdown-menu-end">
+                <Link to="/app-profile" className="dropdown-item ai-icon">
+                  <i className="fa-solid fa-user text-primary me-2" aria-hidden="true" />
+                  Profile
+                </Link>
+                <LogoutPage />
+              </Dropdown.Menu>
+            </Dropdown>
+          </li>
 
-            <Dropdown.Menu align="end" className="mt-2 dropdown-menu dropdown-menu-end">
-              <Link to="/app-profile" className="dropdown-item ai-icon">
-                <svg
-                  id="icon-user1"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="text-primary"
-                  width={18}
-                  height={18}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx={12} cy={7} r={4} />
-                </svg>
-                <span className="ms-2">Profile </span>
-              </Link>
-
-              <LogoutPage />
-
-            </Dropdown.Menu>
-          </Dropdown>
-
-          {/* Menu */}
-          {menuItems.map((data, index) => {
-            let menuClass = data.classsChange;
-
-            if (menuClass === "menu-title") {
+          {menuRows.map((row) => {
+            if (row.type === "label") {
               return (
-                <li className={menuClass} key={index}>
-                  {data.title}
-                </li>
-              );
-            } else {
-              return (
-                <li
-                  className={`${state.active === data.title ? "mm-active" : ""
-                    }`}
-                  key={index}
-                >
-                  {data.content && data.content.length > 0 ? (
-                    <>
-                      <Link
-                        to="#"
-                        className="has-arrow"
-                        onClick={() => handleMenuActive(data.title)}
-                      >
-                        {data.iconStyle}
-                        <span className="nav-text">{data.title}</span>
-                      </Link>
-
-                      <Collapse
-                        in={state.active === data.title ? true : false}
-                      >
-                        <ul
-                          className={`${menuClass === "mm-collapse" ? "mm-show" : ""
-                            }`}
-                        >
-                          {data.content.map((submenu, i) => {
-                            return (
-                              <li key={i}>
-                                <Link
-                                  to={submenu.to}
-                                  onClick={closeSidebarMobile}
-                                >
-                                  {submenu.title}
-                                </Link>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </Collapse>
-                    </>
-                  ) : (
-                    <Link to={data.to} onClick={closeSidebarMobile}>
-                      {data.iconStyle}
-                      <span className="nav-text">{data.title}</span>
-                    </Link>
-                  )}
+                <li className="klk-sidebar__label" key={row.key}>
+                  <span className="klk-sidebar__label-text">{row.title}</span>
                 </li>
               );
             }
+
+            const data = row.data;
+            const hasChildren = data.content?.length > 0;
+            const parentActive = isParentRouteActive(data, location.pathname);
+            const isExpanded = !isCollapsed && openMenu === data.title;
+            const liClass = [
+              isExpanded || parentActive ? "mm-active" : "",
+            ]
+              .filter(Boolean)
+              .join(" ");
+
+            if (hasChildren) {
+              return (
+                <li className={liClass} key={row.key}>
+                  <a
+                    href="#"
+                    className={`has-arrow klk-sidebar__link${
+                      parentActive ? " klk-sidebar__link--active" : ""
+                    }`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleMenuActive(data.title);
+                    }}
+                  >
+                    <MenuIcon icon={data.icon} />
+                    <span className="nav-text">{data.title}</span>
+                  </a>
+
+                  <ul className={isExpanded ? "mm-show" : undefined}>
+                    {data.content.map((submenu) => (
+                      <li key={submenu.to}>
+                        <NavLink
+                          to={submenu.to}
+                          isActive={() =>
+                            isMenuPathActive(submenu.to, location.pathname)
+                          }
+                          className={({ isActive }) =>
+                            isActive ? "klk-sidebar__link--active" : undefined
+                          }
+                          onClick={closeSidebarMobile}
+                        >
+                          {submenu.title}
+                        </NavLink>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              );
+            }
+
+            return (
+              <li
+                className={
+                  isMenuPathActive(data.to, location.pathname)
+                    ? "mm-active"
+                    : undefined
+                }
+                key={row.key}
+              >
+                <NavLink
+                  to={data.to}
+                  isActive={() =>
+                    isMenuPathActive(data.to, location.pathname)
+                  }
+                  className={({ isActive }) =>
+                    `klk-sidebar__link${
+                      isActive ? " klk-sidebar__link--active" : ""
+                    }`
+                  }
+                  onClick={closeSidebarMobile}
+                >
+                  <MenuIcon icon={data.icon} />
+                  <span className="nav-text">{data.title}</span>
+                </NavLink>
+              </li>
+            );
           })}
         </ul>
       </PerfectScrollbar>

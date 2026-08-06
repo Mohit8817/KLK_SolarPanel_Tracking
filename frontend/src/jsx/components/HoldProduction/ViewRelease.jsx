@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Table } from "react-bootstrap";
 import axios from "axios";
+import PrefixCell from "../Common/PrefixCell";
 
 const ViewRelease = ({ holdData }) => {
   const [releaseList, setReleaseList] = useState([]);
@@ -42,6 +43,7 @@ const ViewRelease = ({ holdData }) => {
       <thead>
         <tr>
           <th>#</th>
+          <th>Prefix</th>
           <th>Project Name</th>
           <th>Project State</th>
           <th>Starting No</th>
@@ -55,7 +57,7 @@ const ViewRelease = ({ holdData }) => {
       <tbody>
         {loading ? (
           <tr>
-            <td colSpan="8" className="text-center">
+            <td colSpan="9" className="text-center">
               Loading...
             </td>
           </tr>
@@ -63,6 +65,7 @@ const ViewRelease = ({ holdData }) => {
           releaseList.map((item, index) => (
             <tr key={item._id}>
               <td>{index + 1}</td>
+              <td><PrefixCell value={item.prefix} /></td>
               <td>{item.project}</td>
               <td>{item.state}</td>
               <td>{item.start_panel_no}</td>
@@ -79,7 +82,7 @@ const ViewRelease = ({ holdData }) => {
           ))
         ) : (
           <tr>
-            <td colSpan="8" className="text-center">
+            <td colSpan="9" className="text-center">
               No Release History Found
             </td>
           </tr>

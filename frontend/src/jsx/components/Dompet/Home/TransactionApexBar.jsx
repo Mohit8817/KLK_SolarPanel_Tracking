@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import ReactApexChart from "react-apexcharts";
 
-const TransactionApexBar = ({ data = [] }) => {
+const TransactionApexBar = ({ data = [], height = 400 }) => {
 	const [chartData, setChartData] = useState({
 		series: [],
 		options: {
@@ -16,7 +16,7 @@ const TransactionApexBar = ({ data = [] }) => {
 					columnWidth: "20%",
 				},
 			},
-			colors: ["#80ec67", "#fe7d65"],
+			colors: ["#5bcfc5", "#217069"],
 			legend: { show: true },
 			dataLabels: { enabled: false },
 			stroke: {
@@ -81,13 +81,14 @@ const TransactionApexBar = ({ data = [] }) => {
 				options={chartData.options}
 				series={chartData.series}
 				type="bar"
-				height={400}
+				height={height}
 			/>
 		</div>
 	);
 };
 
 TransactionApexBar.propTypes = {
+	height: PropTypes.number,
 	data: PropTypes.arrayOf(
 		PropTypes.shape({
 			monthLabel: PropTypes.string,

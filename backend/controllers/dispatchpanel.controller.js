@@ -2,6 +2,7 @@ import DispatchPanel from "../models/dispatchpanel.model.js"
 import PanelNumber from "../models/PanelNumber.model.js";
 import session from "express-session";
 import mongoose from "mongoose";
+import { attachDispatchBreakdown, attachPrefixToRecords } from "../utils/attachPrefix.js";
 
 // ✅ CREATE DISPATCH
 export const createDispatch = async (req, res) => {
@@ -54,10 +55,12 @@ export const getAllDispatches = async (req, res) => {
       company_id, // ✅ filter by company
     }).sort({ createdAt: -1 });
 
+    const data = await attachDispatchBreakdown(dispatches);
+
     return res.status(200).json({
       success: true,
-      count: dispatches.length,
-      data: dispatches,
+      count: data.length,
+      data,
     });
 
   } catch (error) {
@@ -259,8 +262,9 @@ export const fetchrecieve = async (req, res) => {
     }
 
     const recieve = await DispatchPanel.find({ state: state });
+    const data = await attachPrefixToRecords(recieve, "dispatch_id");
 
-    return res.status(200).json(recieve);
+    return res.status(200).json(data);
 
   } catch (error) {
     return res.status(500).json({ message: error.message });

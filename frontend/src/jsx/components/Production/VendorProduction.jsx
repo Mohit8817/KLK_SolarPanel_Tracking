@@ -1,4 +1,4 @@
-import { Card, Col, Table, Modal, Button } from "react-bootstrap";
+import { Card, Col, Table, Modal } from "react-bootstrap";
 import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
 import PageHeader from "../Common/PageHeader";
@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import ReleaseProduction from "./ReleaseProduction";
+import PrefixCell from "../Common/PrefixCell";
 
 const VendorProduction = () => {
   const [productionList, setProductionList] = useState([]);
@@ -80,6 +81,7 @@ const VendorProduction = () => {
   const exportData = productionList.map((item, index) => ({
     sno: index + 1,
     date: item.date,
+    prefix: item.prefix,
     panel_count: item.panel_count,
     Old_panel_count: item.old_panel_count,
     panel_capacity: item.panel_capacity,
@@ -96,6 +98,7 @@ const VendorProduction = () => {
   const exportColumns = [
     { label: "S No", key: "sno" },
     { label: "Date", key: "date" },
+    { label: "Prefix", key: "prefix" },
     { label: "Panel Count", key: "panel_count" },
     { label: "Old Panel Count", key: "old_panel_count" },
 
@@ -135,6 +138,7 @@ const VendorProduction = () => {
               <tr>
                 <th>S No.</th>
                 <th>Date</th>
+                <th>Prefix</th>
                 <th>Current Count</th>
                 <th>Old Panel Count</th>
                 <th>Capacity</th>
@@ -156,6 +160,7 @@ const VendorProduction = () => {
                       <strong>{startIndex + index + 1}</strong>
                     </td>
                     <td>{item.date}</td>
+                    <td><PrefixCell value={item.prefix} /></td>
                     <td>{item.panel_count}</td>
                     <td>{item.old_panel_count}</td>
                     <td>{item.panel_capacity}</td>
@@ -212,7 +217,7 @@ const VendorProduction = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="12" className="text-center text-muted">
+                  <td colSpan="14" className="text-center text-muted">
                     No vendor production records found
                   </td>
                 </tr>

@@ -203,11 +203,12 @@ export const getNextPanelNumber = async (req, res) => {
       sequence_digits: history.sequence_digits,
       serial_format: history.serial_format,
       has_history: history.has_history,
+      starting_no_editable: !history.has_history,
       sequence_digits_locked: history.locked,
       serial_format_locked: history.locked,
       history_message: history.has_history
         ? `Existing panels for this prefix/capacity/type/${year} use ${history.sequence_digits}-digit sequence and format: ${formatSerialFormatLabel(history.serial_format)}. Next: ${padSequence(nextNumber, history.sequence_digits)}`
-        : null,
+        : "No existing series for this prefix/capacity/type/year — you may choose the starting number.",
     });
   } catch (error) {
     return res.status(400).json({
@@ -311,38 +312,109 @@ export const createPanelSerialLot = async (req, res) => {
       : requestedFormat;
 
     /* ==========================
-       3️⃣ Atomic Counter Update
+       3️⃣ Counter / starting number
     ========================== */
 
-    const counter = await PanelCounter.findOneAndUpdate(
-      {
-        prefix: String(prefix).trim(),
-        panel_capacity: String(panel_capacity).trim(),
-        panel_type: formattedPanelType,
-        year: yearFull,
-      },
-      {
-        $inc: {
-          seq: totalPanelsNum,
+    const counterKey = {
+      prefix: String(prefix).trim(),
+      panel_capacity: String(panel_capacity).trim(),
+      panel_type: formattedPanelType,
+      year: yearFull,
+    };
+
+    let counter;
+    let actualStartingNo;
+
+    if (history.has_history) {
+      counter = await PanelCounter.findOneAndUpdate(
+        counterKey,
+        {
+          $inc: {
+            seq: totalPanelsNum,
+          },
+          $set: {
+            sequence_digits: normalizedSequenceDigits,
+            serial_format: normalizedFormat,
+          },
+          $setOnInsert: {
+            last_lot_id: null,
+          },
         },
-        $set: {
-          sequence_digits: normalizedSequenceDigits,
-          serial_format: normalizedFormat,
-        },
-        $setOnInsert: {
-          last_lot_id: null,
-        },
-      },
-      {
-        new: true,
-        upsert: true,
+        {
+          new: true,
+          upsert: true,
+        }
+      );
+
+      actualStartingNo = counter.seq - totalPanelsNum + 1;
+    } else {
+      const requestedStart =
+        req.body.starting_no != null && req.body.starting_no !== ""
+          ? Number(req.body.starting_no)
+          : 1;
+
+      if (
+        !Number.isInteger(requestedStart) ||
+        requestedStart < 1 ||
+        requestedStart > 999999999
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Starting number must be a positive whole number",
+        });
       }
-    );
+
+      const endingNo = requestedStart + totalPanelsNum - 1;
+
+      const conflictingPanel = await PanelNumber.findOne({
+        prefix: counterKey.prefix,
+        panel_capacity: counterKey.panel_capacity,
+        panel_type: counterKey.panel_type,
+        generated_year,
+        panel_no: {
+          $gte: requestedStart,
+          $lte: endingNo,
+        },
+      }).lean();
+
+      if (conflictingPanel) {
+        return res.status(400).json({
+          success: false,
+          message: `Starting number ${padSequence(requestedStart, normalizedSequenceDigits)} conflicts with existing panels in this series`,
+        });
+      }
+
+      const existingCounter = await PanelCounter.findOne(counterKey);
+
+      if (existingCounter?.seq > 0 && requestedStart !== existingCounter.seq + 1) {
+        return res.status(400).json({
+          success: false,
+          message: `This series already exists. Next available starting number is ${padSequence(existingCounter.seq + 1, normalizedSequenceDigits)}`,
+        });
+      }
+
+      counter = await PanelCounter.findOneAndUpdate(
+        counterKey,
+        {
+          $set: {
+            seq: endingNo,
+            sequence_digits: normalizedSequenceDigits,
+            serial_format: normalizedFormat,
+          },
+          $setOnInsert: {
+            last_lot_id: null,
+          },
+        },
+        {
+          new: true,
+          upsert: true,
+        }
+      );
+
+      actualStartingNo = requestedStart;
+    }
 
     const endingNo = counter.seq;
-
-    const actualStartingNo =
-      endingNo - totalPanelsNum + 1;
 
     /* ==========================
        4️⃣ Create LOT

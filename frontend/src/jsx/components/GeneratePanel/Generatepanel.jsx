@@ -33,6 +33,7 @@ const Generatepanel = () => {
   const [sequenceDigitsLocked, setSequenceDigitsLocked] = useState(false);
   const [historyMessage, setHistoryMessage] = useState("");
   const [startingNo, setStartingNo] = useState(1);
+  const [startingNoEditable, setStartingNoEditable] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -59,6 +60,7 @@ const Generatepanel = () => {
 
     if (!canFetch) {
       setStartingNo(1);
+      setStartingNoEditable(false);
       setSequenceDigitsLocked(false);
       setSerialFormatLocked(false);
       setHistoryMessage("");
@@ -84,9 +86,11 @@ const Generatepanel = () => {
         }
         setSequenceDigitsLocked(Boolean(data.sequence_digits_locked));
         setSerialFormatLocked(Boolean(data.serial_format_locked));
+        setStartingNoEditable(Boolean(data.starting_no_editable));
         setHistoryMessage(data.history_message || "");
       } catch {
         setStartingNo(1);
+        setStartingNoEditable(false);
         setSequenceDigitsLocked(false);
         setSerialFormatLocked(false);
         setHistoryMessage("");
@@ -122,6 +126,7 @@ const Generatepanel = () => {
         ...formData,
         serial_format: preview.normalized,
         sequence_digits: sequenceDigits,
+        ...(startingNoEditable ? { starting_no: startingNo } : {}),
       });
       notifySuccess("Serial numbers generated successfully");
       setFormData(INITIAL_FORM);
@@ -130,6 +135,7 @@ const Generatepanel = () => {
       setSequenceDigits(DEFAULT_SEQUENCE_DIGITS);
       setSequenceDigitsLocked(false);
       setHistoryMessage("");
+      setStartingNoEditable(false);
       setStartingNo(1);
     } catch (error) {
       console.log("ERROR:", error?.response?.data);
@@ -329,12 +335,36 @@ const Generatepanel = () => {
                   <div className="col-xl-6 col-md-6">
                     <div className="form-group mb-3">
                       <label className="form-label">Starting No</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={padSequence(startingNo, sequenceDigits)}
-                        disabled
-                      />
+                      {startingNoEditable ? (
+                        <input
+                          type="number"
+                          className="form-control"
+                          name="starting_no"
+                          min={1}
+                          step={1}
+                          value={startingNo}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value, 10);
+                            setStartingNo(Number.isNaN(value) || value < 1 ? 1 : value);
+                          }}
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={padSequence(startingNo, sequenceDigits)}
+                          disabled
+                        />
+                      )}
+                      {startingNoEditable ? (
+                        <small className="text-muted d-block mt-1">
+                          New series — enter the first sequence number (e.g. 1, 100, 500).
+                        </small>
+                      ) : (
+                        <small className="text-muted d-block mt-1">
+                          Auto-calculated from existing panels for this prefix/capacity/type/year.
+                        </small>
+                      )}
                     </div>
                   </div>
                 </div>

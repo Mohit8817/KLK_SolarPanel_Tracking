@@ -7,6 +7,7 @@ import CommonPagination from "../Common/Pagination";
 import Search, { useSearch } from "../Common/Search";
 import PageHeader from "../Common/PageHeader";
 import ListToolbar from "../Common/ListToolbar";
+import PrefixCell from "../Common/PrefixCell";
 
 const ViewProductionPanels = () => {
   const { id } = useParams();
@@ -19,7 +20,7 @@ const ViewProductionPanels = () => {
   const token = localStorage.getItem("token");
 
   // ── useSearch replaces manual pagination ─────────────────────────────────
-  const SEARCH_KEYS = ["panel_unique_no", "panel_no", "panel_capacity"];
+  const SEARCH_KEYS = ["panel_unique_no", "panel_no", "panel_capacity", "prefix"];
 
   const {
     currentData,
@@ -60,6 +61,7 @@ const ViewProductionPanels = () => {
   const exportData = panelList.map((item, index) => ({
     sno: index + 1,
     panel_unique_no: item.panel_unique_no,
+    prefix: item.prefix,
     panel_no: item.panel_no,
     capacity: item.panel_capacity,
     production_status: item.production_status === 1 ? "Assigned" : "Pending",
@@ -71,6 +73,7 @@ const ViewProductionPanels = () => {
   const exportColumns = [
     { label: "S No", key: "sno" },
     { label: "Panel Unique No", key: "panel_unique_no" },
+    { label: "Prefix", key: "prefix" },
     { label: "Panel No", key: "panel_no" },
     { label: "Capacity", key: "capacity" },
     { label: "Production Status", key: "production_status" },
@@ -122,6 +125,7 @@ const ViewProductionPanels = () => {
                   <tr>
                     <th>S No.</th>
                     <th>Panel Unique No</th>
+                    <th>Prefix</th>
                     <th>Panel No</th>
                     <th>Capacity</th>
                     <th>Production Status</th>
@@ -137,6 +141,7 @@ const ViewProductionPanels = () => {
                       <tr key={item._id}>
                         <td><strong>{startIndex + index + 1}</strong></td>
                         <td>{item.panel_unique_no}</td>
+                        <td><PrefixCell value={item.prefix} /></td>
                         <td>{item.panel_no}</td>
                         <td>{item.panel_capacity}</td>
 
@@ -172,7 +177,7 @@ const ViewProductionPanels = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="8" className="text-center text-muted">
+                      <td colSpan="9" className="text-center text-muted">
                         {searchQuery
                           ? `No results for "${searchQuery}"`
                           : "No panels found"}

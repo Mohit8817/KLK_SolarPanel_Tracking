@@ -4,6 +4,7 @@ import PageTitle from "../../layouts/PageTitle";
 import CommonPagination from "../Common/Pagination";
 import TableExportActions from "../Common/TableExportActions";
 import ListToolbar from "../Common/ListToolbar";
+import PrefixCell from "../Common/PrefixCell";
 
 const ProductionDamagePanels = () => {
   const [data, setData] = useState([]);
@@ -56,6 +57,7 @@ const ProductionDamagePanels = () => {
   const exportData = data.map((item, index) => ({
     sno: index + 1,
     panelNo: item.panel_no,
+    prefix: item.prefix,
     damage: "Production Damage",
     remarks: item.remarks || "-",
     date: new Date(item.createdAt).toLocaleDateString(),
@@ -64,6 +66,7 @@ const ProductionDamagePanels = () => {
   const exportColumns = [
     { label: "S No", key: "sno" },
     { label: "Panel No", key: "panelNo" },
+    { label: "Prefix", key: "prefix" },
     { label: "Damage", key: "damage" },
     { label: "Remarks", key: "remarks" },
     { label: "Date", key: "date" },
@@ -105,6 +108,7 @@ const ProductionDamagePanels = () => {
                     <tr>
                       <th>S No</th>
                       <th>Panel No</th>
+                      <th>Prefix</th>
                       <th>Damage</th>
                       <th>Remarks</th>
                       <th>Date</th>
@@ -117,6 +121,7 @@ const ProductionDamagePanels = () => {
                       <tr key={item._id}>
                         <td>{startIndex + index + 1}</td>
                         <td>{item.panel_no}</td>
+                        <td><PrefixCell value={item.prefix} /></td>
                         <td>Production Damage</td>
                         <td>{item.remarks || "-"}</td>
                         <td>

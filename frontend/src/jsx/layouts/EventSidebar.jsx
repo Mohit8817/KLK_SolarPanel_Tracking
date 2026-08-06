@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 /// Scroll
 import PerfectScrollbar from "react-perfect-scrollbar";

@@ -4,6 +4,7 @@ import PanelNumber from '../models/PanelNumber.model.js'
 import PanelSerialLot from "../models/PanelSerialLot.model.js";
 import ReleasePanel from "../models/ReleasePanel.model.js";
 import ProductionPanel from "../models/ProductionPanel.model.js";
+import { attachPrefixToRecords } from "../utils/attachPrefix.js";
 
 
 
@@ -369,9 +370,11 @@ export const fetchAllHoldPanels = async (req, res) => {
     const holdPanels = await HoldPanel.find({})
       .sort({ hold_date: -1 });
 
+    const data = await attachPrefixToRecords(holdPanels, "hold_id");
+
     res.status(200).json({
       success: true,
-      data: holdPanels,
+      data,
     });
   } catch (error) {
     res.status(500).json({
@@ -652,10 +655,12 @@ export const getReleasePanels = async (req, res) => {
         .sort({ createdAt: -1 })
         .populate("production_id");
 
+        const data = await attachPrefixToRecords(releases, "release_id");
+
         return res.status(200).json({
             success: true,
-            count: releases.length,
-            data: releases
+            count: data.length,
+            data
         });
 
     } catch (error) {

@@ -1,10 +1,8 @@
 import { lazy, Suspense, useEffect } from 'react';
 import Index from './jsx/index';
-import { connect, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { checkAutoLogin } from './services/AuthService';
-import { isAuthenticated } from './store/selectors/AuthSelectors';
-
 import './assets/vendor/swiper/css/swiper-bundle.min.css';
 import "./assets/css/style.css";
 import "react-toastify/dist/ReactToastify.css";
@@ -30,13 +28,13 @@ function withRouter(Component) {
     return ComponentWithRouterProp;
 }
 
-function App(props) {
+function App() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
     useEffect(() => {
-  checkAutoLogin(dispatch, navigate);
-}, []);
+        checkAutoLogin(dispatch, navigate);
+    }, [dispatch, navigate]);
 
     return (
         <Suspense
@@ -63,10 +61,4 @@ function App(props) {
     );
 }
 
-const mapStateToProps = (state) => {
-    return {
-        isAuthenticated: isAuthenticated(state),
-    };
-};
-
-export default withRouter(connect(mapStateToProps)(App));
+export default withRouter(App);

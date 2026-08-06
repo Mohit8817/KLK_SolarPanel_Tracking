@@ -1,9 +1,9 @@
-import React, { Fragment, useState } from "react";
+import { Fragment, useState } from "react";
 import SideBar from "./SideBar";
 import NavHader from "./NavHader";
 import Header from "./Header";
 
-const JobieNav = ({ title, onClick: ClickToAddEvent, onClick2, onClick3 }) => {
+const JobieNav = ({ title, onClick: ClickToAddEvent, onClick2: _onClick2, onClick3: _onClick3 }) => {
   const [toggle, setToggle] = useState("");
   const onClick = (name) => setToggle(toggle === name ? "" : name);
   return (

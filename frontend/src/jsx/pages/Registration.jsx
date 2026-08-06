@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { connect, useDispatch } from 'react-redux';
 import {
@@ -121,7 +121,7 @@ function Register(props) {
       </div>
     </div>
   );
-};
+}
 
 const mapStateToProps = (state) => {
   return {

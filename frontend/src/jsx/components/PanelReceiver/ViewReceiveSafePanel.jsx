@@ -4,6 +4,7 @@ import CommonPagination from "../Common/Pagination";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import PageHeader from "../Common/PageHeader";
+import PrefixCell from "../Common/PrefixCell";
 
 const ReceiveList = () => {
 
@@ -75,6 +76,7 @@ const ReceiveList = () => {
             <thead>
               <tr>
                 <th>S no.</th>
+                <th>Prefix</th>
                 <th>Truck No</th>
                 <th>Challan No</th>
                 <th>Driver Name / Number</th>
@@ -87,7 +89,7 @@ const ReceiveList = () => {
             <tbody>
               {currentData.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="text-center">
+                  <td colSpan="8" className="text-center">
                     No receive data found
                   </td>
                 </tr>
@@ -95,6 +97,7 @@ const ReceiveList = () => {
                 currentData.map((item, index) => (
                   <tr key={item._id}>
                     <td>{startIndex + index + 1}</td>
+                    <td><PrefixCell value={item.prefix} /></td>
                     <td>{item.truck_no}</td>
                     <td>{item.challan_no}</td>
                     <td>{item.driver_name} / {item.driver_no}</td>

@@ -3,6 +3,7 @@ import { Card, Col, Table, Badge } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import PageHeader from "../Common/PageHeader";
+import PrefixCell from "../Common/PrefixCell";
 
 const ViewReceivedPanels = () => {
   const { id } = useParams();
@@ -81,6 +82,7 @@ const ViewReceivedPanels = () => {
                 <tr>
                   <th>S No.</th>
                   <th>Panel Unique No</th>
+                  <th>Prefix</th>
                   <th>Panel No</th>
                   <th>Capacity</th>
                   <th>Panel Type</th>
@@ -96,6 +98,7 @@ const ViewReceivedPanels = () => {
                     <tr key={item._id || index}>
                       <td>{index + 1}</td>
                       <td>{item.panel_unique_no || "-"}</td>
+                      <td><PrefixCell value={item.prefix} /></td>
                       <td>{item.panel_no || "-"}</td>
                       <td>{item.panel_capacity || "-"}</td>
 
@@ -134,7 +137,7 @@ const ViewReceivedPanels = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="7" className="text-center">
+                    <td colSpan="9" className="text-center">
                       No panels found
                     </td>
                   </tr>

@@ -6,6 +6,7 @@ export const getAllManufactureDamage = async () => {
         {
           _id: "1",
           panel_no: "KLK001",
+          prefix: "KLK",
           damage_type: "Crack",
           remarks: "Glass crack",
           date: "2026-02-21",
@@ -13,6 +14,7 @@ export const getAllManufactureDamage = async () => {
         {
           _id: "2",
           panel_no: "KLK002",
+          prefix: "KLK",
           damage_type: "Scratch",
           remarks: "Minor scratch",
           date: "2026-02-21",
@@ -20,6 +22,7 @@ export const getAllManufactureDamage = async () => {
         {
           _id: "3",
           panel_no: "KLK003",
+          prefix: "KLK",
           damage_type: "Broken Glass",
           remarks: "Broken",
           date: "2026-02-22",

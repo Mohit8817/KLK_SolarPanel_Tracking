@@ -1,10 +1,11 @@
-import { Card, Table, Modal, Button, Row, Col } from "react-bootstrap";
+import { Card, Table, Modal, Button } from "react-bootstrap";
 import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
 import Search, { useSearch } from "../Common/Search";
 import PageHeader from "../Common/PageHeader";
 import ListToolbar from "../Common/ListToolbar";
 import { ViewAction, AddAction, ExportAction } from "../Common/ActionButtons";
+import PrefixCell from "../Common/PrefixCell";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
@@ -30,6 +31,7 @@ const ViewProduction = () => {
   // ── SEARCH + PAGINATION ──────────────────────────────────────────────────
   const SEARCH_KEYS = [
     "date",
+    "prefix",
     "panel_count",
     "panel_capacity",
     "panel_type",
@@ -150,6 +152,7 @@ const ViewProduction = () => {
   const exportData = productionList.map((item, index) => ({
     sno: index + 1,
     date: item.date,
+    prefix: item.prefix,
     panel_count: item.panel_count,
     manufactured: manufacturedCounts[item._id] ?? "—",
     panel_capacity: item.panel_capacity,
@@ -161,6 +164,7 @@ const ViewProduction = () => {
   const exportColumns = [
     { label: "S No", key: "sno" },
     { label: "Date", key: "date" },
+    { label: "Prefix", key: "prefix" },
     { label: "Panel Count", key: "panel_count" },
     { label: "Manufactured", key: "manufactured" },
     { label: "Capacity", key: "panel_capacity" },
@@ -270,6 +274,7 @@ const ViewProduction = () => {
               <tr>
                 <th>S No.</th>
                 <th>Date</th>
+                <th>Prefix</th>
                 <th>Panel Count</th>
                 <th className="text-center">Manufactured</th>
                 <th>Capacity</th>
@@ -287,6 +292,7 @@ const ViewProduction = () => {
                       <strong>{startIndex + index + 1}</strong>
                     </td>
                     <td>{item.date}</td>
+                    <td><PrefixCell value={item.prefix} /></td>
                     <td>{item.panel_count}</td>
 
                     {/* ── Manufactured count cell ── */}
@@ -332,7 +338,7 @@ const ViewProduction = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="9" className="text-center text-muted">
+                  <td colSpan="10" className="text-center text-muted">
                     No production records found
                   </td>
                 </tr>
@@ -458,6 +464,7 @@ const ViewProduction = () => {
                 <tr>
                   <th>S No.</th>
                   <th>Date</th>
+                  <th>Prefix</th>
                   <th>Shift</th>
                   <th>Panel Count</th>
                   <th>Remark</th>
@@ -469,6 +476,7 @@ const ViewProduction = () => {
                     <tr key={entry._id}>
                       <td>{index + 1}</td>
                       <td>{entry.date}</td>
+                      <td><PrefixCell value={entry.prefix} /></td>
                       <td>{entry.shift}</td>
                       <td>{entry.panel_count}</td>
                       <td>{entry.remarks || "—"}</td>
@@ -476,7 +484,7 @@ const ViewProduction = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="text-center text-muted">
+                    <td colSpan="7" className="text-center text-muted">
                       No entries yet
                     </td>
                   </tr>
@@ -487,7 +495,7 @@ const ViewProduction = () => {
               {manufacturingList.length > 0 && (
                 <tfoot>
                   <tr className="table fw-bold">
-                    <td colSpan="3" className="text-end">
+                    <td colSpan="4" className="text-end">
                       Total Manufactured:
                     </td>
                     <td>

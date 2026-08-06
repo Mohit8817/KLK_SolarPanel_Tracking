@@ -592,15 +592,15 @@ const UpdateDispatchPanel = () => {
                   </div>
                 </div>
 
-                <div className="klk-form-actions klk-dispatch-actions">
+                <div className="klk-form-actions">
                   <button
                     type="submit"
-                    className="btn btn-success"
+                    className="btn btn-primary klk-form-actions__btn"
                     disabled={saving}
                   >
                     {saving ? "Updating..." : "Update Dispatch"}
                     {totalScanned > 0 && (
-                      <span className="badge bg-light text-success">
+                      <span className="badge bg-light text-primary ms-1">
                         {totalScanned} panel{totalScanned !== 1 ? "s" : ""}
                       </span>
                     )}

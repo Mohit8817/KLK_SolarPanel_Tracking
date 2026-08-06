@@ -10,6 +10,7 @@ import axios from "axios";
 
 import ReleaseForm from "./releaseForm";
 import ViewRelease from "./ViewRelease";
+import PrefixCell from "../Common/PrefixCell";
 
 const ViewHoldProduction = () => {
   const [holdList, setHoldList] = useState([]);
@@ -63,6 +64,7 @@ const ViewHoldProduction = () => {
     "panel_type",
     "panel_count",
     "panel_capacity",
+    "prefix",
     "state",
     "created_by",
     "reason",
@@ -83,6 +85,7 @@ const ViewHoldProduction = () => {
     date: item.hold_date
       ? new Date(item.hold_date).toLocaleDateString("en-GB")
       : "-",
+    prefix: item.prefix,
     hold_status:
       item.hold_status === "H"
         ? "Hold"
@@ -107,6 +110,7 @@ const ViewHoldProduction = () => {
   const exportColumns = [
     { label: "S No", key: "sno" },
     { label: "Date", key: "date" },
+    { label: "Prefix", key: "prefix" },
     { label: "Status", key: "hold_status" },
     { label: "Panel Count", key: "panel_count" },
     { label: "Capacity", key: "panel_capacity" },
@@ -152,6 +156,7 @@ const ViewHoldProduction = () => {
                 <tr>
                   <th>S No.</th>
                   <th>Date</th>
+                  <th>Prefix</th>
                   <th>Status</th>
                   <th>Panel Count</th>
                   <th>Capacity</th>
@@ -166,7 +171,7 @@ const ViewHoldProduction = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="13" className="text-center">
+                    <td colSpan="14" className="text-center">
                       Loading...
                     </td>
                   </tr>
@@ -182,6 +187,8 @@ const ViewHoldProduction = () => {
                             ).toLocaleDateString("en-GB")
                           : "-"}
                       </td>
+
+                      <td><PrefixCell value={item.prefix} /></td>
 
                       <td>
                         <span
@@ -257,7 +264,7 @@ const ViewHoldProduction = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="13" className="text-center">
+                    <td colSpan="14" className="text-center">
                       No Hold Production Found
                     </td>
                   </tr>

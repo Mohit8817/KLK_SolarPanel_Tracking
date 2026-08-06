@@ -2,6 +2,7 @@ import { Fragment, useState, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
 import { Badge } from "react-bootstrap";
+import PrefixCell from "../Common/PrefixCell";
 
 
 
@@ -488,6 +489,7 @@ const ReleaseProduction = ({ item, onClose }) => {
                   <tr>
                     <th>S No.</th>
                     <th>Release Date</th>
+                    <th>Prefix</th>
                     <th>Panel Count Before</th>
                     <th>Panel Count After</th>
                     <th>Panel Unique No.</th>
@@ -501,6 +503,11 @@ const ReleaseProduction = ({ item, onClose }) => {
                       <tr key={row._id}>
                         <td><strong>{index + 1}</strong></td>
                         <td>{row.released_date || "—"}</td>
+                        <td>
+                          <PrefixCell
+                            value={[...new Set((row.panels || []).map((p) => p.prefix).filter(Boolean))].join(", ")}
+                          />
+                        </td>
                         <td>{row.old_panel_count_before}</td>
                         <td>{row.old_panel_count_after}</td>
                         <td>
@@ -539,7 +546,7 @@ const ReleaseProduction = ({ item, onClose }) => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="6" className="text-center text-muted py-3">
+                      <td colSpan="8" className="text-center text-muted py-3">
                         No release history found
                       </td>
                     </tr>

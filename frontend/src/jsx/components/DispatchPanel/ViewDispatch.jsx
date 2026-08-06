@@ -10,6 +10,7 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import Search, { useSearch } from "../Common/Search";
 import CommonPagination from "../Common/Pagination";
+import BreakdownChips from "../Common/BreakdownChips";
 
 const ViewDispatchPanel = () => {
 
@@ -127,6 +128,8 @@ const ViewDispatchPanel = () => {
         "driver_name",
         "driver_no",
         "state",
+        "prefix",
+        "capacities",
     ];
 
     const {
@@ -149,6 +152,13 @@ const ViewDispatchPanel = () => {
         return {
             sno          : index + 1,
             dispatchId   : item.dispatch_id,
+            prefix       : item.prefix,
+            companies    : (item.prefixBreakdown || [])
+              .map(({ prefix, count }) => `${prefix} (${count})`)
+              .join(", "),
+            capacities   : (item.capacityBreakdown || [])
+              .map(({ capacity, count }) => `${capacity} W (${count})`)
+              .join(", "),
             truckNo      : item.truck_no,
             challanNo    : item.challan_no,
             driver       : `${item.driver_name} (${item.driver_no})`,
@@ -163,6 +173,8 @@ const ViewDispatchPanel = () => {
     const exportColumns = [
         { label: "S No",          key: "sno"         },
         { label: "Dispatch ID",   key: "dispatchId"  },
+        { label: "Companies",     key: "companies"   },
+        { label: "Capacities",    key: "capacities"  },
         { label: "Truck No",      key: "truckNo"     },
         { label: "Challan No",    key: "challanNo"   },
         { label: "Driver",        key: "driver"      },
@@ -215,6 +227,8 @@ const ViewDispatchPanel = () => {
                                     <tr>
                                         <th>S No.</th>
                                         <th>Dispatch ID</th>
+                                        <th>Company</th>
+                                        <th>Capacities</th>
                                         <th>Truck No</th>
                                         <th>Challan No</th>
                                         <th>Driver</th>
@@ -239,6 +253,21 @@ const ViewDispatchPanel = () => {
                                                     <td><strong>{startIndex + index + 1}</strong></td>
 
                                                     <td>{item.dispatch_id}</td>
+
+                                                    <td>
+                                                      <BreakdownChips
+                                                        items={item.prefixBreakdown || []}
+                                                        labelKey="prefix"
+                                                      />
+                                                    </td>
+
+                                                    <td>
+                                                      <BreakdownChips
+                                                        items={item.capacityBreakdown || []}
+                                                        labelKey="capacity"
+                                                        suffix=" W"
+                                                      />
+                                                    </td>
 
                                                     <td>{item.truck_no}</td>
 
@@ -287,7 +316,7 @@ const ViewDispatchPanel = () => {
                                         })
                                     ) : (
                                         <tr>
-                                            <td colSpan="9" className="text-center text-muted py-4">
+                                            <td colSpan="11" className="text-center text-muted py-4">
                                                 {searchQuery
                                                     ? `No results for "${searchQuery}"`
                                                     : "No dispatch records found"}

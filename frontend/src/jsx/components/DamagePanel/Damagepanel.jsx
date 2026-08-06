@@ -45,7 +45,7 @@ const DamagePanel = () => {
         scanner.clear();
         setScanning(false);
       },
-      (error) => {}
+      () => {}
     );
 
     scannerRef.current = scanner;

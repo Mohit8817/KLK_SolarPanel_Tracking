@@ -5,6 +5,7 @@ import TableExportActions from "../Common/TableExportActions";
 import CommonPagination from "../Common/Pagination";
 import PageHeader from "../Common/PageHeader";
 import ListToolbar from "../Common/ListToolbar";
+import PrefixCell from "../Common/PrefixCell";
 
 import {
     getAllManufactureDamage,
@@ -14,7 +15,6 @@ import {
 const ViewManufactureDamage = () => {
 
     const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(true);
 
     const itemsPerPage = 5;
     const [currentPage, setCurrentPage] = useState(1);
@@ -26,7 +26,6 @@ const ViewManufactureDamage = () => {
     const fetchData = async () => {
         const res = await getAllManufactureDamage();
         setData(res.data.data);
-        setLoading(false);
     };
 
     const handleDelete = async (id) => {
@@ -46,6 +45,7 @@ const ViewManufactureDamage = () => {
     const exportData = data.map((item, index) => ({
         sno: index + 1,
         panelNo: item.panel_no,
+        prefix: item.prefix,
         type: item.panel_type,
         damage: item.damage_type,
         remarks: item.remarks,
@@ -55,6 +55,7 @@ const ViewManufactureDamage = () => {
     const exportColumns = [
         { label: "S No", key: "sno" },
         { label: "Panel No", key: "panelNo" },
+        { label: "Prefix", key: "prefix" },
         { label: "Type", key: "type" },
         { label: "Damage", key: "damage" },
         { label: "Remarks", key: "remarks" },
@@ -90,6 +91,7 @@ const ViewManufactureDamage = () => {
                                 <tr>
                                     <th>S No</th>
                                     <th>Panel No</th>
+                                    <th>Prefix</th>
                                     <th>Damage</th>
                                     <th>Remarks</th>
                                     <th>Date</th>
@@ -102,6 +104,7 @@ const ViewManufactureDamage = () => {
                                     <tr key={item._id}>
                                         <td>{startIndex + index + 1}</td>
                                         <td>{item.panel_no}</td>
+                                        <td><PrefixCell value={item.prefix} /></td>
                                         <td>{item.damage_type}</td>
                                         <td>{item.remarks}</td>
                                         <td>{item.date}</td>

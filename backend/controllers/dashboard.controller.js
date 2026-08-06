@@ -95,6 +95,71 @@ export const getDashboardStats = async (req, res) => {
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
+    const panelBreakdownPipeline = (groupField) => [
+      {
+        $match: {
+          [groupField.replace("$", "")]: { $exists: true, $nin: [null, ""] },
+        },
+      },
+      {
+        $group: {
+          _id: groupField,
+          total: { $sum: 1 },
+          totalProduced: {
+            $sum: { $cond: [{ $eq: ["$production_status", 1] }, 1, 0] },
+          },
+          productionDamaged: {
+            $sum: { $cond: [{ $eq: ["$production_damage_status", 1] }, 1, 0] },
+          },
+          totalDispatched: {
+            $sum: { $cond: [{ $eq: ["$dispatch_status", 1] }, 1, 0] },
+          },
+          DispatchedDamaged: {
+            $sum: { $cond: [{ $eq: ["$damage_status", 1] }, 1, 0] },
+          },
+          dispatchedNotCollected: {
+            $sum: {
+              $cond: [
+                { $and: [{ $eq: ["$dispatch_status", 1] }, { $eq: ["$collect_status", 0] }] },
+                1, 0,
+              ],
+            },
+          },
+          dispatchedAndCollected: {
+            $sum: {
+              $cond: [
+                { $and: [{ $eq: ["$dispatch_status", 1] }, { $eq: ["$collect_status", 1] }] },
+                1, 0,
+              ],
+            },
+          },
+          dispatchedAndCollectedDamaged: {
+            $sum: {
+              $cond: [
+                { $and: [{ $eq: ["$dispatch_status", 1] }, { $eq: ["$collect_damage_status", 1] }] },
+                1, 0,
+              ],
+            },
+          },
+          totalDamage: {
+            $sum: {
+              $cond: [
+                {
+                  $or: [
+                    { $eq: ["$production_damage_status", 1] },
+                    { $eq: ["$damage_status", 1] },
+                    { $eq: ["$collect_damage_status", 1] },
+                  ],
+                },
+                1, 0,
+              ],
+            },
+          },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ];
+
     /* ================= PRODUCTION ================= */
 
     // Total panels where production is complete (production_status: 1)
@@ -148,74 +213,73 @@ export const getDashboardStats = async (req, res) => {
 
     /* ================= STOCK ================= */
 
-    // Panels produced but not yet dispatched (in stock)
+    // Panels produced, not dispatched, not damaged — ready for dispatch
     const inStock = await PanelNumber.countDocuments({
-      production_status: 0,
+      production_status: 1,
+      dispatch_status: 0,
       production_damage_status: 0,
+      damage_status: 0,
+      collect_damage_status: 0,
+    });
+
+    const pendingProduction = await PanelNumber.countDocuments({
+      production_status: { $ne: 1 },
+      production_damage_status: 0,
+      hold_status: { $ne: 1 },
+    });
+
+    const onHold = await PanelNumber.countDocuments({
+      hold_status: 1,
+    });
+
+    const readyToDispatch = inStock;
+
+    const safePanelsReceived = await PanelNumber.countDocuments({
+      dispatch_status: 1,
+      collect_status: 1,
+      collect_damage_status: 0,
     });
 
 
 
-    const panelCapacityWise = await PanelNumber.aggregate([
+    const panelCapacityWise = await PanelNumber.aggregate(
+      panelBreakdownPipeline("$panel_capacity")
+    );
+
+    const panelPrefixWiseRaw = await PanelNumber.aggregate(
+      panelBreakdownPipeline("$prefix")
+    );
+
+    const prefixCapacityCounts = await PanelNumber.aggregate([
+      {
+        $match: {
+          prefix: { $exists: true, $nin: [null, ""] },
+          panel_capacity: { $exists: true, $nin: [null, ""] },
+        },
+      },
       {
         $group: {
-          _id: "$panel_capacity",
-
-          // ── Total panels of this capacity ──
-          total: { $sum: 1 },
-
-          // ── Production ──
-          totalProduced: {
-            $sum: { $cond: [{ $eq: ["$production_status", 1] }, 1, 0] },
-          },
-          productionDamaged: {
-            $sum: { $cond: [{ $eq: ["$production_damage_status", 1] }, 1, 0] },
-          },
-
-          // ── Dispatch ──
-          totalDispatched: {
-            $sum: { $cond: [{ $eq: ["$dispatch_status", 1] }, 1, 0] },
-          },
-          DispatchedDamaged: {
-            $sum: { $cond: [{ $eq: ["$damage_status", 1] }, 1, 0] },
-          },
-          dispatchedNotCollected: {
-            $sum: {
-              $cond: [
-                { $and: [{ $eq: ["$dispatch_status", 1] }, { $eq: ["$collect_status", 0] }] },
-                1, 0,
-              ],
-            },
-          },
-          dispatchedAndCollected: {
-            $sum: {
-              $cond: [
-                { $and: [{ $eq: ["$dispatch_status", 1] }, { $eq: ["$collect_status", 1] }] },
-                1, 0,
-              ],
-            },
-          },
-          dispatchedAndCollectedDamaged: {
-            $sum: {
-              $cond: [
-                { $and: [{ $eq: ["$dispatch_status", 1] }, { $eq: ["$collect_damage_status", 1] }] },
-                1, 0,
-              ],
-            },
-          },
-          totalDamage: {
-            $sum: {
-              $cond: [
-                { $or: [{ $eq: ["$production_damage_status", 1] }, { $eq: ["$damage_status", 1] }, { $eq: ["$collect_damage_status", 1] }] },
-                1, 0
-              ]
-            }
-          }
-
-        }
+          _id: { prefix: "$prefix", capacity: "$panel_capacity" },
+          count: { $sum: 1 },
+        },
       },
-      { $sort: { _id: 1 } },
+      { $sort: { "_id.prefix": 1, "_id.capacity": 1 } },
     ]);
+
+    const capacitiesByPrefix = prefixCapacityCounts.reduce((acc, row) => {
+      const prefix = row._id.prefix;
+      if (!acc[prefix]) acc[prefix] = [];
+      acc[prefix].push({
+        capacity: row._id.capacity,
+        count: row.count,
+      });
+      return acc;
+    }, {});
+
+    const panelPrefixWise = panelPrefixWiseRaw.map((row) => ({
+      ...row,
+      capacities: capacitiesByPrefix[row._id] || [],
+    }));
 
 
 
@@ -308,13 +372,38 @@ const monthWiseData = await PanelNumber.aggregate([
 ]);
 
 
+    const totalPanels = totalPanelsProduced || 1;
+    const summary = {
+      productionRate: Number(((totalProduction / totalPanels) * 100).toFixed(1)),
+      dispatchRate: totalProduction
+        ? Number(((totalDispatched / totalProduction) * 100).toFixed(1))
+        : 0,
+      receiveRate: totalDispatched
+        ? Number(((dispatchedAndCollected / totalDispatched) * 100).toFixed(1))
+        : 0,
+      damageRate: Number(((totalDamage / totalPanels) * 100).toFixed(1)),
+      pendingDispatch: Math.max(totalProduction - totalDispatched - productionDamaged, 0),
+    };
+
+    const pipeline = [
+      { key: "generated", label: "Generated", value: totalPanelsProduced },
+      { key: "produced", label: "Produced", value: totalProduction },
+      { key: "inStock", label: "In Stock", value: inStock },
+      { key: "dispatched", label: "Dispatched", value: totalDispatched },
+      { key: "received", label: "Received", value: dispatchedAndCollected },
+      { key: "damaged", label: "Damaged", value: totalDamage },
+    ];
+
     /* ================= RESPONSE ================= */
     return res.status(200).json({
       success: true,
       data: {
-                stock: {
+        stock: {
           totalPanelsProduced,
           inStock,
+          pendingProduction,
+          onHold,
+          readyToDispatch,
         },
         production: {
           totalProduction,
@@ -325,6 +414,7 @@ const monthWiseData = await PanelNumber.aggregate([
           totalDispatched,
           dispatchedNotCollected,
           dispatchedAndCollected,
+          safePanelsReceived,
         },
         damage: {
           productionDamaged,
@@ -332,10 +422,11 @@ const monthWiseData = await PanelNumber.aggregate([
           dispatchedAndCollectedDamaged,
           totalDamage,
         },
-
+        summary,
+        pipeline,
         panelCapacityWise,
-        monthWiseData
-
+        panelPrefixWise,
+        monthWiseData,
       },
     });
 
