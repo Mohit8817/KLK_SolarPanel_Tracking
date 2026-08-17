@@ -8,8 +8,11 @@ import { notifySuccess, notifyError } from "../../utils/toast";
 import {
   DEFAULT_SERIAL_FORMAT,
   DEFAULT_SEQUENCE_DIGITS,
+  DEFAULT_CAPACITY_DIGITS,
   ALLOWED_SEQUENCE_DIGITS,
+  ALLOWED_CAPACITY_DIGITS,
   padSequence,
+  formatCapacityForSerial,
   buildSerialPreview,
 } from "../../utils/serialNumberFormat";
 import { createPanelSerial, getNextStartingNo } from "./GeneratepanelApis";
@@ -31,6 +34,8 @@ const Generatepanel = () => {
   const [serialFormatLocked, setSerialFormatLocked] = useState(false);
   const [sequenceDigits, setSequenceDigits] = useState(DEFAULT_SEQUENCE_DIGITS);
   const [sequenceDigitsLocked, setSequenceDigitsLocked] = useState(false);
+  const [capacityDigits, setCapacityDigits] = useState(DEFAULT_CAPACITY_DIGITS);
+  const [capacityDigitsLocked, setCapacityDigitsLocked] = useState(false);
   const [historyMessage, setHistoryMessage] = useState("");
   const [startingNo, setStartingNo] = useState(1);
   const [startingNoEditable, setStartingNoEditable] = useState(false);
@@ -62,9 +67,11 @@ const Generatepanel = () => {
       setStartingNo(1);
       setStartingNoEditable(false);
       setSequenceDigitsLocked(false);
+      setCapacityDigitsLocked(false);
       setSerialFormatLocked(false);
       setHistoryMessage("");
       setSerialFormat([...DEFAULT_SERIAL_FORMAT]);
+      setCapacityDigits(DEFAULT_CAPACITY_DIGITS);
       return;
     }
 
@@ -81,10 +88,14 @@ const Generatepanel = () => {
         if (data.sequence_digits) {
           setSequenceDigits(data.sequence_digits);
         }
+        if (data.capacity_digits) {
+          setCapacityDigits(data.capacity_digits);
+        }
         if (Array.isArray(data.serial_format) && data.serial_format.length) {
           setSerialFormat(data.serial_format);
         }
         setSequenceDigitsLocked(Boolean(data.sequence_digits_locked));
+        setCapacityDigitsLocked(Boolean(data.capacity_digits_locked));
         setSerialFormatLocked(Boolean(data.serial_format_locked));
         setStartingNoEditable(Boolean(data.starting_no_editable));
         setHistoryMessage(data.history_message || "");
@@ -92,6 +103,7 @@ const Generatepanel = () => {
         setStartingNo(1);
         setStartingNoEditable(false);
         setSequenceDigitsLocked(false);
+        setCapacityDigitsLocked(false);
         setSerialFormatLocked(false);
         setHistoryMessage("");
       }
@@ -113,8 +125,9 @@ const Generatepanel = () => {
         startingNo,
         totalPanels: formData.total_panels || 1,
         sequenceDigits,
+        capacityDigits,
       }),
-    [serialFormat, formData, startingNo, sequenceDigits]
+    [serialFormat, formData, startingNo, sequenceDigits, capacityDigits]
   );
 
   const handleSubmit = async (e) => {
@@ -126,6 +139,7 @@ const Generatepanel = () => {
         ...formData,
         serial_format: preview.normalized,
         sequence_digits: sequenceDigits,
+        capacity_digits: capacityDigits,
         ...(startingNoEditable ? { starting_no: startingNo } : {}),
       });
       notifySuccess("Serial numbers generated successfully");
@@ -133,7 +147,9 @@ const Generatepanel = () => {
       setSerialFormat([...DEFAULT_SERIAL_FORMAT]);
       setSerialFormatLocked(false);
       setSequenceDigits(DEFAULT_SEQUENCE_DIGITS);
+      setCapacityDigits(DEFAULT_CAPACITY_DIGITS);
       setSequenceDigitsLocked(false);
+      setCapacityDigitsLocked(false);
       setHistoryMessage("");
       setStartingNoEditable(false);
       setStartingNo(1);
@@ -306,6 +322,38 @@ const Generatepanel = () => {
 
                   <div className="col-xl-6 col-md-6">
                     <div className="form-group mb-3">
+                      <label className="form-label">Capacity Digits in Serial</label>
+                      <select
+                        className="form-control"
+                        name="capacity_digits"
+                        value={capacityDigits}
+                        onChange={(e) => setCapacityDigits(Number(e.target.value))}
+                        disabled={capacityDigitsLocked}
+                      >
+                        {ALLOWED_CAPACITY_DIGITS.map((digits) => (
+                          <option key={digits} value={digits}>
+                            {digits} digits
+                            {formData.panel_capacity
+                              ? ` → ${formatCapacityForSerial(formData.panel_capacity, digits)}`
+                              : ""}
+                            {digits === DEFAULT_CAPACITY_DIGITS ? " (default)" : ""}
+                          </option>
+                        ))}
+                      </select>
+                      {capacityDigitsLocked ? (
+                        <small className="text-muted d-block mt-1">
+                          Locked to match existing panels for this prefix/capacity/type/year.
+                        </small>
+                      ) : (
+                        <small className="text-muted d-block mt-1">
+                          Pads capacity with leading zeros in the serial number (e.g. 55 → 055 for 3 digits).
+                        </small>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="col-xl-6 col-md-6">
+                    <div className="form-group mb-3">
                       <label className="form-label">Sequence Digits</label>
                       <select
                         className="form-control"
@@ -382,6 +430,8 @@ const Generatepanel = () => {
                       format={serialFormat}
                       onChange={setSerialFormat}
                       sequenceDigits={sequenceDigits}
+                      capacityDigits={capacityDigits}
+                      panelCapacity={formData.panel_capacity}
                       locked={serialFormatLocked}
                     />
                   </div>
@@ -413,7 +463,7 @@ const Generatepanel = () => {
                       )}
 
                       <div className="klk-serial-preview__format">
-                        Sequence: {preview.sequenceDigits} digits · Order:{" "}
+                        Capacity: {preview.capacityDigits} digits · Sequence: {preview.sequenceDigits} digits · Order:{" "}
                         {preview.normalized
                           .map((part, index) => `${index + 1}. ${part.replace("_", " ")}`)
                           .join(" → ")}

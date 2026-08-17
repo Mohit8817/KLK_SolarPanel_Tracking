@@ -7,6 +7,7 @@ const PanelCounterSchema = new mongoose.Schema({
   year: { type: String, required: true },
   seq: { type: Number, default: 0 },
   sequence_digits: { type: Number, default: 6 },
+  capacity_digits: { type: Number, default: 3 },
   serial_format: {
     type: [String],
   },

@@ -52,6 +52,10 @@ const PanelSerialLotSchema = new mongoose.Schema(
       type: Number,
       default: 6,
     },
+    capacity_digits: {
+      type: Number,
+      default: 3,
+    },
     created_by: {
       type: String,
       trim: true,

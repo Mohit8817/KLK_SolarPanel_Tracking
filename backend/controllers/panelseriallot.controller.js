@@ -7,8 +7,10 @@ import {
   buildSerialNumberParts,
   normalizeSerialFormat,
   normalizeSequenceDigits,
+  normalizeCapacityDigits,
   DEFAULT_SERIAL_FORMAT,
   DEFAULT_SEQUENCE_DIGITS,
+  DEFAULT_CAPACITY_DIGITS,
   padSequence,
   formatsEqual,
   formatSerialFormatLabel,
@@ -36,6 +38,7 @@ const resolveHistoricalSeriesConfig = async (
   if (!counter || counter.seq <= 0) {
     return {
       sequence_digits: DEFAULT_SEQUENCE_DIGITS,
+      capacity_digits: DEFAULT_CAPACITY_DIGITS,
       serial_format: [...DEFAULT_SERIAL_FORMAT],
       has_history: false,
       locked: false,
@@ -44,6 +47,10 @@ const resolveHistoricalSeriesConfig = async (
 
   let sequence_digits = counter.sequence_digits
     ? normalizeSequenceDigits(counter.sequence_digits)
+    : null;
+
+  let capacity_digits = counter.capacity_digits
+    ? normalizeCapacityDigits(counter.capacity_digits)
     : null;
 
   let serial_format = Array.isArray(counter.serial_format) &&
@@ -55,7 +62,7 @@ const resolveHistoricalSeriesConfig = async (
 
   if (counter.last_lot_id) {
     const lastLot = await PanelSerialLot.findById(counter.last_lot_id)
-      .select("sequence_digits serial_format date")
+      .select("sequence_digits capacity_digits serial_format date")
       .lean();
 
     if (lastLot) {
@@ -63,6 +70,10 @@ const resolveHistoricalSeriesConfig = async (
 
       if (!sequence_digits && lastLot.sequence_digits) {
         sequence_digits = normalizeSequenceDigits(lastLot.sequence_digits);
+      }
+
+      if (!capacity_digits && lastLot.capacity_digits) {
+        capacity_digits = normalizeCapacityDigits(lastLot.capacity_digits);
       }
 
       if (
@@ -87,7 +98,7 @@ const resolveHistoricalSeriesConfig = async (
   if (samplePanel) {
     if (!lotDate && samplePanel.panel_lot_id) {
       const sampleLot = await PanelSerialLot.findById(samplePanel.panel_lot_id)
-        .select("date sequence_digits serial_format")
+        .select("date sequence_digits capacity_digits serial_format")
         .lean();
 
       if (sampleLot) {
@@ -95,6 +106,10 @@ const resolveHistoricalSeriesConfig = async (
 
         if (!sequence_digits && sampleLot.sequence_digits) {
           sequence_digits = normalizeSequenceDigits(sampleLot.sequence_digits);
+        }
+
+        if (!capacity_digits && sampleLot.capacity_digits) {
+          capacity_digits = normalizeCapacityDigits(sampleLot.capacity_digits);
         }
 
         if (
@@ -110,6 +125,9 @@ const resolveHistoricalSeriesConfig = async (
     if (!sequence_digits) {
       sequence_digits = DEFAULT_SEQUENCE_DIGITS;
     }
+    if (!capacity_digits) {
+      capacity_digits = DEFAULT_CAPACITY_DIGITS;
+    }
 
     const inferenceInput = {
       panel_unique_no: samplePanel.panel_unique_no,
@@ -119,6 +137,7 @@ const resolveHistoricalSeriesConfig = async (
       date: lotDate || `${year}-01-01`,
       panel_no: samplePanel.panel_no,
       sequence_digits,
+      capacity_digits,
     };
 
     if (
@@ -134,6 +153,9 @@ const resolveHistoricalSeriesConfig = async (
   if (!sequence_digits) {
     sequence_digits = DEFAULT_SEQUENCE_DIGITS;
   }
+  if (!capacity_digits) {
+    capacity_digits = DEFAULT_CAPACITY_DIGITS;
+  }
   if (!serial_format) {
     serial_format = [...DEFAULT_SERIAL_FORMAT];
   }
@@ -144,6 +166,11 @@ const resolveHistoricalSeriesConfig = async (
 
     if (counterDoc.sequence_digits !== sequence_digits) {
       counterDoc.sequence_digits = sequence_digits;
+      needsSave = true;
+    }
+
+    if (counterDoc.capacity_digits !== capacity_digits) {
+      counterDoc.capacity_digits = capacity_digits;
       needsSave = true;
     }
 
@@ -163,6 +190,7 @@ const resolveHistoricalSeriesConfig = async (
 
   return {
     sequence_digits,
+    capacity_digits,
     serial_format,
     has_history: true,
     locked: true,
@@ -201,13 +229,15 @@ export const getNextPanelNumber = async (req, res) => {
       success: true,
       next_starting_no: nextNumber,
       sequence_digits: history.sequence_digits,
+      capacity_digits: history.capacity_digits,
       serial_format: history.serial_format,
       has_history: history.has_history,
       starting_no_editable: !history.has_history,
       sequence_digits_locked: history.locked,
+      capacity_digits_locked: history.locked,
       serial_format_locked: history.locked,
       history_message: history.has_history
-        ? `Existing panels for this prefix/capacity/type/${year} use ${history.sequence_digits}-digit sequence and format: ${formatSerialFormatLabel(history.serial_format)}. Next: ${padSequence(nextNumber, history.sequence_digits)}`
+        ? `Existing panels for this prefix/capacity/type/${year} use ${history.sequence_digits}-digit sequence, ${history.capacity_digits}-digit capacity in serial, and format: ${formatSerialFormatLabel(history.serial_format)}. Next: ${padSequence(nextNumber, history.sequence_digits)}`
         : "No existing series for this prefix/capacity/type/year — you may choose the starting number.",
     });
   } catch (error) {
@@ -234,6 +264,7 @@ export const createPanelSerialLot = async (req, res) => {
       updated_by,
       serial_format,
       sequence_digits,
+      capacity_digits,
     } = req.body;
 
     /* ==========================
@@ -284,12 +315,25 @@ export const createPanelSerialLot = async (req, res) => {
     );
 
     const requestedDigits = normalizeSequenceDigits(sequence_digits);
+    const requestedCapacityDigits = normalizeCapacityDigits(capacity_digits);
 
     if (history.has_history && requestedDigits !== history.sequence_digits) {
       return res.status(400).json({
         success: false,
         message: `This prefix/capacity/type/${yearFull} already uses ${history.sequence_digits}-digit sequence numbers (last: ${padSequence(history.last_sequence, history.sequence_digits)}). You cannot change to ${requestedDigits} digits for the same series.`,
         sequence_digits: history.sequence_digits,
+        has_history: true,
+      });
+    }
+
+    if (
+      history.has_history &&
+      requestedCapacityDigits !== history.capacity_digits
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: `This prefix/capacity/type/${yearFull} already uses ${history.capacity_digits}-digit capacity in serial numbers. You cannot change to ${requestedCapacityDigits} digits for the same series.`,
+        capacity_digits: history.capacity_digits,
         has_history: true,
       });
     }
@@ -306,6 +350,10 @@ export const createPanelSerialLot = async (req, res) => {
     const normalizedSequenceDigits = history.has_history
       ? history.sequence_digits
       : requestedDigits;
+
+    const normalizedCapacityDigits = history.has_history
+      ? history.capacity_digits
+      : requestedCapacityDigits;
 
     const normalizedFormat = history.has_history
       ? history.serial_format
@@ -334,6 +382,7 @@ export const createPanelSerialLot = async (req, res) => {
           },
           $set: {
             sequence_digits: normalizedSequenceDigits,
+            capacity_digits: normalizedCapacityDigits,
             serial_format: normalizedFormat,
           },
           $setOnInsert: {
@@ -399,6 +448,7 @@ export const createPanelSerialLot = async (req, res) => {
           $set: {
             seq: endingNo,
             sequence_digits: normalizedSequenceDigits,
+            capacity_digits: normalizedCapacityDigits,
             serial_format: normalizedFormat,
           },
           $setOnInsert: {
@@ -433,6 +483,7 @@ export const createPanelSerialLot = async (req, res) => {
       total_panels: totalPanelsNum,
       serial_format: normalizedFormat,
       sequence_digits: normalizedSequenceDigits,
+      capacity_digits: normalizedCapacityDigits,
       created_by,
       updated_by,
     });
@@ -455,6 +506,7 @@ export const createPanelSerialLot = async (req, res) => {
         date,
         sequence: serial,
         sequence_digits: normalizedSequenceDigits,
+        capacity_digits: normalizedCapacityDigits,
       });
 
       panels.push({
@@ -500,6 +552,7 @@ export const createPanelSerialLot = async (req, res) => {
       total_created: totalPanelsNum,
       serial_format: normalizedFormat,
       sequence_digits: normalizedSequenceDigits,
+      capacity_digits: normalizedCapacityDigits,
       example_serial: buildSerialNumber(
         normalizedFormat,
         buildSerialNumberParts({
@@ -509,6 +562,7 @@ export const createPanelSerialLot = async (req, res) => {
           date,
           sequence: actualStartingNo,
           sequence_digits: normalizedSequenceDigits,
+          capacity_digits: normalizedCapacityDigits,
         })
       ),
     });
@@ -534,10 +588,12 @@ export const previewPanelSerialFormat = async (req, res) => {
       starting_no = 1,
       total_panels = 1,
       sequence_digits,
+      capacity_digits,
     } = req.body;
 
     const normalizedFormat = normalizeSerialFormat(serial_format || DEFAULT_SERIAL_FORMAT);
     const normalizedSequenceDigits = normalizeSequenceDigits(sequence_digits);
+    const normalizedCapacityDigits = normalizeCapacityDigits(capacity_digits);
     const start = Number(starting_no) || 1;
     const total = Math.max(Number(total_panels) || 1, 1);
     const end = start + total - 1;
@@ -552,6 +608,7 @@ export const previewPanelSerialFormat = async (req, res) => {
           date,
           sequence,
           sequence_digits: normalizedSequenceDigits,
+          capacity_digits: normalizedCapacityDigits,
         })
       );
 

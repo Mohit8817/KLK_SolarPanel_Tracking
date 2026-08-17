@@ -17,11 +17,35 @@ export const DEFAULT_SERIAL_FORMAT = [
 export const ALLOWED_SEQUENCE_DIGITS = [3, 5, 6, 7];
 export const DEFAULT_SEQUENCE_DIGITS = 6;
 
+export const ALLOWED_CAPACITY_DIGITS = [2, 3];
+export const DEFAULT_CAPACITY_DIGITS = 3;
+
 export const normalizeSequenceDigits = (digits) => {
   const value = Number(digits);
   return ALLOWED_SEQUENCE_DIGITS.includes(value)
     ? value
     : DEFAULT_SEQUENCE_DIGITS;
+};
+
+export const normalizeCapacityDigits = (digits) => {
+  const value = Number(digits);
+  return ALLOWED_CAPACITY_DIGITS.includes(value)
+    ? value
+    : DEFAULT_CAPACITY_DIGITS;
+};
+
+export const formatCapacityForSerial = (
+  capacity,
+  digits = DEFAULT_CAPACITY_DIGITS
+) => {
+  const raw = String(capacity ?? "")
+    .trim()
+    .replace(/[^\d]/g, "");
+  if (!raw) return "";
+
+  const width = normalizeCapacityDigits(digits);
+  if (raw.length > width) return raw.slice(-width);
+  return raw.padStart(width, "0");
 };
 
 export const padSequence = (sequence, digits = DEFAULT_SEQUENCE_DIGITS) =>
@@ -57,9 +81,10 @@ export const buildSerialPartValues = ({
   date = "",
   sequence = 1,
   sequence_digits = DEFAULT_SEQUENCE_DIGITS,
+  capacity_digits = DEFAULT_CAPACITY_DIGITS,
 }) => ({
   prefix: String(prefix || "").trim(),
-  capacity: String(panel_capacity || "").trim(),
+  capacity: formatCapacityForSerial(panel_capacity, capacity_digits),
   type: String(panel_type || "").trim(),
   month_year: getMonthYearFromDate(date),
   sequence: padSequence(sequence, sequence_digits),
@@ -76,9 +101,11 @@ export const buildSerialPreview = ({
   startingNo = 1,
   totalPanels = 1,
   sequenceDigits = DEFAULT_SEQUENCE_DIGITS,
+  capacityDigits = DEFAULT_CAPACITY_DIGITS,
 }) => {
   const normalized = normalizeSerialFormat(format);
   const digits = normalizeSequenceDigits(sequenceDigits);
+  const capDigits = normalizeCapacityDigits(capacityDigits);
   const endNo = startingNo + Math.max(Number(totalPanels) || 1, 1) - 1;
 
   const buildValues = (sequence) =>
@@ -86,6 +113,7 @@ export const buildSerialPreview = ({
       ...formData,
       sequence,
       sequence_digits: digits,
+      capacity_digits: capDigits,
     });
 
   const first = buildSerialNumber(normalized, buildValues(startingNo));
@@ -100,5 +128,5 @@ export const buildSerialPreview = ({
       ? buildSerialNumber(normalized, buildValues(endNo))
       : null;
 
-  return { first, second, last, normalized, sequenceDigits: digits };
+  return { first, second, last, normalized, sequenceDigits: digits, capacityDigits: capDigits };
 };

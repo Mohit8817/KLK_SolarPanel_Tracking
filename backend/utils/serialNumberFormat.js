@@ -17,11 +17,50 @@ export const DEFAULT_SERIAL_FORMAT = [
 export const ALLOWED_SEQUENCE_DIGITS = [3, 5, 6, 7];
 export const DEFAULT_SEQUENCE_DIGITS = 6;
 
+export const ALLOWED_CAPACITY_DIGITS = [2, 3];
+export const DEFAULT_CAPACITY_DIGITS = 3;
+
 export const normalizeSequenceDigits = (digits) => {
   const value = Number(digits);
   return ALLOWED_SEQUENCE_DIGITS.includes(value)
     ? value
     : DEFAULT_SEQUENCE_DIGITS;
+};
+
+export const normalizeCapacityDigits = (digits) => {
+  const value = Number(digits);
+  return ALLOWED_CAPACITY_DIGITS.includes(value)
+    ? value
+    : DEFAULT_CAPACITY_DIGITS;
+};
+
+export const formatCapacityForSerial = (
+  capacity,
+  digits = DEFAULT_CAPACITY_DIGITS
+) => {
+  const raw = String(capacity ?? "")
+    .trim()
+    .replace(/[^\d]/g, "");
+  if (!raw) return "";
+
+  const width = normalizeCapacityDigits(digits);
+  if (raw.length > width) return raw.slice(-width);
+  return raw.padStart(width, "0");
+};
+
+export const getCapacitySerialVariants = (capacity) => {
+  const raw = String(capacity ?? "")
+    .trim()
+    .replace(/[^\d]/g, "");
+  if (!raw) return [""];
+
+  return [
+    ...new Set([
+      raw,
+      formatCapacityForSerial(raw, 2),
+      formatCapacityForSerial(raw, 3),
+    ]),
+  ];
 };
 
 export const padSequence = (sequence, digits = DEFAULT_SEQUENCE_DIGITS) =>
@@ -84,20 +123,14 @@ export const inferSerialFormatFromUniqueNo = ({
   date = "",
   panel_no = 1,
   sequence_digits = DEFAULT_SEQUENCE_DIGITS,
+  capacity_digits = DEFAULT_CAPACITY_DIGITS,
 }) => {
   const target = String(panel_unique_no).trim();
   if (!target) {
     return [...DEFAULT_SERIAL_FORMAT];
   }
 
-  const partValues = buildSerialNumberParts({
-    prefix,
-    panel_capacity,
-    panel_type,
-    date,
-    sequence: panel_no,
-    sequence_digits,
-  });
+  const capacityVariants = getCapacitySerialVariants(panel_capacity);
 
   const partCount = OPTIONAL_SERIAL_PARTS.length;
   const subsetCount = 1 << partCount;
@@ -107,8 +140,24 @@ export const inferSerialFormatFromUniqueNo = ({
 
     for (const order of permutations(included)) {
       const format = [...order, "sequence"];
-      if (buildSerialNumber(format, partValues) === target) {
-        return normalizeSerialFormat(format);
+
+      for (const capacityValue of capacityVariants) {
+        const partValues = {
+          ...buildSerialNumberParts({
+            prefix,
+            panel_capacity,
+            panel_type,
+            date,
+            sequence: panel_no,
+            sequence_digits,
+            capacity_digits,
+          }),
+          capacity: capacityValue,
+        };
+
+        if (buildSerialNumber(format, partValues) === target) {
+          return normalizeSerialFormat(format);
+        }
       }
     }
   }
@@ -126,6 +175,7 @@ export const serialFormatMatchesUniqueNo = (
     date = "",
     panel_no = 1,
     sequence_digits = DEFAULT_SEQUENCE_DIGITS,
+    capacity_digits = DEFAULT_CAPACITY_DIGITS,
   }
 ) => {
   const target = String(panel_unique_no).trim();
@@ -140,6 +190,7 @@ export const serialFormatMatchesUniqueNo = (
       date,
       sequence: panel_no,
       sequence_digits,
+      capacity_digits,
     })
   );
 
@@ -160,12 +211,13 @@ export const buildSerialNumberParts = ({
   date = "",
   sequence = 1,
   sequence_digits = DEFAULT_SEQUENCE_DIGITS,
+  capacity_digits = DEFAULT_CAPACITY_DIGITS,
 }) => {
   const digits = normalizeSequenceDigits(sequence_digits);
 
   return {
     prefix: String(prefix || "").trim(),
-    capacity: String(panel_capacity || "").trim(),
+    capacity: formatCapacityForSerial(panel_capacity, capacity_digits),
     type: String(panel_type || "").trim(),
     month_year: date ? getMonthYearFromDate(date) : "",
     sequence: padSequence(sequence, digits),

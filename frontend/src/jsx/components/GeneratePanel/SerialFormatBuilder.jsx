@@ -4,12 +4,16 @@ import {
   normalizeSerialFormat,
   padSequence,
   DEFAULT_SEQUENCE_DIGITS,
+  DEFAULT_CAPACITY_DIGITS,
+  formatCapacityForSerial,
 } from "../../utils/serialNumberFormat";
 
 const SerialFormatBuilder = ({
   format,
   onChange,
   sequenceDigits = DEFAULT_SEQUENCE_DIGITS,
+  capacityDigits = DEFAULT_CAPACITY_DIGITS,
+  panelCapacity = "",
   locked = false,
 }) => {
   const normalized = normalizeSerialFormat(format);
@@ -93,7 +97,9 @@ const SerialFormatBuilder = ({
                   e.g.{" "}
                   {part.id === "sequence"
                     ? padSequence(1, sequenceDigits)
-                    : part.sample}
+                    : part.id === "capacity"
+                      ? formatCapacityForSerial(panelCapacity || part.sample, capacityDigits)
+                      : part.sample}
                 </span>
               </div>
 
