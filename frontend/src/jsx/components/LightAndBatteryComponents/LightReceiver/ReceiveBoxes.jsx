@@ -46,7 +46,7 @@ const ReceiveBoxes = () => {
       />
 
       <Row>
-        <Col xl={10} className="mx-auto">
+        <Col xl={12} className="mx-auto">
           <Card className="border-0 shadow-sm mb-4">
             <Card.Header className="bg-white border-bottom py-3">
               <h5 className="mb-0 fw-bold">Scan Incoming Box QR Code</h5>
