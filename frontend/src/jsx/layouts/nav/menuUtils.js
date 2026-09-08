@@ -1,7 +1,9 @@
 export const SECTION_LABELS = {
   overview: "Overview",
-  operations: "Operations",
+  panel_operations: "Solar Panel Operations",
+  light_operations: "Solar Light & Battery Operations",
   admin: "Administration",
+  operations: "Solar Panel Operations",
 };
 
 /** Strip leading/trailing slashes for consistent route matching. */
@@ -19,6 +21,11 @@ const DETAIL_ROUTE_PREFIXES = {
   "production-damage/list": ["production-damage"],
   "damage/list": ["damage"],
   "receiver/damage/list": ["receiver/damage"],
+  "light/serial/list": ["light/view-serial-details"],
+  "light/production/list": ["light/view-production-details"],
+  "light/box/list": ["light/view-box-details"],
+  "light/dispatch/list": ["light/view-dispatch-details"],
+  "light/receive/list": ["light/view-receive-details"],
 };
 
 /** Whether a menu path matches the current URL (including related detail routes). */

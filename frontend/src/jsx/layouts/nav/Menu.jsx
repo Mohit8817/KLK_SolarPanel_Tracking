@@ -3,14 +3,24 @@ import { hasPermission } from "../../../utils/auth.js";
 export const MenuList = [
   {
     section: "overview",
-    title: "Dashboard",
+    title: "Panel Dashboard",
     icon: "fa-chart-column",
     to: "dashboard",
     permission: "dashboard",
   },
-
   {
-    section: "operations",
+    section: "overview",
+    title: "Light & Battery Dashboard",
+    icon: "fa-chart-column",
+    to: "light/dashboard",
+    permission: "dashboard",
+  },
+
+  // ==========================================
+  // SOLAR PANEL OPERATIONS
+  // ==========================================
+  {
+    section: "panel_operations",
     title: "Panel Generation",
     icon: "fa-solar-panel",
     content: [
@@ -20,7 +30,7 @@ export const MenuList = [
   },
 
   {
-    section: "operations",
+    section: "panel_operations",
     title: "Production",
     icon: "fa-industry",
     content: [
@@ -33,7 +43,7 @@ export const MenuList = [
   },
 
   {
-    section: "operations",
+    section: "panel_operations",
     title: "Hold Production",
     icon: "fa-pause-circle",
     content: [
@@ -43,7 +53,7 @@ export const MenuList = [
   },
 
   {
-    section: "operations",
+    section: "panel_operations",
     title: "Dispatch Panel",
     icon: "fa-truck-fast",
     content: [
@@ -55,7 +65,7 @@ export const MenuList = [
   },
 
   {
-    section: "operations",
+    section: "panel_operations",
     title: "Receive Panel",
     icon: "fa-truck-ramp-box",
     content: [
@@ -65,6 +75,84 @@ export const MenuList = [
     ],
   },
 
+  // ==========================================
+  // SOLAR LIGHT & BATTERY OPERATIONS
+  // ==========================================
+  {
+    section: "light_operations",
+    title: "Serial Generation",
+    icon: "fa-barcode",
+    content: [
+      { title: "Generate Serials", to: "light/serial/generate", permission: "" },
+      { title: "Serial Lot List", to: "light/serial/list", permission: "" },
+    ],
+  },
+
+  {
+    section: "light_operations",
+    title: "BOM & Stock Request",
+    icon: "fa-boxes-stacked",
+    content: [
+      { title: "Material Request", to: "light/bom/request", permission: "" },
+      { title: "Request & OTP List", to: "light/bom/list", permission: "" },
+    ],
+  },
+
+  {
+    section: "light_operations",
+    title: " Light & Battery Production",
+    icon: "fa-screwdriver-wrench",
+    content: [
+      { title: "Add Production", to: "light/production/add", permission: "" },
+      { title: "Production List", to: "light/production/list", permission: "" },
+    ],
+  },
+
+  {
+    section: "light_operations",
+    title: "Quality Check",
+    icon: "fa-clipboard-check",
+    content: [
+      { title: "Quality Check Inspection", to: "light/qc/inspection", permission: "" },
+      { title: "Quality Check Tested List", to: "light/qc/list", permission: "" },
+    ],
+  },
+
+  {
+    section: "light_operations",
+    title: "Box Packaging",
+    icon: "fa-box-open",
+    content: [
+      { title: "Packaging Console", to: "light/box/packaging", permission: "" },
+      { title: "Sealed Boxes List", to: "light/box/list", permission: "" },
+    ],
+  },
+
+  {
+    section: "light_operations",
+    title: "Dispatch Light",
+    icon: "fa-dolly",
+    content: [
+      { title: "Dispatch Boxes", to: "light/dispatch/create", permission: "" },
+      { title: "View Dispatch List", to: "light/dispatch/list", permission: "" },
+    ],
+  },
+
+  {
+    section: "light_operations",
+    title: "Receive Light",
+    icon: "fa-warehouse",
+    content: [
+      { title: "Receive Boxes", to: "light/receive/boxes", permission: "" },
+      { title: "Received Box List", to: "light/receive/list", permission: "" },
+    ],
+  },
+
+
+
+  // ==========================================
+  // ADMINISTRATION
+  // ==========================================
   {
     section: "admin",
     title: "User Management",
@@ -89,10 +177,14 @@ export const MenuList = [
 export const getFilteredMenuList = () =>
   MenuList.map((menu) => {
     if (menu.content) {
-      const filtered = menu.content.filter((item) => hasPermission(item.permission));
+      const filtered = menu.content.filter((item) => {
+        if (!item.permission) return true;
+        return hasPermission(item.permission);
+      });
       return filtered.length > 0 ? { ...menu, content: filtered } : null;
     }
 
+    if (!menu.permission) return menu;
     return hasPermission(menu.permission) ? menu : null;
   }).filter(Boolean);
 

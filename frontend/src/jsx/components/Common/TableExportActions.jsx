@@ -14,7 +14,7 @@ const TableExportActions = ({
   actions
 }) => {
   return (
-    <div className="d-flex gap-1 flex-wrap">
+    <div className="d-flex gap-1 flex-nowrap">
 
       {actions.includes("csv") && (
         <button

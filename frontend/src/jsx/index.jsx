@@ -50,7 +50,24 @@ import HoldProductionform from "./components/HoldProduction/HoldProductionform";
 import ViewHoldProd from "./components/HoldProduction/ViewHoldProd";
 import ViewHoldPanels from "./components/HoldProduction/ViewHoldpanels";
 
-
+// Solar Light & Battery Components
+import LightDashboard from "./components/LightAndBatteryComponents/Dashboard/LightDashboard";
+import GenerateLightSerial from "./components/LightAndBatteryComponents/SerialGeneration/GenerateLightSerial";
+import ViewSerialList from "./components/LightAndBatteryComponents/SerialGeneration/ViewSerialList";
+import MaterialRequisition from "./components/LightAndBatteryComponents/BOMAndMaterials/MaterialRequisition";
+ import ViewMaterialRequests from "./components/LightAndBatteryComponents/BOMAndMaterials/ViewMaterialRequests";
+import ProductionEntry from "./components/LightAndBatteryComponents/LightProduction/ProductionEntry";
+import ViewProductionList from "./components/LightAndBatteryComponents/LightProduction/ViewProductionList";
+import QCInspection from "./components/LightAndBatteryComponents/QualityCheck/QCInspection";
+import ViewQCList from "./components/LightAndBatteryComponents/QualityCheck/ViewQCList";
+import PackagingConsole from "./components/LightAndBatteryComponents/BoxPackaging/PackagingConsole";
+import ViewBoxList from "./components/LightAndBatteryComponents/BoxPackaging/ViewBoxList";
+import CreateDispatch from "./components/LightAndBatteryComponents/LightDispatch/CreateDispatch";
+import ViewDispatchList from "./components/LightAndBatteryComponents/LightDispatch/ViewDispatchList";
+import ReceiveBoxes from "./components/LightAndBatteryComponents/LightReceiver/ReceiveBoxes";
+import ViewReceivedList from "./components/LightAndBatteryComponents/LightReceiver/ViewReceivedList";
+import ViewGenerateDetailsList from "./components/LightAndBatteryComponents/SerialGeneration/ViewGenerateDetailsList";
+import ViewProductionDetailsList from "./components/LightAndBatteryComponents/LightProduction/ViewProductionDetailsList";
 
 const ProtectedRoute = () => {
   const token = localStorage.getItem("token");
@@ -106,6 +123,29 @@ const Markup = () => {
     { url: "hold-production/list", component: < ViewHoldProd/> },
     { url: "hold-production-panels/:id", component: < ViewHoldPanels/> },
 
+    // ==========================================
+    // SOLAR LIGHT & BATTERY OPERATIONS
+    // ==========================================
+    { url: "light/dashboard", component: <LightDashboard /> },
+    { url: "light/serial/generate", component: <GenerateLightSerial /> },
+    { url: "light/serial/list", component: <ViewSerialList /> },
+    { url: "light/serial/generate-details/:id", component: <ViewGenerateDetailsList /> },
+   
+    { url: "light/production/add", component: <ProductionEntry /> },
+    { url: "light/production/list", component: <ViewProductionList /> },
+    { url: "production/light-battery/series", component: <ViewProductionDetailsList /> },
+
+    { url: "light/qc/inspection", component: <QCInspection /> },
+    { url: "light/qc/list", component: <ViewQCList /> },
+    { url: "light/box/packaging", component: <PackagingConsole /> },
+    { url: "light/box/list", component: <ViewBoxList /> },
+    { url: "light/dispatch/create", component: <CreateDispatch /> },
+    { url: "light/dispatch/list", component: <ViewDispatchList /> },
+    { url: "light/receive/boxes", component: <ReceiveBoxes /> },
+    { url: "light/receive/list", component: <ViewReceivedList /> },
+
+     { url: "light/bom/request", component: <MaterialRequisition /> },
+    { url: "light/bom/list", component: <ViewMaterialRequests /> },
   ];
 
   return (
