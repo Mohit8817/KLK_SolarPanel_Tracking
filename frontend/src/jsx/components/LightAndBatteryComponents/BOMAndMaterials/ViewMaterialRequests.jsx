@@ -6,7 +6,7 @@ import ListToolbar from "../../Common/ListToolbar";
 import Search, { useSearch } from "../../Common/Search";
 import TableExportActions from "../../Common/TableExportActions";
 import CommonPagination from "../../Common/Pagination";
-import { ViewAction, DeleteAction } from "../../Common/ActionButtons";
+import { DeleteAction } from "../../Common/ActionButtons";
 
 // ── MOCK DATA ───────────────────────────────────────────────────────────
 const MOCK_BOM_LIST = [

@@ -77,7 +77,7 @@ const ViewSerialList = () => {
   const [serialList, setSerialList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState("ALL");
-  const [_selectedLot, setSelectedLot] = useState(null);
+  const [_selectedLot] = useState(null);
 
   useEffect(() => {
     fetchLots();
