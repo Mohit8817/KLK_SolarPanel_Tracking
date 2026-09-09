@@ -68,6 +68,7 @@ import ReceiveBoxes from "./components/LightAndBatteryComponents/LightReceiver/R
 import ViewReceivedList from "./components/LightAndBatteryComponents/LightReceiver/ViewReceivedList";
 import ViewGenerateDetailsList from "./components/LightAndBatteryComponents/SerialGeneration/ViewGenerateDetailsList";
 import ViewProductionDetailsList from "./components/LightAndBatteryComponents/LightProduction/ViewProductionDetailsList";
+import AppProfile from "./components/AppsMenu/AppProfile/AppProfile";
 
 const ProtectedRoute = () => {
   const token = localStorage.getItem("token");
@@ -146,6 +147,9 @@ const Markup = () => {
 
      { url: "light/bom/request", component: <MaterialRequisition /> },
     { url: "light/bom/list", component: <ViewMaterialRequests /> },
+
+    // Profile
+    { url: "app-profile", component: <AppProfile /> },
   ];
 
   return (

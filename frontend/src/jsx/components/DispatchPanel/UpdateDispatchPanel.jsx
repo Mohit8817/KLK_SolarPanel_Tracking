@@ -480,7 +480,7 @@ const UpdateDispatchPanel = () => {
                             savePanel(finalValue);
                           }, 70);
                         }}
-                        onBlur={forceFocus}
+                        // onBlur={forceFocus}
                       />
                     </div>
 
@@ -511,7 +511,7 @@ const UpdateDispatchPanel = () => {
                       <label>Manual entry</label>
                       <div className="klk-scan-tools__manual">
                         <input
-                          type="text"
+                          type="text" 
                           className="form-control"
                           placeholder="Panel number"
                           value={manualPanel}
