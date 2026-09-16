@@ -11,7 +11,18 @@ const MOCK_BOXES = [
 ];
 
 const ViewBoxList = () => {
-  const [boxes] = useState(MOCK_BOXES);
+  const [boxes] = useState(() => {
+    try {
+      const saved = localStorage.getItem("klk_sealed_boxes");
+      if (saved) {
+        const list = JSON.parse(saved);
+        if (list.length > 0) return list;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return MOCK_BOXES;
+  });
   const [selectedBox, setSelectedBox] = useState(null);
   const [showModal, setShowModal] = useState(false);
 

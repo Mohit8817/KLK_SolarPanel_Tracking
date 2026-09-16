@@ -165,7 +165,15 @@ const INITIAL_QC_DATA = [
 ];
 
 const ViewQCList = () => {
-  const [list] = useState(INITIAL_QC_DATA);
+  const [list] = useState(() => {
+    try {
+      const saved = localStorage.getItem("klk_qc_records");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return INITIAL_QC_DATA;
+  });
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [searchTerm, setSearchTerm] = useState("");

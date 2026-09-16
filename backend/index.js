@@ -24,6 +24,8 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://127.0.0.1:5173",
+      "http://127.0.0.1:5174",
+      "http://127.0.0.1:5174",
       "http://klkventures.cloud",
       "https://klkventures.cloud",
       "http://www.klkventures.cloud",
@@ -72,3 +74,5 @@ app.use("/api/holdpanel", holdpanelroutes)
 app.listen(3000, () => {
     console.log('server is runing on port 3000');
 })
+
+
