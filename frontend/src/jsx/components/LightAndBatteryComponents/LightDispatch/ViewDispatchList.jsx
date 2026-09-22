@@ -40,7 +40,7 @@ const ViewDispatchList = () => {
         <Card.Body className="p-0">
           <div className="table-responsive">
             <Table hover className="align-middle mb-0">
-              <thead className="table-light">
+              <thead className="table-primary">
                 <tr>
                   <th>Challan No</th>
                   <th>Truck Number</th>

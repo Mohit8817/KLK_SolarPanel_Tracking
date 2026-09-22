@@ -143,7 +143,7 @@ const CreateDispatch = () => {
 
               <div className="table-responsive border rounded">
                 <Table hover className="align-middle mb-0">
-                  <thead className="table-light">
+                  <thead className="table-primary">
                     <tr>
                       <th>#</th>
                       <th>Box QR Number</th>

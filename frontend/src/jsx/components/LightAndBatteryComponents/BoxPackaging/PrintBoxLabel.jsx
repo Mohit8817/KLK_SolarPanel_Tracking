@@ -44,7 +44,7 @@ const PrintBoxLabel = ({ show, onHide, boxData, onBoxSealed }) => {
 
   return (
     <Modal show={show} onHide={onHide} size="lg" centered>
-      <Modal.Header closeButton className="py-2 px-3 bg-light">
+      <Modal.Header closeButton className="py-2 px-3">
         <div className="d-flex align-items-center gap-2">
           <i className="fa-solid fa-qrcode text-primary fs-18"></i>
           <div>
@@ -95,7 +95,7 @@ const PrintBoxLabel = ({ show, onHide, boxData, onBoxSealed }) => {
           <h6 className="fw-bold fs-13 mb-2">Packed Serial Numbers ({items.length} Units)</h6>
           <div className="table-responsive" style={{ maxHeight: 260, overflowY: "auto" }}>
             <Table bordered size="sm" className="align-middle mb-0 fs-12">
-              <thead className="table-light sticky-top">
+              <thead className="table-primary sticky-top">
                 <tr>
                   <th style={{ width: 40 }}>#</th>
                   <th>Serial Number</th>

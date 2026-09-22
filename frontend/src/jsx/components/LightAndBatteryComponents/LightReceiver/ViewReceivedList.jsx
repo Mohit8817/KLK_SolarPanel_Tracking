@@ -32,7 +32,7 @@ const ViewReceivedList = () => {
         <Card.Body className="p-0">
           <div className="table-responsive">
             <Table hover className="align-middle mb-0">
-              <thead className="table-light">
+              <thead className="table-primary">
                 <tr>
                   <th>Box QR Number</th>
                   <th>Warehouse / Hub</th>

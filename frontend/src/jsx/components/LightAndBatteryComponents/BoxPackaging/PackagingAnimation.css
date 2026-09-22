@@ -1,0 +1,184 @@
+.flying-box {
+  position: fixed;
+  z-index: 1080;
+  pointer-events: none;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, .28);
+  border: 1px solid #D1FAE5;
+  overflow: hidden;
+  top: var(--flight-top);
+  left: var(--flight-left);
+  width: var(--flight-width);
+  height: var(--flight-height);
+  transform: var(--flight-transform);
+  opacity: var(--flight-opacity);
+  transition:
+    top 1.1s cubic-bezier(.22,.7,.28,1),
+    left 1.1s cubic-bezier(.22,.7,.28,1),
+    width 1.1s cubic-bezier(.22,.7,.28,1),
+    height 1.1s cubic-bezier(.22,.7,.28,1),
+    transform 1.1s cubic-bezier(.22,.7,.28,1),
+    opacity .35s ease 0.8s;
+}
+
+.sealed-tile--landing {
+  animation: tileIn .55s cubic-bezier(.2,.8,.3,1);
+}
+
+@keyframes tileIn {
+  0% { transform: scale(.88); }
+  100% { transform: scale(1); }
+}
+
+/* ── Item icon-tile grid: shown inside an open box, one tile per
+   scanned Light / Battery unit — a circular icon badge with the
+   serial underneath, matching the "symbols inside the box" sketch. ── */
+.item-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 16px;
+  justify-content: start;
+}
+
+.item-icon-tile {
+  animation: tileIn .3s cubic-bezier(.2,.8,.3,1);
+}
+
+.item-icon-tile__box {
+  border: 1px solid #E5E9F0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .06);
+  padding: 14px 8px 12px;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.item-icon-tile:hover .item-icon-tile__box {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .12);
+  border-color: #CBD5E1;
+}
+
+.item-icon-tile__circle {
+  width: 56px;
+  height: 56px;
+  font-size: 24px;
+}
+
+/* Cross / remove button — always visible, generously sized so it's
+   easy to tap on touch screens, sitting cleanly on the tile's corner */
+.item-icon-tile__remove {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #94A3B8;
+  color: #fff;
+  font-size: 11px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(15, 23, 42, .2);
+  z-index: 2;
+  cursor: pointer;
+  transition: background .15s ease, transform .15s ease;
+}
+
+.item-icon-tile__remove:hover {
+  background: #EF4444;
+  transform: scale(1.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flying-box { transition: opacity .2s ease; }
+  .sealed-tile--landing { animation: none; }
+  .item-icon-tile { animation: none; }
+}
+
+/* ── Sealed box tile (right side container grid) — clean, professional
+   card with a soft success-tinted top accent instead of a heavy border ── */
+.sealed-box-tile {
+  border: 1px solid #E5E9F0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .06);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.sealed-box-tile::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 12px 12px 0 0;
+  background: linear-gradient(90deg, #10B981, #34D399);
+}
+
+.sealed-box-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, .1);
+  border-color: #D1FAE5;
+}
+
+.sealed-box-tile__badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #059669;
+  background: #ECFDF5;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.sealed-box-tile__count {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0F172A;
+  background: #F1F5F9;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+/* ── General smoothing across the console — softer card edges,
+   gentle hover lift, and consistent easing everywhere ── */
+.packaging-console-page .card {
+  border-radius: 14px;
+  transition: box-shadow .2s ease;
+}
+
+.packaging-console-page .form-control,
+.packaging-console-page .form-select,
+.packaging-console-page .input-group-text {
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.packaging-console-page .form-control:focus {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+}
+
+.packaging-console-page .container-grid-scroll,
+.packaging-console-page .item-icon-grid {
+  scroll-behavior: smooth;
+}
+.packaging-console-page ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.packaging-console-page ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.packaging-console-page ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+.packaging-console-page ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Container grid: keeps its own scroll area contained and clipped
+   so scaling to many boxes never forces the whole page to scroll */
+.container-grid-scroll {
+  scrollbar-gutter: stable;
+}

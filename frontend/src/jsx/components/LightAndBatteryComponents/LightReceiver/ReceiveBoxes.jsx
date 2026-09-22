@@ -83,7 +83,7 @@ const ReceiveBoxes = () => {
             <Card.Body className="p-0">
               <div className="table-responsive">
                 <Table hover className="align-middle mb-0">
-                  <thead className="table-light">
+                  <thead className="table-primary">
                     <tr>
                       <th>#</th>
                       <th>Box QR Number</th>
