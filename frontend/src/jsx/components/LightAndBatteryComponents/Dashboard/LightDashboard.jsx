@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Row, Col, Card, Table, Badge, ProgressBar, Button, Dropdown } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import ReactApexChart from "react-apexcharts";
 import PageHeader from "../../Common/PageHeader";
+import DashboardSection from "../../Dashboard/DashboardSection";
+import DashboardStatCard from "../../Dashboard/DashboardStatCard";
+import "../../Dashboard/Dashboard.css";
 
 const LightDashboard = () => {
   // Timeframe filter state for Production Chart
@@ -21,6 +24,140 @@ const LightDashboard = () => {
     receivedBoxes: 650,
     damagedUnits: 34,
   });
+
+  // At-a-glance Quick Strip (Panel Dashboard Pattern)
+  const glanceItems = useMemo(
+    () => [
+      { label: "QC Yield Rate", value: "98.2%", icon: "fa-circle-check" },
+      { label: "Box Max Cap", value: "20 / Box", icon: "fa-box-open" },
+      { label: "Active Stations", value: "3 Lines", icon: "fa-industry" },
+      { label: "Dispatch Rate", value: "82.9%", icon: "fa-truck-fast" },
+      { label: "QC Defect Rate", value: "0.27%", icon: "fa-triangle-exclamation", danger: true },
+    ],
+    []
+  );
+
+  // Lifecycle Pipeline Steps (Panel Dashboard Pattern)
+  const pipelineSteps = useMemo(
+    () => [
+      { label: "Lights Gen", value: stats.totalLightsGenerated, icon: "fa-lightbulb", pct: 100 },
+      { label: "Batteries Gen", value: stats.totalBatteriesGenerated, icon: "fa-car-battery", pct: 95 },
+      { label: "In Assembly", value: stats.inProduction, icon: "fa-screwdriver-wrench", pct: 28 },
+      { label: "QC Passed", value: stats.qcPassedUnits, icon: "fa-clipboard-check", pct: 27 },
+      { label: "Sealed Boxes", value: `${stats.sealedBoxes} Boxes`, icon: "fa-box-archive", pct: 85 },
+      { label: "Dispatched", value: `${stats.dispatchedBoxes} Boxes`, icon: "fa-truck-fast", pct: 70 },
+    ],
+    [stats]
+  );
+
+  // Needs Attention Items (Panel Dashboard Pattern)
+  const attentionItems = useMemo(
+    () => [
+      {
+        key: "ready",
+        value: stats.readyToDispatchBoxes,
+        label: "boxes ready for carrier dispatch",
+        tone: "amber",
+        icon: "fa-clock",
+        to: "/light/box/list",
+      },
+      {
+        key: "defect",
+        value: stats.damagedUnits,
+        label: "units flagged in QC rework bay",
+        tone: "rose",
+        icon: "fa-triangle-exclamation",
+        to: "/light/qc/list",
+      },
+      {
+        key: "burnin",
+        value: 80,
+        label: "units under Station 3 aging test",
+        tone: "slate",
+        icon: "fa-hourglass-half",
+        to: "/light/production/list",
+      },
+    ],
+    [stats]
+  );
+
+  // KPI Section 1: Production & Assembly (Panel Dashboard Pattern)
+  const productionKpis = useMemo(
+    () => [
+      {
+        label: "Lights Generated",
+        value: stats.totalLightsGenerated,
+        hint: "+8.4% generated this week",
+        icon: "fa-lightbulb",
+        accent: "teal",
+        to: "/light/serial/list",
+      },
+      {
+        label: "Batteries Generated",
+        value: stats.totalBatteriesGenerated,
+        hint: "LiFePO4 12.8V & 24V Packs",
+        icon: "fa-car-battery",
+        accent: "blue",
+        to: "/light/serial/list",
+      },
+      {
+        label: "In Assembly Line",
+        value: stats.inProduction,
+        hint: "3 Active assembly lines running",
+        icon: "fa-screwdriver-wrench",
+        accent: "dark",
+        to: "/light/production/list",
+      },
+      {
+        label: "QC Passed & Approved",
+        value: stats.qcPassedUnits,
+        hint: "98.2% quality inspection pass rate",
+        icon: "fa-clipboard-check",
+        accent: "teal",
+        to: "/light/qc/list",
+      },
+    ],
+    [stats]
+  );
+
+  // KPI Section 2: Packaging & Dispatch (Panel Dashboard Pattern)
+  const packagingKpis = useMemo(
+    () => [
+      {
+        label: "Packed in Boxes (Max 20)",
+        value: `${stats.sealedBoxes.toLocaleString()} Boxes`,
+        hint: `${(stats.sealedBoxes * 20).toLocaleString()} units packed in inventory`,
+        icon: "fa-box-open",
+        accent: "teal",
+        to: "/light/box/list",
+      },
+      {
+        label: "Ready for Dispatch",
+        value: `${stats.readyToDispatchBoxes.toLocaleString()} Boxes`,
+        hint: `${(stats.readyToDispatchBoxes * 20).toLocaleString()} units awaiting carrier`,
+        icon: "fa-truck-ramp-box",
+        accent: "amber",
+        to: "/light/box/list",
+      },
+      {
+        label: "Dispatched Boxes",
+        value: `${stats.dispatchedBoxes.toLocaleString()} Boxes`,
+        hint: `${(stats.dispatchedBoxes * 20).toLocaleString()} units shipped to sites`,
+        icon: "fa-truck-fast",
+        accent: "blue",
+        to: "/light/dispatch/list",
+      },
+      {
+        label: "QC Defect / Rework",
+        value: stats.damagedUnits,
+        hint: "Units under technician rework bench",
+        icon: "fa-triangle-exclamation",
+        accent: "rose",
+        to: "/light/qc/list",
+      },
+    ],
+    [stats]
+  );
 
   // Chart 1: Production & Assembly Output Trends
   const chartDataMap = {
@@ -221,6 +358,14 @@ const LightDashboard = () => {
           { label: "Dashboard", to: "/dashboard" },
           { label: "Solar Light & Battery" },
         ]}
+        action={
+          <div className="d-flex flex-wrap align-items-center gap-2">
+            <span className="klk-dash-updated">
+              <i className="fa-solid fa-circle klk-dash-updated__dot" aria-hidden="true" />
+              Live Sync Active
+            </span>
+          </div>
+        }
       />
 
       {/* QC Alert Banner */}
@@ -281,169 +426,108 @@ const LightDashboard = () => {
       </Card>
 
 
-      {/* KPI Cards Row 1: Generation & Assembly */}
-      <Row className="mb-1">
-        <Col xl={3} sm={6} className="mb-3">
-          <Card className="border-0 shadow-sm h-100">
-            <Card.Body>
-              <div className="d-flex align-items-center justify-content-between">
-                <div>
-                  <span className="text-muted text-uppercase fs-12 fw-semibold">Lights Generated</span>
-                  <h3 className="mb-0 mt-1 text-primary fw-bold">{stats.totalLightsGenerated.toLocaleString()}</h3>
-                  <div className="mt-2 fs-12 text-success">
-                    <i className="fa-solid fa-arrow-trend-up me-1"></i> +8.4% this week
-                  </div>
-                </div>
-                <div className="rounded-circle p-3 bg-primary-subtle text-primary" style={{ width: "52px", height: "52px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <i className="fa-solid fa-lightbulb fa-xl"></i>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
+      {/* At a glance strip (Panel Dashboard Pattern) */}
+      <div className="klk-dash-glance mb-3">
+        {glanceItems.map((item) => (
+          <div
+            key={item.label}
+            className={`klk-dash-glance__item${item.danger ? " klk-dash-glance__item--danger" : ""}`}
+          >
+            <span className="klk-dash-glance__icon">
+              <i className={`fa-solid ${item.icon}`} aria-hidden="true" />
+            </span>
+            <div>
+              <span className="klk-dash-glance__value">{item.value}</span>
+              <span className="klk-dash-glance__label">{item.label}</span>
+            </div>
+          </div>
+        ))}
+      </div>
 
-        <Col xl={3} sm={6} className="mb-3">
-          <Card className="border-0 shadow-sm h-100">
-            <Card.Body>
-              <div className="d-flex align-items-center justify-content-between">
-                <div>
-                  <span className="text-muted text-uppercase fs-12 fw-semibold">Batteries Generated</span>
-                  <h3 className="mb-0 mt-1 text-info fw-bold">{stats.totalBatteriesGenerated.toLocaleString()}</h3>
-                  <div className="mt-2 fs-12 text-info">
-                    <i className="fa-solid fa-bolt me-1"></i> LiFePO4 12.8V / 24V
-                  </div>
-                </div>
-                <div className="rounded-circle p-3 bg-info-subtle text-info" style={{ width: "52px", height: "52px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <i className="fa-solid fa-car-battery fa-xl"></i>
+      {/* Lifecycle Flow Pipeline & Needs Attention Alerts (Panel Dashboard Pattern) */}
+      <DashboardSection
+        icon="fa-diagram-project"
+        title="Operations Lifecycle Flow"
+        subtitle="Solar Light & Battery progress from serial generation to final dispatch"
+        accent="dark"
+        className="mb-3"
+      >
+        <div className="klk-dash-pipeline">
+          {pipelineSteps.map((step, i) => (
+            <div key={step.label} className="klk-dash-pipeline__item">
+              {i > 0 && (
+                <span className="klk-dash-pipeline__connector" aria-hidden="true">
+                  <i className="fa-solid fa-chevron-right" />
+                </span>
+              )}
+              <div className="klk-dash-pipeline__box">
+                <span className="klk-dash-pipeline__icon">
+                  <i className={`fa-solid ${step.icon}`} aria-hidden="true" />
+                </span>
+                <span className="klk-dash-pipeline__num">
+                  {typeof step.value === "number" ? step.value.toLocaleString() : step.value}
+                </span>
+                <span className="klk-dash-pipeline__text">{step.label}</span>
+                <div className="klk-dash-pipeline__track">
+                  <div className="klk-dash-pipeline__fill" style={{ width: `${step.pct}%` }} />
                 </div>
               </div>
-            </Card.Body>
-          </Card>
-        </Col>
+            </div>
+          ))}
+        </div>
 
-        <Col xl={3} sm={6} className="mb-3">
-          <Card className="border-0 shadow-sm h-100">
-            <Card.Body>
-              <div className="d-flex align-items-center justify-content-between">
-                <div>
-                  <span className="text-muted text-uppercase fs-12 fw-semibold">In Assembly Line</span>
-                  <h3 className="mb-0 mt-1 text-secondary fw-bold">{stats.inProduction.toLocaleString()}</h3>
-                  <div className="mt-2 fs-12 text-muted">
-                    <i className="fa-solid fa-gears me-1"></i> 3 Lines active
-                  </div>
-                </div>
-                <div className="rounded-circle p-3 bg-secondary-subtle text-secondary" style={{ width: "52px", height: "52px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <i className="fa-solid fa-screwdriver-wrench fa-xl"></i>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
+        {/* Needs attention alerts */}
+        <div className="klk-dash-alerts">
+          <p className="klk-dash-alerts__label">Needs attention</p>
+          <div className="klk-dash-alerts__list">
+            {attentionItems.map((item) => (
+              <Link
+                key={item.key}
+                to={item.to}
+                className={`klk-dash-alerts__pill klk-dash-alerts__pill--${item.tone}`}
+              >
+                <i className={`fa-solid ${item.icon}`} aria-hidden="true" />
+                <strong>{item.value.toLocaleString()}</strong>
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </DashboardSection>
 
-        <Col xl={3} sm={6} className="mb-3">
-          <Card className="border-0 shadow-sm h-100">
-            <Card.Body>
-              <div className="d-flex align-items-center justify-content-between">
-                <div>
-                  <span className="text-muted text-uppercase fs-12 fw-semibold">QC Passed (Ready)</span>
-                  <h3 className="mb-0 mt-1 text-success fw-bold">{stats.qcPassedUnits.toLocaleString()}</h3>
-                  <div className="mt-2 fs-12 text-success">
-                    <i className="fa-solid fa-circle-check me-1"></i> 98.2% Pass Rate
-                  </div>
-                </div>
-                <div className="rounded-circle p-3 bg-success-subtle text-success" style={{ width: "52px", height: "52px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <i className="fa-solid fa-clipboard-check fa-xl"></i>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+      {/* KPI Cards: Production & Assembly (Panel Dashboard Pattern) */}
+      <DashboardSection
+        icon="fa-industry"
+        title="Production & Assembly Metrics"
+        subtitle="Current status across serial generation, battery cell packs, and line throughput"
+        accent="teal"
+        className="mb-3"
+      >
+        <div className="row g-3">
+          {productionKpis.map((kpi) => (
+            <div className="col-xl-3 col-sm-6" key={kpi.label}>
+              <DashboardStatCard {...kpi} />
+            </div>
+          ))}
+        </div>
+      </DashboardSection>
 
-      {/* KPI Cards Row 2: Packaging & Dispatch */}
-      <Row className="mb-4">
-        <Col xl={3} sm={6} className="mb-3">
-          <Card className="border-0 shadow-sm h-100">
-            <Card.Body>
-              <div className="d-flex align-items-center justify-content-between">
-                <div>
-                  <span className="text-muted text-uppercase fs-12 fw-semibold">Packed in Boxes (Max 20)</span>
-                  <h3 className="mb-0 mt-1 text-success fw-bold">
-                    {stats.sealedBoxes.toLocaleString()} <small className="text-muted fs-14 fw-normal">Boxes</small>
-                  </h3>
-                  <div className="mt-2 fs-12 text-muted">
-                    <i className="fa-solid fa-cubes me-1"></i> {(stats.sealedBoxes * 20).toLocaleString()} Units Packed
-                  </div>
-                </div>
-                <div className="rounded-circle p-3 bg-success-subtle text-success" style={{ width: "52px", height: "52px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <i className="fa-solid fa-box-open fa-xl"></i>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xl={3} sm={6} className="mb-3">
-          <Card className="border-0 shadow-sm h-100">
-            <Card.Body>
-              <div className="d-flex align-items-center justify-content-between">
-                <div>
-                  <span className="text-muted text-uppercase fs-12 fw-semibold">Ready for Dispatch</span>
-                  <h3 className="mb-0 mt-1 text-warning fw-bold">
-                    {stats.readyToDispatchBoxes.toLocaleString()} <small className="text-muted fs-14 fw-normal">Boxes</small>
-                  </h3>
-                  <div className="mt-2 fs-12 text-warning">
-                    <i className="fa-solid fa-clock me-1"></i> Awaiting Carrier
-                  </div>
-                </div>
-                <div className="rounded-circle p-3 bg-warning-subtle text-warning" style={{ width: "52px", height: "52px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <i className="fa-solid fa-truck-fast fa-xl"></i>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xl={3} sm={6} className="mb-3">
-          <Card className="border-0 shadow-sm h-100">
-            <Card.Body>
-              <div className="d-flex align-items-center justify-content-between">
-                <div>
-                  <span className="text-muted text-uppercase fs-12 fw-semibold">Dispatched Boxes</span>
-                  <h3 className="mb-0 mt-1 text-primary fw-bold">
-                    {stats.dispatchedBoxes.toLocaleString()} <small className="text-muted fs-14 fw-normal">Boxes</small>
-                  </h3>
-                  <div className="mt-2 fs-12 text-primary">
-                    <i className="fa-solid fa-road me-1"></i> In transit to sites
-                  </div>
-                </div>
-                <div className="rounded-circle p-3 bg-primary-subtle text-primary" style={{ width: "52px", height: "52px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <i className="fa-solid fa-dolly fa-xl"></i>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xl={3} sm={6} className="mb-3">
-          <Card className="border-0 shadow-sm h-100">
-            <Card.Body>
-              <div className="d-flex align-items-center justify-content-between">
-                <div>
-                  <span className="text-muted text-uppercase fs-12 fw-semibold">QC Defect / Rework</span>
-                  <h3 className="mb-0 mt-1 text-danger fw-bold">{stats.damagedUnits.toLocaleString()}</h3>
-                  <div className="mt-2 fs-12 text-danger">
-                    <i className="fa-solid fa-screwdriver me-1"></i> In rework bay
-                  </div>
-                </div>
-                <div className="rounded-circle p-3 bg-danger-subtle text-danger" style={{ width: "52px", height: "52px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <i className="fa-solid fa-triangle-exclamation fa-xl"></i>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+      {/* KPI Cards: Packaging & Dispatch Operations (Panel Dashboard Pattern) */}
+      <DashboardSection
+        icon="fa-boxes-packing"
+        title="Packaging & Consignment Operations"
+        subtitle="Box sealing (Max 20 units/box), dispatch consignments, and QC rework status"
+        accent="blue"
+        className="mb-4"
+      >
+        <div className="row g-3">
+          {packagingKpis.map((kpi) => (
+            <div className="col-xl-3 col-sm-6" key={kpi.label}>
+              <DashboardStatCard {...kpi} />
+            </div>
+          ))}
+        </div>
+      </DashboardSection>
 
       {/* Charts Section: Production Analytics & QC Breakdown */}
       <Row className="mb-4">

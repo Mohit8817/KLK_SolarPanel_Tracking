@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { Card, Table, Badge, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import PageHeader from "../../Common/PageHeader";
@@ -160,102 +160,113 @@ const ViewMaterialRequests = () => {
         }
       />
 
-      <Card className="klk-list-card shadow-sm border-0">
-        <Card.Header className="bg-white py-3">
+      <Card className="klk-list-card">
+        <Card.Header>
           <ListToolbar>
-            <Search
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder="Search BOM code, product, category..."
-            />
-            <TableExportActions
-              data={exportData}
-              columns={exportColumns}
-              fileName="BOM_Materials_Report"
-            />
+            {/* RIGHT SIDE - SEARCH + EXPORT ACTIONS */}
+            <div className="d-flex align-items-center gap-3 ms-auto flex-nowrap">
+              <div style={{ width: "260px", minWidth: "220px" }}>
+                <Search
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Search BOM code, product, category..."
+                />
+              </div>
+
+              <div
+                className="d-flex align-items-center flex-nowrap flex-shrink-0"
+                style={{ minWidth: "145px", whiteSpace: "nowrap" }}
+              >
+                <TableExportActions
+                  data={exportData}
+                  columns={exportColumns}
+                  fileName="BOM_Materials_Report"
+                />
+              </div>
+            </div>
           </ListToolbar>
         </Card.Header>
 
-        <Card.Body className="p-0">
-          <div className="table-responsive">
-            <Table hover className="align-middle mb-0 text-nowrap">
-              <thead className="table-secondary text-dark fs-12 text-uppercase">
-                <tr className="fs-12 text-muted text-uppercase">
-                  <th style={{ width: 50 }} className="text-center">Sr.</th>
-                  <th>BOM Code</th>
-                  <th>Product Name</th>
-                  <th>Category</th>
-                  <th>Warehouse</th>
-                  <th>Materials</th>
-                  <th>Document</th>
-                  <th>Created By</th>
-                  <th className="text-center" style={{ width: 100 }}>Action</th>
-                </tr>
-              </thead>
+        <Card.Body>
+          <Table responsive className="table-hover align-middle" style={{ minWidth: "1100px" }}>
+            <thead>
+              <tr>
+                <th style={{ width: "65px" }}>S no.</th>
+                <th style={{ minWidth: "180px" }}>BOM Code</th>
+                <th style={{ minWidth: "200px" }}>Product Name</th>
+                <th style={{ width: "130px" }}>Category</th>
+                <th style={{ width: "150px" }}>Warehouse</th>
+                <th style={{ width: "140px" }}>Materials</th>
+                <th style={{ width: "150px" }}>Document</th>
+                <th style={{ width: "140px" }}>Created By</th>
+                <th className="text-center" style={{ width: "100px", minWidth: "100px" }}>Action</th>
+              </tr>
+            </thead>
 
-              <tbody>
-                {currentData.length > 0 ? (
-                  currentData.map((bom, bIndex) => {
-                    const isOpen = expandedId === bom._id;
+            <tbody>
+              {currentData.length > 0 ? (
+                currentData.map((bom, bIndex) => {
+                  const isOpen = expandedId === bom._id;
 
-                    return (
-                      <>
-                        {/* ── Main BOM Row ── */}
-                        <tr key={bom._id} className={isOpen ? "table-light" : ""}>
-                          <td className="text-center text-muted fw-bold">
-                            {startIndex + bIndex + 1}
-                          </td>
+                  return (
+                    <Fragment key={bom._id}>
+                      {/* ── Main BOM Row ── */}
+                      <tr className={isOpen ? "table-light" : ""}>
+                        <td><strong>{startIndex + bIndex + 1}</strong></td>
 
-                          <td className="font-monospace fw-bold text-primary">
-                            {bom.bom_code}
-                          </td>
+                        <td className="font-monospace fw-bold text-primary">
+                          {bom.bom_code}
+                        </td>
 
-                          <td>
-                            <strong className="text-dark d-block">{bom.product_name}</strong>
-                            <small className="text-muted">Unit: {bom.product_unit} | {bom.variant}</small>
-                          </td>
+                        <td>
+                          <strong className="text-dark d-block">{bom.product_name}</strong>
+                          <small className="text-muted">Unit: {bom.product_unit} | {bom.variant}</small>
+                        </td>
 
-                          <td>
-                            <Badge bg={bom.product_category === "BATTERY" ? "success" : "info"} className="px-2 py-1">
-                              {bom.product_category}
-                            </Badge>
-                          </td>
+                        <td>
+                          <Badge
+                            bg={bom.product_category === "BATTERY" ? "info" : "primary"}
+                            className="py-2 px-2 fs-12"
+                          >
+                            {bom.product_category === "BATTERY" ? "Battery Pack" : "Street Light"}
+                          </Badge>
+                        </td>
 
-                          <td>{bom.warehouse}</td>
+                        <td>{bom.warehouse}</td>
 
-                          {/* Click to Toggle Materials */}
-                          <td>
-                            <Button
-                              variant={isOpen ? "primary" : "outline-secondary"}
-                              size="sm"
-                              className="py-1 px-2 fs-12 rounded-2"
-                              onClick={() => toggleMaterials(bom._id)}
-                            >
-                              <i className="fa-solid fa-boxes-stacked me-1"></i>
-                              {bom.materials.length} Items
-                              <i className={`fa-solid fa-chevron-${isOpen ? "up" : "down"} ms-2 fs-10`}></i>
-                            </Button>
-                          </td>
+                        {/* Click to Toggle Materials */}
+                        <td>
+                          <Button
+                            variant={isOpen ? "primary" : "outline-secondary"}
+                            size="sm"
+                            className="py-1 px-2 fs-12 rounded-2"
+                            onClick={() => toggleMaterials(bom._id)}
+                          >
+                            <i className="fa-solid fa-boxes-stacked me-1"></i>
+                            {bom.materials.length} Items
+                            <i className={`fa-solid fa-chevron-${isOpen ? "up" : "down"} ms-2 fs-10`}></i>
+                          </Button>
+                        </td>
 
-                          <td>
-                            {bom.attachment ? (
-                              <a href="#" className="text-primary text-decoration-none fs-12">
-                                <i className="fa-solid fa-paperclip me-1"></i>
-                                {bom.attachment.name}
-                              </a>
-                            ) : (
-                              <span className="text-muted fs-12 fst-italic">No File</span>
-                            )}
-                          </td>
+                        <td>
+                          {bom.attachment ? (
+                            <a href="#" className="text-primary text-decoration-none fs-12">
+                              <i className="fa-solid fa-paperclip me-1"></i>
+                              {bom.attachment.name}
+                            </a>
+                          ) : (
+                            <span className="text-muted fs-12 fst-italic">No File</span>
+                          )}
+                        </td>
 
-                          <td className="font-monospace text-muted fs-12">{bom.created_by}</td>
+                        <td className="font-monospace text-muted fs-12">{bom.created_by}</td>
 
-                          <td className="text-center">
-                            <div className="d-flex justify-content-center align-items-center gap-2">
-                              <DeleteAction onClick={() => handleDelete(bom._id)} />
-                            </div>
-                          </td>
-                        </tr>
+                        <td className="text-center">
+                          <div className="klk-actions d-flex justify-content-center align-items-center flex-nowrap">
+                            <DeleteAction onClick={() => handleDelete(bom._id)} />
+                          </div>
+                        </td>
+                      </tr>
 
                         {/* ── Dropdown Sub-Table: Show Materials when clicked ── */}
                         {isOpen && (
@@ -302,7 +313,7 @@ const ViewMaterialRequests = () => {
                             </td>
                           </tr>
                         )}
-                      </>
+                      </Fragment>
                     );
                   })
                 ) : (
@@ -314,16 +325,13 @@ const ViewMaterialRequests = () => {
                 )}
               </tbody>
             </Table>
-          </div>
 
-          <div className="p-3">
             <CommonPagination
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={setCurrentPage}
             />
-          </div>
-        </Card.Body>
+          </Card.Body>
       </Card>
     </div>
   );

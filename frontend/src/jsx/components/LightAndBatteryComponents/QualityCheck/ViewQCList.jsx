@@ -1,8 +1,12 @@
 import { useState, useMemo } from "react";
-import { Card, Table, Badge, Button, Row, Col, Form } from "react-bootstrap";
+import { Card, Table, Badge,  Row, Col, Form } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import PageHeader from "../../Common/PageHeader";
+import ListToolbar from "../../Common/ListToolbar";
+import Search, { useSearch } from "../../Common/Search";
 import TableExportActions from "../../Common/TableExportActions";
+import CommonPagination from "../../Common/Pagination";
+import { ViewAction } from "../../Common/ActionButtons";
 import QCDetailsModal from "./QCDetailsModal";
 
 const INITIAL_QC_DATA = [
@@ -174,29 +178,11 @@ const ViewQCList = () => {
     }
     return INITIAL_QC_DATA;
   });
+
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [typeFilter, setTypeFilter] = useState("ALL");
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [showModal, setShowModal] = useState(false);
-
-  // Filtered List
-  const filteredList = useMemo(() => {
-    return list.filter((item) => {
-      const matchStatus = statusFilter === "ALL" || item.status === statusFilter;
-      const matchType = typeFilter === "ALL" || item.type === typeFilter;
-      const search = searchTerm.toLowerCase();
-      const matchSearch =
-        !searchTerm ||
-        item.serialNo.toLowerCase().includes(search) ||
-        item.model.toLowerCase().includes(search) ||
-        item.poNo.toLowerCase().includes(search) ||
-        item.inspector.toLowerCase().includes(search) ||
-        (item.defectReason && item.defectReason.toLowerCase().includes(search));
-
-      return matchStatus && matchType && matchSearch;
-    });
-  }, [list, statusFilter, typeFilter, searchTerm]);
 
   // Overall Statistics
   const totalInspected = list.length;
@@ -204,7 +190,53 @@ const ViewQCList = () => {
   const totalFailed = list.filter((i) => i.status === "FAILED").length;
   const totalRework = list.filter((i) => i.status === "REWORK").length;
 
+  // Filter by Status and Category
+  const filteredList = useMemo(() => {
+    return list.filter((item) => {
+      const matchStatus = statusFilter === "ALL" || item.status === statusFilter;
+      const matchType = typeFilter === "ALL" || item.type === typeFilter;
+      return matchStatus && matchType;
+    });
+  }, [list, statusFilter, typeFilter]);
+
+  // ── SEARCH + PAGINATION (Standard useSearch hook) ──
+  const SEARCH_KEYS = [
+    "serialNo",
+    "type",
+    "model",
+    "poNo",
+    "inspector",
+    "defectReason",
+    "status",
+    "date",
+  ];
+
+  const {
+    currentData,
+    searchQuery,
+    setSearchQuery,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    startIndex,
+  } = useSearch(filteredList, SEARCH_KEYS, 10);
+
+  // ── EXPORT ──
+  const exportData = filteredList.map((item, index) => ({
+    sno: index + 1,
+    serialNo: item.serialNo,
+    type: item.type === "LIGHT" ? "Solar Light" : "Battery Pack",
+    model: item.model,
+    poNo: item.poNo,
+    status: item.status,
+    defectReason: item.defectReason || "None",
+    inspector: item.inspector,
+    date: item.date,
+    time: item.time || "",
+  }));
+
   const exportColumns = [
+    { label: "S No", key: "sno" },
     { label: "Serial No", key: "serialNo" },
     { label: "Category", key: "type" },
     { label: "Model", key: "model" },
@@ -213,6 +245,7 @@ const ViewQCList = () => {
     { label: "Defect Reason", key: "defectReason" },
     { label: "Inspector", key: "inspector" },
     { label: "Date", key: "date" },
+    { label: "Time", key: "time" },
   ];
 
   const handleOpenModal = (item) => {
@@ -259,7 +292,7 @@ const ViewQCList = () => {
         </Col>
 
         <Col xl={3} sm={6} className="mb-3 mb-xl-0">
-          <Card className="border-0 shadow-sm">
+          <Card className="border-0 shadow-sm border-start border-success border-4">
             <Card.Body className="d-flex align-items-center justify-content-between">
               <div>
                 <span className="text-muted text-uppercase fs-12 fw-semibold">Passed &amp; Approved</span>
@@ -273,7 +306,7 @@ const ViewQCList = () => {
         </Col>
 
         <Col xl={3} sm={6} className="mb-3 mb-xl-0">
-          <Card className="border-0 shadow-sm">
+          <Card className="border-0 shadow-sm border-start border-danger border-4">
             <Card.Body className="d-flex align-items-center justify-content-between">
               <div>
                 <span className="text-muted text-uppercase fs-12 fw-semibold">Failed / Rejected</span>
@@ -287,7 +320,7 @@ const ViewQCList = () => {
         </Col>
 
         <Col xl={3} sm={6} className="mb-3 mb-xl-0">
-          <Card className="border-0 shadow-sm">
+          <Card className="border-0 shadow-sm border-start border-warning border-4">
             <Card.Body className="d-flex align-items-center justify-content-between">
               <div>
                 <span className="text-muted text-uppercase fs-12 fw-semibold">Under Rework</span>
@@ -301,162 +334,168 @@ const ViewQCList = () => {
         </Col>
       </Row>
 
-      {/* Filter & Search Bar */}
-      <Card className="border-0 shadow-sm mb-4">
-        <Card.Body className="p-3">
-          <Row className="g-2 align-items-center">
-            {/* Search Input */}
-            <Col md={4}>
-              <div className="input-group">
-                <span className="input-group-text bg-light">
-                  <i className="fa-solid fa-magnifying-glass text-muted"></i>
-                </span>
-                <Form.Control
-                  type="text"
-                  placeholder="Search Serial, PO, Model, Inspector..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </Col>
-
-            {/* Status Filter */}
-            <Col md={3}>
+      {/* QC Tested Records Table in standard klk-list-card */}
+      <Card className="klk-list-card">
+        <Card.Header>
+          <ListToolbar>
+            {/* Filters */}
+            <div className="d-flex align-items-center gap-2 flex-wrap">
               <Form.Select
+                size="sm"
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="form-select-sm"
+                style={{ width: "160px", height: "36px" }}
               >
                 <option value="ALL">All Statuses ({totalInspected})</option>
                 <option value="PASSED">Passed Only ({totalPassed})</option>
                 <option value="FAILED">Failed / Rejected ({totalFailed})</option>
                 <option value="REWORK">In Rework ({totalRework})</option>
               </Form.Select>
-            </Col>
 
-            {/* Category Filter */}
-            <Col md={3}>
               <Form.Select
+                size="sm"
                 value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
+                onChange={(e) => {
+                  setTypeFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="form-select-sm"
+                style={{ width: "170px", height: "36px" }}
               >
-                <option value="ALL">All Categories (Lights &amp; Batteries)</option>
-                <option value="LIGHT">Solar Street Lights Only</option>
+                <option value="ALL">All Categories</option>
+                <option value="LIGHT">Solar Lights Only</option>
                 <option value="BATTERY">Battery Packs Only</option>
               </Form.Select>
-            </Col>
+            </div>
 
-            {/* Export Actions */}
-            <Col md={2} className="text-end">
-              <TableExportActions
-                data={filteredList}
-                columns={exportColumns}
-                fileName="Solar_Light_Battery_QC_Report"
-              />
-            </Col>
-          </Row>
-        </Card.Body>
-      </Card>
+            {/* RIGHT SIDE - SEARCH + EXPORT ACTIONS */}
+            <div className="d-flex align-items-center gap-3 ms-auto flex-nowrap">
+              <div style={{ width: "260px", minWidth: "220px" }}>
+                <Search
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Search serial, model, PO..."
+                />
+              </div>
 
-      {/* QC Tested Records Table */}
-      <Card className="border-0 shadow-sm">
-        <Card.Header className="bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-          <h5 className="mb-0 fw-bold">
-            Inspection History ({filteredList.length} Records Found)
-          </h5>
-          <span className="text-muted fs-13">
-            Showing verified results from production testing stations
-          </span>
+              <div
+                className="d-flex align-items-center flex-nowrap flex-shrink-0"
+                style={{ minWidth: "145px", whiteSpace: "nowrap" }}
+              >
+                <TableExportActions
+                  data={exportData}
+                  columns={exportColumns}
+                  fileName="Solar_Light_Battery_QC_Report"
+                />
+              </div>
+            </div>
+          </ListToolbar>
         </Card.Header>
 
-        <Card.Body className="p-0">
-          <div className="table-responsive">
-            <Table hover className="align-middle mb-0">
-              <thead className="table-primary">
+        <Card.Body>
+          <Table responsive className="table-hover align-middle" style={{ minWidth: "1150px" }}>
+            <thead>
+              <tr>
+                <th style={{ width: "65px" }}>S no.</th>
+                <th style={{ minWidth: "160px" }}>Serial Number</th>
+                <th style={{ width: "140px" }}>Category</th>
+                <th style={{ minWidth: "180px" }}>Model / Specs</th>
+                <th style={{ width: "130px" }}>PO / Work Order</th>
+                <th style={{ width: "120px" }}>QC Status</th>
+                <th style={{ minWidth: "160px" }}>Defect / Finding</th>
+                <th style={{ width: "130px" }}>Inspector</th>
+                <th style={{ width: "140px" }}>Date &amp; Time</th>
+                <th className="text-center" style={{ width: "110px", minWidth: "110px" }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentData.length === 0 ? (
                 <tr>
-                  <th>#</th>
-                  <th>Serial Number</th>
-                  <th>Product Category</th>
-                  <th>Model / Specs</th>
-                  <th>PO / Work Order</th>
-                  <th>QC Status</th>
-                  <th>Defect / Finding</th>
-                  <th>Inspector</th>
-                  <th>Date &amp; Time</th>
-                  <th className="text-end">Actions</th>
+                  <td colSpan={10} className="text-center py-4 text-muted">
+                    {searchQuery
+                      ? `No results for "${searchQuery}"`
+                      : "No records found"}
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredList.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} className="text-center py-4 text-muted">
-                      Koi record nahi mila. Filters check karein ya naya inspection karein.
+              ) : (
+                currentData.map((item, idx) => (
+                  <tr key={item.id}>
+                    <td><strong>{startIndex + idx + 1}</strong></td>
+                    <td className="font-monospace fw-bold text-primary">{item.serialNo}</td>
+                    <td>
+                      {item.type === "LIGHT" ? (
+                        <Badge bg="primary" className="py-2 px-2 d-inline-flex align-items-center gap-1">
+                          <i className="fa-solid fa-lightbulb"></i> Street Light
+                        </Badge>
+                      ) : (
+                        <Badge bg="info" className="py-2 px-2 d-inline-flex align-items-center gap-1">
+                          <i className="fa-solid fa-car-battery"></i> Battery Pack
+                        </Badge>
+                      )}
                     </td>
-                  </tr>
-                ) : (
-                  filteredList.map((item, idx) => (
-                    <tr key={item.id}>
-                      <td className="fw-bold">{idx + 1}</td>
-                      <td className="font-monospace fw-bold text-primary">{item.serialNo}</td>
-                      <td>
-                        <Badge bg={item.type === "LIGHT" ? "primary" : "info"}>
-                          {item.type === "LIGHT" ? "Solar Light" : "Battery Pack"}
-                        </Badge>
-                      </td>
-                      <td>{item.model}</td>
-                      <td>{item.poNo}</td>
-                      <td>
-                        <Badge
-                          bg={
-                            item.status === "PASSED"
-                              ? "success"
-                              : item.status === "FAILED"
-                              ? "danger"
-                              : "warning"
-                          }
-                          className="fs-12 p-2"
-                        >
-                          {item.status}
-                        </Badge>
-                      </td>
-                      <td>
-                        {item.defectReason ? (
-                          <span className="text-danger fw-semibold">{item.defectReason}</span>
-                        ) : (
-                          <span className="text-success fs-12">
-                            <i className="fa-solid fa-check me-1"></i> Passed
-                          </span>
-                        )}
-                      </td>
-                      <td>{item.inspector}</td>
-                      <td>
-                        {item.date} <small className="text-muted">{item.time}</small>
-                      </td>
-                      <td className="text-end">
-                        <Button
-                          variant="outline-primary"
-                          size="sm"
-                          className="me-1"
+                    <td>{item.model}</td>
+                    <td>{item.poNo}</td>
+                    <td>
+                      <Badge
+                        bg={
+                          item.status === "PASSED"
+                            ? "success"
+                            : item.status === "FAILED"
+                            ? "danger"
+                            : "warning"
+                        }
+                        className="fs-12 py-2 px-2"
+                      >
+                        {item.status}
+                      </Badge>
+                    </td>
+                    <td>
+                      {item.defectReason ? (
+                        <span className="text-danger fw-semibold">{item.defectReason}</span>
+                      ) : (
+                        <span className="text-success fs-12">
+                          <i className="fa-solid fa-check me-1"></i> Passed
+                        </span>
+                      )}
+                    </td>
+                    <td>{item.inspector}</td>
+                    <td className="text-nowrap">
+                      {item.date} <small className="text-muted">{item.time}</small>
+                    </td>
+                    <td className="text-center">
+                      <div className="klk-actions d-flex justify-content-center align-items-center flex-nowrap">
+                        <ViewAction
                           onClick={() => handleOpenModal(item)}
                           title="View QC Test Sheet"
-                        >
-                          <i className="fa-solid fa-eye me-1"></i> Details
-                        </Button>
+                        />
                         {item.status === "PASSED" && (
                           <Link
                             to="/light/box/packaging"
-                            className="btn btn-outline-success btn-sm"
+                            className="btn btn-xs sharp btn-success me-1"
                             title="Ready for packaging - Pack into Box"
                           >
-                            <i className="fa-solid fa-box me-1"></i> Pack
+                            <i className="fa fa-box" />
                           </Link>
                         )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </Table>
-          </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </Table>
+
+          {totalPages > 1 && (
+            <CommonPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          )}
         </Card.Body>
       </Card>
 

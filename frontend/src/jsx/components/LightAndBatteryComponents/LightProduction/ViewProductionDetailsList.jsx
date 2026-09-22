@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Card, Table, Badge, Button, Row, Col } from "react-bootstrap";
 
 import PageHeader from "../../Common/PageHeader";
+import ListToolbar from "../../Common/ListToolbar";
 import Search, { useSearch } from "../../Common/Search";
 import CommonPagination from "../../Common/Pagination";
 import TableExportActions from "../../Common/TableExportActions";
@@ -59,27 +60,36 @@ const generateSerials = (record) => {
             serialNo,
             uniqueNo,
             production: "Assigned",
-            pDamage: "Pending",
+            pDamage: "Safe",
             dispatch: "Pending",
-            dDamage: "Pending",
+            dDamage: "Safe",
             receive: "Pending",
-            rDamage: "Pending",
+            rDamage: "Safe",
         });
     }
 
     return list;
 };
 
-const StatusBadge = ({ value }) => (
-    <Badge
-        bg={value === "Assigned" ? "success" : "warning"}
-        text={value === "Assigned" ? undefined : "dark"}
-        className="py-2 px-3 fw-medium"
-        style={value !== "Assigned" ? { color: "#fff", backgroundColor: "#f1a545" } : {}}
-    >
-        {value}
-    </Badge>
-);
+const StatusBadge = ({ value }) => {
+    let bg = "warning";
+    if (value === "Assigned" || value === "Safe" || value === "Dispatched" || value === "Received") {
+        bg = "success";
+    } else if (value === "Damaged" || value === "Failed") {
+        bg = "danger";
+    } else {
+        bg = "warning";
+    }
+
+    return (
+        <Badge
+            bg={bg}
+            className="py-2 px-2"
+        >
+            {value}
+        </Badge>
+    );
+};
 
 // ================= DETAIL SUMMARY CARD =================
 const DetailItem = ({ label, value }) => (
@@ -284,21 +294,20 @@ const ViewProductionDetailsList = () => {
             <RecordSummaryCard record={record} isLight={isLight} itemLabel={itemLabel} />
 
             <Card className="klk-list-card">
-                <Card.Header className="d-flex justify-content-end align-items-center gap-3 flex-wrap">
-                    <div style={{ width: "260px", minWidth: "220px" }}>
+                <Card.Header>
+                    <ListToolbar>
                         <Search
                             value={searchQuery}
                             onChange={setSearchQuery}
                             placeholder={`Search by ${itemLabel.toLowerCase()} no`}
                         />
-                    </div>
-
-                    <TableExportActions
-                        data={exportData}
-                        columns={exportColumns}
-                        fileName={`${itemLabel}_Production_List`}
-                        onBeforeExport={handleExportGuard}
-                    />
+                        <TableExportActions
+                            data={exportData}
+                            columns={exportColumns}
+                            fileName={`${itemLabel}_Production_List`}
+                            onBeforeExport={handleExportGuard}
+                        />
+                    </ListToolbar>
                 </Card.Header>
 
                 <Card.Body>
@@ -309,13 +318,13 @@ const ViewProductionDetailsList = () => {
                     >
                         <thead>
                             <tr>
-                                <th style={{ width: "65px" }}>S No.</th>
+                                <th style={{ width: "65px" }}>S no.</th>
                                 <th style={{ minWidth: "180px" }}>{itemLabel} Unique No</th>
                                 <th style={{ width: "110px" }}>Prefix</th>
                                 <th style={{ width: "110px" }}>
                                     {isLight ? "Wattage" : "Capacity"}
                                 </th>
-                                <th style={{ width: "110px" }}>Category</th>
+                                <th style={{ width: "130px" }}>Category</th>
                                 <th style={{ width: "120px" }}>Production</th>
                                 <th style={{ width: "110px" }}>P Damage</th>
                                 <th style={{ width: "110px" }}>Dispatch</th>
@@ -329,8 +338,8 @@ const ViewProductionDetailsList = () => {
                             {currentData.length > 0 ? (
                                 currentData.map((item, index) => (
                                     <tr key={item.uniqueNo + index}>
-                                        <td>{startIndex + index + 1}</td>
-                                        <td className="fw-semibold text-muted">
+                                        <td><strong>{startIndex + index + 1}</strong></td>
+                                        <td className="font-monospace fw-bold text-primary">
                                             {item.uniqueNo}
                                         </td>
                                         <td>
@@ -338,8 +347,8 @@ const ViewProductionDetailsList = () => {
                                         </td>
                                         <td>{isLight ? record.wattage : record.capacity}</td>
                                         <td>
-                                            <Badge bg="secondary" className="py-2 px-2">
-                                                {isLight ? record.light_type : record.chemistry}
+                                            <Badge bg={isLight ? "primary" : "info"} className="py-2 px-2">
+                                                {isLight ? "Street Light" : "Battery Pack"}
                                             </Badge>
                                         </td>
                                         <td>

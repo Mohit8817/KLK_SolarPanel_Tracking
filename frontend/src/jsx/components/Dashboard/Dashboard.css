@@ -499,6 +499,7 @@
 .klk-dash-alerts__pill--amber { border-color: #fcd34d; background: #fffbeb; }
 .klk-dash-alerts__pill--blue { border-color: #93c5fd; background: #eff6ff; }
 .klk-dash-alerts__pill--slate { border-color: #cbd5e1; background: #f8fafc; }
+.klk-dash-alerts__pill--rose { border-color: #fca5a5; background: #fef2f2; }
 
 /* KPI cards */
 .klk-metric-link {

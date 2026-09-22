@@ -133,9 +133,7 @@ const PrintBoxLabel = ({ show, onHide, boxData, onBoxSealed }) => {
           Cancel
         </Button>
         <div className="d-flex gap-2">
-          <Button variant="outline-primary" size="sm" onClick={() => window.print()}>
-            <i className="fa-solid fa-print me-1"></i> Print Label
-          </Button>
+         
           <Button variant="success" size="sm" onClick={handleSealAndNext} className="fw-semibold">
             <i className="fa-solid fa-box-check me-1"></i> Seal Box &amp; Start Next
           </Button>
